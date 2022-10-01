@@ -1,0 +1,19 @@
+project:
+  type: website
+
+website:
+  title: "Yves Barmaz"
+  navbar:
+    right:
+      - about.qmd
+      - icon: github
+        href: https://github.com/ybarmaz
+      - icon: twitter
+        href: https://twitter.com/YvesBarmaz
+format:
+  html:
+    theme: spacelab
+    css: styles.css
+
+
+
