@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.1.251">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Yves Barmaz">
+<meta name="dcterms.date" content="2021-02-09">
+<meta name="description" content="An introduction to Thompson sampling and how to implement it with probabilistic machine learning to tackle contextual bandits.">
+
+<title>Yves Barmaz - Thompson sampling for contextual bandits</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1.6em;
+  vertical-align: middle;
+}
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { color: #008000; } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { color: #008000; font-weight: bold; } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<script src="../site_libs/quarto-html/quarto.js"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" integrity="sha512-c3Nl8+7g4LMSTdrm621y7kf9v3SDPnhxLNhcjFJbKECVnmZHTdo+IRO05sNLTH/D3vA6u1X32ehoLC7WFVdheg==" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script>
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<link rel="stylesheet" href="../styles.css">
+</head>
+
+<body class="nav-fixed fullcontent">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">Yves Barmaz</span>
+    </a>
+  </div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../about.html">About</a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/ybarmaz"><i class="bi bi-github" role="img">
+</i> 
+ </a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://twitter.com/YvesBarmaz"><i class="bi bi-twitter" role="img">
+</i> 
+ </a>
+  </li>  
+</ul>
+              <div id="quarto-search" class="" title="Search"></div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">Thompson sampling for contextual bandits</h1>
+                  <div>
+        <div class="description">
+          An introduction to Thompson sampling and how to implement it with probabilistic machine learning to tackle contextual bandits.
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">contextual bandits</div>
+                <div class="quarto-category">reinforcement learning</div>
+                <div class="quarto-category">bayesian modeling</div>
+                <div class="quarto-category">variational inference</div>
+                <div class="quarto-category">probabilistic machine learning</div>
+                <div class="quarto-category">tensorflow-probability</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p>Yves Barmaz </p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">February 9, 2021</p>
+      </div>
+    </div>
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+<p>The <a href="https://en.wikipedia.org/wiki/Multi-armed_bandit">multi-armed bandit problem</a> is inspired by the situation of gamblers facing <span class="math inline">\(N\)</span> slot machines with a limited amount of resources to “invest” in them, without knowing the probability distribution of rewards from each machine. By playing with a machine, they can of course sample its distribution. Once they find a machine that performs well enough, the question is wheter they should try the other ones that might perform even better, at the risk of wasting money because they might be worse. This is an example of the exploration-exploitation tradeoff dilemma. Applications include clinical trial design, portfolio selection, and A/B testing.</p>
+<p><a href="https://en.wikipedia.org/wiki/Thompson_sampling">Thompson sampling</a> is an approximate solution applicable to bandits for which we have a Bayesian model of the reward <span class="math inline">\(r\)</span>, namely a likelihood <span class="math inline">\(P(r\vert \theta, a)\)</span> that depends on the action <span class="math inline">\(a\)</span> (the choice of an arm to pull) and a vector of parameters <span class="math inline">\(\theta\)</span>, and a prior distribution <span class="math inline">\(P(\theta)\)</span>. In certain cases, called contextual bandits, the likelihood also depends on a set of features <span class="math inline">\(x\)</span> observed by the players before they choose an action, <span class="math inline">\(P(r\vert \theta, a, x)\)</span>. After each round, the posterior distribution <span class="math inline">\(P(\theta \vert \left\lbrace r_i, a_i, x_i\right\rbrace_{i})\)</span> is updated with the newly observed data. Then a <span class="math inline">\(\theta^\ast\)</span> is sampled from it, the new context <span class="math inline">\(x\)</span> is observed, and the new action is chosen to maximize the expected reward, <span class="math inline">\(a^\ast = \mathrm{argmax}_a \ \mathbb{E}(r\vert \theta, a, x)\)</span>.</p>
+<p>This approach solves the exploration-exploitation dilemma with the random sampling of <span class="math inline">\(\theta^\ast\)</span>, which gives to every action a chance to be selected, yet favors the most promising ones. The more data is collected, the more informative the posterior distribution will become and the more it will favor its top performer.</p>
+<p>This mechanism is illustrated in the <a href="https://nbviewer.jupyter.org/github/CamDavidsonPilon/Probabilistic-Programming-and-Bayesian-Methods-for-Hackers/blob/master/Chapter6_Priorities/Ch6_Priors_PyMC3.ipynb">chapter 6</a> of <a href="https://camdavidsonpilon.github.io/Probabilistic-Programming-and-Bayesian-Methods-for-Hackers/">Probabilistic Programming &amp; Bayesian Methods for Hackers</a> and the section 4.4 of <a href="https://www.routledge.com/Bayesian-Adaptive-Methods-for-Clinical-Trials/Berry-Carlin-Lee-Muller/p/book/9781439825488">Bayesian Adaptive Methods for Clinical Trials</a>.</p>
+<p>Both discuss the case of a binary reward (success and failure) for every action <span class="math inline">\(a\)</span> that follows a Bernoulli distribution with unknown probability of success <span class="math inline">\(p_a\)</span>. They assume a beta prior for each of the <span class="math inline">\(p_a\)</span>, which is the conjugate prior for the Bernoulli likelihood and makes inference of the posterior straightforward. This is particularly appealing when you have to update your posterior after each play.</p>
+<p>If there are covariates that can explain the probability of success, one of the simplest models for a binary response of the potential actions is the combination of generalized linear models for each action,</p>
+<p><span class="math display">\[
+P(r=1 \vert \theta, a, x) = \frac{1}{1 + e^{-\left(\alpha_a + \beta_a^T\,x\right)}}
+\]</span></p>
+<p>Unfortunately, there is no immediate congugate prior for this type of likelihood, so we have to rely on numerical methods to estimate the posterior distribution. A previous <a href="https://ybarmaz.github.io/blog/bayesian%20modeling/variational%20inference/tensorflow-probability/2021/02/01/Variational-inference-with-tfp.html">blog post</a> discussed variational inference as a speedier alternative to MCMC algorithms, and we will see here how we can apply it to the problem of contextual bandits with binary response.</p>
+<p>This problem is relevant in the development of <a href="https://en.wikipedia.org/wiki/Personalized_medicine">personalized therapies</a>, where the actions represent the different treatments under investigation and the contexts <span class="math inline">\(x\)</span> are predictive biomarkers of their response. The goal of a trial would be to estimate the response to each treatment option given biomarkers <span class="math inline">\(x\)</span>, and, based on that, to define the best treatment policy. Adaptive randomization through Thompson sampling ensures that more subjects enrolled in the trial get the optimal treatment based on their biomarkers and the knowledge accrued until their randomization, which is certainly more ethical than a randomization independent on the biomarkers.</p>
+<p>Another example is online ad serving, where the binary response corresponds to a successful conversion, the action is the selection of an ad for a specific user, and the context is a set of features related to that user. When a new ad enters the portfolio and a new click-through rate model needs to be deployed for it, Thompson sampling can accelerate the training phase and reduce the related costs.</p>
+<section id="bandit-model" class="level2">
+<h2 class="anchored" data-anchor-id="bandit-model">Bandit model</h2>
+<p>For simplicity, we simulate bandits whose true probabilities of success follow logistic models, so we can see how the posterior distributions concentrate around the true values during training. You can run this notebook in Colab to experiment with more realistic models, and vary the number of arms or the context dimension.</p>
+<div class="cell" data-execution_count="2">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ContextualBandit(<span class="bu">object</span>):</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co">    This class represents contextual bandit machines with n_arms arms and</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co">    linear logits of p-dimensional contexts.</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co">    parameters:</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co">        arm_true_weights: (n_arms, p) Numpy array of real weights.</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co">        arm_true_biases:  (n_arms,) Numpy array of real biases</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co">    methods:</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="co">        pull( arms, X ): returns the results, 0 or 1, of pulling </span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="co">                   the arms[i]-th bandit given an input context X[i].</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co">                   arms is an (n,) array of arms indices selected by the player</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="co">                   and X an (n, p) array of contexts observed by the player</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="co">                   before making a choice.</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="co">        </span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="co">        get_logits(X): returns the logits of all bandit arms for every context in</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="co">                   the (n, p) array X</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="co">                   </span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="co">        get_probs(X): returns sigmoid(get_logits(X))</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="co">        </span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="co">        get_selected_logits(arms, X): returns from get_logits(X) only the logits</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="co">                   corresponding to the selected arms</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="co">        </span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="co">        get_selected_probs(arms, X): returns sigmoid(get_selected_logits(arms, X))</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="co">        </span></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a><span class="co">        get_optimal_arm(X): returns the arm with the highest probability of success</span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a><span class="co">                   for every context in X</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a><span class="co">    """</span></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, arm_true_weights, arm_true_biases):</span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>._arm_true_weights <span class="op">=</span> tf.convert_to_tensor(</span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>              arm_true_weights,</span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>              dtype<span class="op">=</span>tf.float32,</span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>              name<span class="op">=</span><span class="st">'arm_true_weights'</span>)</span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>._arm_true_biases <span class="op">=</span> tf.convert_to_tensor(</span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>              arm_true_biases,</span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>              dtype<span class="op">=</span>tf.float32,</span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>              name<span class="op">=</span><span class="st">'arm_true_biases'</span>)</span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>._shape <span class="op">=</span> np.array(</span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>              <span class="va">self</span>._arm_true_weights.shape.as_list(),</span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>              dtype<span class="op">=</span>np.int32)</span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>._dtype <span class="op">=</span> tf.convert_to_tensor(</span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a>              arm_true_weights,</span>
+<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a>              dtype<span class="op">=</span>tf.float32).dtype.base_dtype</span>
+<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a>    <span class="at">@property</span></span>
+<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> dtype(<span class="va">self</span>):</span>
+<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span>._dtype</span>
+<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a>    <span class="at">@property</span></span>
+<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> shape(<span class="va">self</span>):</span>
+<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span>._shape</span>
+<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> get_logits(<span class="va">self</span>, X):</span>
+<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> tf.matmul(X, <span class="va">self</span>._arm_true_weights, transpose_b<span class="op">=</span><span class="va">True</span>) <span class="op">+</span> <span class="op">\</span></span>
+<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a>               <span class="va">self</span>._arm_true_biases</span>
+<span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> get_probs(<span class="va">self</span>, X):</span>
+<span id="cb1-60"><a href="#cb1-60" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> tf.math.sigmoid(<span class="va">self</span>.get_logits(X))</span>
+<span id="cb1-61"><a href="#cb1-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-62"><a href="#cb1-62" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> get_selected_logits(<span class="va">self</span>, arms, X):</span>
+<span id="cb1-63"><a href="#cb1-63" aria-hidden="true" tabindex="-1"></a>        all_logits <span class="op">=</span> <span class="va">self</span>.get_logits(X)</span>
+<span id="cb1-64"><a href="#cb1-64" aria-hidden="true" tabindex="-1"></a>        column_indices <span class="op">=</span> tf.convert_to_tensor(arms, dtype<span class="op">=</span>tf.int64)</span>
+<span id="cb1-65"><a href="#cb1-65" aria-hidden="true" tabindex="-1"></a>        row_indices <span class="op">=</span> tf.<span class="bu">range</span>(X.shape[<span class="dv">0</span>], dtype<span class="op">=</span>tf.int64)</span>
+<span id="cb1-66"><a href="#cb1-66" aria-hidden="true" tabindex="-1"></a>        full_indices <span class="op">=</span> tf.stack([row_indices, column_indices], axis<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb1-67"><a href="#cb1-67" aria-hidden="true" tabindex="-1"></a>        selected_logits <span class="op">=</span> tf.gather_nd(all_logits, full_indices)</span>
+<span id="cb1-68"><a href="#cb1-68" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> selected_logits</span>
+<span id="cb1-69"><a href="#cb1-69" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb1-70"><a href="#cb1-70" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> get_selected_probs(<span class="va">self</span>, arms, X):</span>
+<span id="cb1-71"><a href="#cb1-71" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> tf.math.sigmoid(<span class="va">self</span>.get_selected_logits(arms, X))</span>
+<span id="cb1-72"><a href="#cb1-72" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb1-73"><a href="#cb1-73" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> pull(<span class="va">self</span>, arms, X):</span>
+<span id="cb1-74"><a href="#cb1-74" aria-hidden="true" tabindex="-1"></a>        selected_logits <span class="op">=</span> <span class="va">self</span>.get_selected_logits(arms, X)</span>
+<span id="cb1-75"><a href="#cb1-75" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> tfd.Bernoulli(logits<span class="op">=</span>selected_logits).sample()</span>
+<span id="cb1-76"><a href="#cb1-76" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb1-77"><a href="#cb1-77" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> pull_all_arms(<span class="va">self</span>, X):</span>
+<span id="cb1-78"><a href="#cb1-78" aria-hidden="true" tabindex="-1"></a>        logits <span class="op">=</span> <span class="va">self</span>.get_logits(X)</span>
+<span id="cb1-79"><a href="#cb1-79" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> tfd.Bernoulli(logits<span class="op">=</span>logits).sample()</span>
+<span id="cb1-80"><a href="#cb1-80" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb1-81"><a href="#cb1-81" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> get_optimal_arm(<span class="va">self</span>, X):</span>
+<span id="cb1-82"><a href="#cb1-82" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> tf.argmax(</span>
+<span id="cb1-83"><a href="#cb1-83" aria-hidden="true" tabindex="-1"></a>            <span class="va">self</span>.get_logits(X),</span>
+<span id="cb1-84"><a href="#cb1-84" aria-hidden="true" tabindex="-1"></a>            axis<span class="op">=-</span><span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Here we work with a two-dimensional context drawn from two independent standard normal distributions, and we select true weights and biases that correspond to an overall probability of success of about 30% for each arm, a situation that might be encountered in a personalized medicine question.</p>
+<div class="cell" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>true_weights <span class="op">=</span> np.array([[<span class="fl">2.</span>, <span class="fl">0.</span>],[<span class="fl">0.</span>, <span class="fl">3.</span>]])</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>true_biases <span class="op">=</span> np.array([<span class="op">-</span><span class="fl">1.</span>, <span class="op">-</span><span class="fl">2.</span>])</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>N_ARMS <span class="op">=</span> true_weights.shape[<span class="dv">0</span>]</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>CONTEXT_DIM <span class="op">=</span> true_weights.shape[<span class="dv">1</span>]</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>bandit <span class="op">=</span> ContextualBandit(true_weights, true_biases)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>population <span class="op">=</span> tfd.Normal(loc<span class="op">=</span>tf.zeros(CONTEXT_DIM, dtype<span class="op">=</span>tf.float32),</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>                        scale<span class="op">=</span>tf.ones(CONTEXT_DIM, dtype<span class="op">=</span>tf.float32))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="4">
+<div class="cell-output cell-output-display">
+<p><img src="2021-02-09-Contextual_bandits_files/figure-html/cell-5-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+</section>
+<section id="thompson-sampling" class="level2">
+<h2 class="anchored" data-anchor-id="thompson-sampling">Thompson sampling</h2>
+<p>A Thompson sampler based on a logistic regression can be implemented as a generalization of the probabilistic machine learning model discussed in the <a href="https://ybarmaz.github.io/blog/bayesian%20modeling/variational%20inference/tensorflow-probability/2021/02/01/Variational-inference-with-tfp.html">previous post</a>. It is essentially a single dense variational layer with one unit per arm of the contextual bandit we want to solve. These units are fed into a Bernoulli distribution layer that simulates the pull of each arm.</p>
+<p>The parameters <span class="math inline">\(\theta\)</span> of the model are encoded in the <code>posterior_mean_field</code> used as a variational family for the dense variational layer, and when we fit the full model to data, it converges to an approximation of the true posterior <span class="math inline">\(P(\theta \vert \left\lbrace r_i, a_i, x_i\right\rbrace_{i})\)</span>.</p>
+<p>A subsequent call of that dense variational layer on a new input <span class="math inline">\(x\)</span> will return random logits drawn from the approximate posterior predictive distribution and can thus be used to implement Thompson sampling (see the <code>randomize</code> method in the code). The <span class="math inline">\(a^\ast = \mathrm{argmax}_a \ \mathbb{E}(r\vert \theta, a, x)\)</span> step is the selection of the unit with the highest logit.</p>
+<p>For training, the loss function is the negative log-likelihood of the observed outcome <span class="math inline">\(r_i\)</span>, but only for the unit corresponding to the selected action <span class="math inline">\(a_i\)</span>, so it is convenient to combine them into a unique output <span class="math inline">\(y_i=(a_i,r_i)\)</span> and write a custom loss function.</p>
+<div class="cell" data-execution_count="5">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ThompsonLogistic(tf.keras.Model):</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co">    This class represents a Thompson sampler for a Bayesian logistic regression</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co">    model.</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co">    </span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="co">    It is essentially a keras Model of a single layer Bayesian neural network</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co">    with Bernoulli output enriched with a Thompson randomization method that</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co">    calls only the dense variational layer.</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co">    </span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="co">    Parameters:</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="co">        - context_dim: dimension of the context</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="co">        - n_arms: number of arms of the multi-arm bandit under investigation</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="co">        - sample_size: size of the current training set of outcome observations,</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="co">                       used to scale the kl_weight of the dense variational layer</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="co">    </span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="co">    Methods:</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="co">        - randomize(inputs): returns a logit for each arm drawn from the (approximate)</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="co">            posterior predictive distribution</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a><span class="co">        - get_weights_stats(): returns means and sttdevs of the surrogate posterior</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a><span class="co">            of the model parameters</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a><span class="co">        - predict_probs(X, sample_size): returns the posterior probability of success</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a><span class="co">            for each context in the array X and each arm of the bandit, sample_size specifies</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a><span class="co">            the sample size of the Monte Carlo estimate</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a><span class="co">        - assign_best_mc(X, sample_size): returns the arms with the highest</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a><span class="co">                                          predict_probs(X, sample_size)</span></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a><span class="co">        - assign_best(X): returns the arms with the highest expected logit, should</span></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a><span class="co">            be very similar to assign_best_mc, a little bit less accurate</span></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a><span class="co">    """</span></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, context_dim, n_arms, sample_size):</span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>        <span class="bu">super</span>().<span class="fu">__init__</span>()</span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.context_dim <span class="op">=</span> context_dim</span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.n_arms <span class="op">=</span> n_arms</span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.densevar <span class="op">=</span> tfp.layers.DenseVariational(n_arms, posterior_mean_field, prior_ridge, kl_weight<span class="op">=</span><span class="dv">1</span><span class="op">/</span>sample_size)</span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.bernoullihead <span class="op">=</span> tfp.layers.DistributionLambda(<span class="kw">lambda</span> t: tfd.Bernoulli(logits<span class="op">=</span>t))</span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> call(<span class="va">self</span>, inputs):</span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>        x <span class="op">=</span> <span class="va">self</span>.densevar(inputs)</span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span>.bernoullihead(x)</span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> randomize(<span class="va">self</span>, inputs):</span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span>.densevar(inputs)</span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> get_weights_stats(<span class="va">self</span>):</span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>        n_params <span class="op">=</span> <span class="va">self</span>.n_arms <span class="op">*</span> (<span class="va">self</span>.context_dim <span class="op">+</span> <span class="dv">1</span>)</span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a>        c <span class="op">=</span> np.log(np.expm1(<span class="fl">1.</span>))</span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>        weights <span class="op">=</span> <span class="va">self</span>.densevar.weights[<span class="dv">0</span>]</span>
+<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a>        means <span class="op">=</span> weights[:n_params].numpy().reshape(<span class="va">self</span>.context_dim <span class="op">+</span> <span class="dv">1</span>, <span class="va">self</span>.n_arms)</span>
+<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a>        stddevs <span class="op">=</span> (<span class="fl">1e-5</span> <span class="op">+</span> tf.nn.softplus(c <span class="op">+</span> weights[n_params:])).numpy().reshape(<span class="va">self</span>.context_dim <span class="op">+</span> <span class="dv">1</span>, <span class="va">self</span>.n_arms)</span>
+<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a>        mean_weights <span class="op">=</span> means[:<span class="op">-</span><span class="dv">1</span>]</span>
+<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a>        mean_biases <span class="op">=</span> means[<span class="op">-</span><span class="dv">1</span>]</span>
+<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a>        std_weights <span class="op">=</span> stddevs[:<span class="op">-</span><span class="dv">1</span>]</span>
+<span id="cb3-56"><a href="#cb3-56" aria-hidden="true" tabindex="-1"></a>        std_biases <span class="op">=</span> stddevs[<span class="op">-</span><span class="dv">1</span>]</span>
+<span id="cb3-57"><a href="#cb3-57" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> mean_weights, mean_biases, std_weights, std_biases</span>
+<span id="cb3-58"><a href="#cb3-58" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb3-59"><a href="#cb3-59" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> assign_best(<span class="va">self</span>, X):</span>
+<span id="cb3-60"><a href="#cb3-60" aria-hidden="true" tabindex="-1"></a>        mean_weights, mean_biases, std_weights, std_biases <span class="op">=</span> <span class="va">self</span>.get_weights_stats()</span>
+<span id="cb3-61"><a href="#cb3-61" aria-hidden="true" tabindex="-1"></a>        logits <span class="op">=</span> tf.matmul(X, mean_weights) <span class="op">+</span> mean_biases</span>
+<span id="cb3-62"><a href="#cb3-62" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> tf.argmax(logits, axis<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb3-63"><a href="#cb3-63" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb3-64"><a href="#cb3-64" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> predict_probs(<span class="va">self</span>, X, sample_size<span class="op">=</span><span class="dv">100</span>):</span>
+<span id="cb3-65"><a href="#cb3-65" aria-hidden="true" tabindex="-1"></a>        mean_weights, mean_biases, std_weights, std_biases <span class="op">=</span> <span class="va">self</span>.get_weights_stats()</span>
+<span id="cb3-66"><a href="#cb3-66" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb3-67"><a href="#cb3-67" aria-hidden="true" tabindex="-1"></a>        weights <span class="op">=</span> tfd.Normal(loc<span class="op">=</span>mean_weights, scale<span class="op">=</span>std_weights).sample(sample_size)</span>
+<span id="cb3-68"><a href="#cb3-68" aria-hidden="true" tabindex="-1"></a>        biases <span class="op">=</span> tfd.Normal(loc<span class="op">=</span>mean_biases, scale<span class="op">=</span>std_biases).sample(sample_size)</span>
+<span id="cb3-69"><a href="#cb3-69" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb3-70"><a href="#cb3-70" aria-hidden="true" tabindex="-1"></a>        probs <span class="op">=</span> tf.math.sigmoid(tf.matmul(X, weights)<span class="op">+</span>biases[:,tf.newaxis,:])</span>
+<span id="cb3-71"><a href="#cb3-71" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> tf.reduce_mean(probs, axis<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb3-72"><a href="#cb3-72" aria-hidden="true" tabindex="-1"></a>              </span>
+<span id="cb3-73"><a href="#cb3-73" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> assign_best_mc(<span class="va">self</span>, X, sample_size<span class="op">=</span><span class="dv">100</span>):</span>
+<span id="cb3-74"><a href="#cb3-74" aria-hidden="true" tabindex="-1"></a>        probs <span class="op">=</span> <span class="va">self</span>.predict_probs(X, sample_size)</span>
+<span id="cb3-75"><a href="#cb3-75" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> tf.argmax(probs, axis<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb3-76"><a href="#cb3-76" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb3-77"><a href="#cb3-77" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-78"><a href="#cb3-78" aria-hidden="true" tabindex="-1"></a><span class="co"># Specify the surrogate posterior over `keras.layers.Dense` `kernel` and `bias`.</span></span>
+<span id="cb3-79"><a href="#cb3-79" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> posterior_mean_field(kernel_size, bias_size<span class="op">=</span><span class="dv">0</span>, dtype<span class="op">=</span><span class="va">None</span>):</span>
+<span id="cb3-80"><a href="#cb3-80" aria-hidden="true" tabindex="-1"></a>    n <span class="op">=</span> kernel_size <span class="op">+</span> bias_size</span>
+<span id="cb3-81"><a href="#cb3-81" aria-hidden="true" tabindex="-1"></a>    c <span class="op">=</span> np.log(np.expm1(<span class="fl">1.</span>))</span>
+<span id="cb3-82"><a href="#cb3-82" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> tf.keras.Sequential([</span>
+<span id="cb3-83"><a href="#cb3-83" aria-hidden="true" tabindex="-1"></a>        tfp.layers.VariableLayer(<span class="dv">2</span> <span class="op">*</span> n,</span>
+<span id="cb3-84"><a href="#cb3-84" aria-hidden="true" tabindex="-1"></a>                                 initializer<span class="op">=</span>tfp.layers.BlockwiseInitializer([</span>
+<span id="cb3-85"><a href="#cb3-85" aria-hidden="true" tabindex="-1"></a>                                     <span class="st">'zeros'</span>,</span>
+<span id="cb3-86"><a href="#cb3-86" aria-hidden="true" tabindex="-1"></a>                                     tf.keras.initializers.Constant(np.log(np.expm1(<span class="fl">.7</span>))),</span>
+<span id="cb3-87"><a href="#cb3-87" aria-hidden="true" tabindex="-1"></a>                                 ], sizes<span class="op">=</span>[n, n]),</span>
+<span id="cb3-88"><a href="#cb3-88" aria-hidden="true" tabindex="-1"></a>                                 dtype<span class="op">=</span>dtype),</span>
+<span id="cb3-89"><a href="#cb3-89" aria-hidden="true" tabindex="-1"></a>        tfp.layers.DistributionLambda(<span class="kw">lambda</span> t: tfd.Independent(</span>
+<span id="cb3-90"><a href="#cb3-90" aria-hidden="true" tabindex="-1"></a>            tfd.Normal(loc<span class="op">=</span>t[..., :n],</span>
+<span id="cb3-91"><a href="#cb3-91" aria-hidden="true" tabindex="-1"></a>                       scale<span class="op">=</span><span class="fl">1e-5</span> <span class="op">+</span> tf.nn.softplus(c <span class="op">+</span> t[..., n:])),</span>
+<span id="cb3-92"><a href="#cb3-92" aria-hidden="true" tabindex="-1"></a>            reinterpreted_batch_ndims<span class="op">=</span><span class="dv">1</span>)),</span>
+<span id="cb3-93"><a href="#cb3-93" aria-hidden="true" tabindex="-1"></a>    ])</span>
+<span id="cb3-94"><a href="#cb3-94" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-95"><a href="#cb3-95" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-96"><a href="#cb3-96" aria-hidden="true" tabindex="-1"></a><span class="co"># Specify the prior over `keras.layers.Dense` `kernel` and `bias`.</span></span>
+<span id="cb3-97"><a href="#cb3-97" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> prior_ridge(kernel_size, bias_size, dtype<span class="op">=</span><span class="va">None</span>):</span>
+<span id="cb3-98"><a href="#cb3-98" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">lambda</span> _: tfd.Independent(</span>
+<span id="cb3-99"><a href="#cb3-99" aria-hidden="true" tabindex="-1"></a>        tfd.Normal(loc<span class="op">=</span>tf.zeros(kernel_size <span class="op">+</span> bias_size),</span>
+<span id="cb3-100"><a href="#cb3-100" aria-hidden="true" tabindex="-1"></a>                   scale<span class="op">=</span>tf.concat([<span class="dv">2</span><span class="op">*</span>tf.ones(kernel_size),</span>
+<span id="cb3-101"><a href="#cb3-101" aria-hidden="true" tabindex="-1"></a>                                    <span class="dv">4</span><span class="op">*</span>tf.ones(bias_size)],</span>
+<span id="cb3-102"><a href="#cb3-102" aria-hidden="true" tabindex="-1"></a>                                   axis<span class="op">=</span><span class="dv">0</span>)),</span>
+<span id="cb3-103"><a href="#cb3-103" aria-hidden="true" tabindex="-1"></a>        reinterpreted_batch_ndims<span class="op">=</span><span class="dv">1</span></span>
+<span id="cb3-104"><a href="#cb3-104" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb3-105"><a href="#cb3-105" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-106"><a href="#cb3-106" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb3-107"><a href="#cb3-107" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> build_model(context_dim, n_arms, sample_size, learning_rate<span class="op">=</span><span class="fl">0.01</span>):</span>
+<span id="cb3-108"><a href="#cb3-108" aria-hidden="true" tabindex="-1"></a>    model <span class="op">=</span> ThompsonLogistic(context_dim, n_arms, sample_size)</span>
+<span id="cb3-109"><a href="#cb3-109" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb3-110"><a href="#cb3-110" aria-hidden="true" tabindex="-1"></a>    <span class="co"># the loss function is the negloglik of the outcome y[:,1] and the head corresponding</span></span>
+<span id="cb3-111"><a href="#cb3-111" aria-hidden="true" tabindex="-1"></a>    <span class="co"># to the arm assignment y[:,0] is selected with a one-hot mask</span></span>
+<span id="cb3-112"><a href="#cb3-112" aria-hidden="true" tabindex="-1"></a>    loss_fn <span class="op">=</span> <span class="kw">lambda</span> y, rv_y: tf.reduce_sum(<span class="op">-</span>rv_y.log_prob(y[:,<span class="dv">1</span>, tf.newaxis]) <span class="op">*</span> tf.one_hot(y[:,<span class="dv">0</span>], n_arms), axis<span class="op">=-</span><span class="dv">1</span>)</span>
+<span id="cb3-113"><a href="#cb3-113" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb3-114"><a href="#cb3-114" aria-hidden="true" tabindex="-1"></a>    model.<span class="bu">compile</span>(optimizer<span class="op">=</span>tf.optimizers.Adam(learning_rate<span class="op">=</span>learning_rate), loss<span class="op">=</span>loss_fn)</span>
+<span id="cb3-115"><a href="#cb3-115" aria-hidden="true" tabindex="-1"></a>    model.build(input_shape<span class="op">=</span>(<span class="va">None</span>, context_dim))</span>
+<span id="cb3-116"><a href="#cb3-116" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> model</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section>
+<section id="learning-strategy" class="level2">
+<h2 class="anchored" data-anchor-id="learning-strategy">Learning strategy</h2>
+<p>In the learning phase of the model, at each step a new context <span class="math inline">\(x_i\)</span> is observed (or drawn from the population), an action <span class="math inline">\(a_i\)</span> is chosen, a reward <span class="math inline">\(r_i\)</span> is observed (or simulated with <code>bandit.pull</code>), and the model is updated.</p>
+<div class="cell" data-execution_count="7">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> BayesianStrategy(<span class="bu">object</span>):</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co">    Implements an online, learning strategy to solve</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co">    the contextual multi-armed bandit problem.</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co">    </span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co">    parameters:</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co">      bandit: an instance of the ContextualBandit class</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="co">    </span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="co">    methods:</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="co">      thompson_randomize(X): draws logits from the posterior distribution and</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="co">                             returns the arms with the highest values</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="co">      </span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="co">      _update_step(X, y): updates the model with the new observations</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="co">      </span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="co">      one_trial(n, population): samples n elements from population, selects</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="co">                             an arm for each of them through Thompson sampling,</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="co">                             pulls it, updates the model</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="co">      </span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a><span class="co">      train_on_data(X_train, all_outcomes_train): implements Thompson sampling</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a><span class="co">                             on pre-sampled data where an omnicient being has</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a><span class="co">                             pulled all the arms. The reason is to compare with</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a><span class="co">                             standard Bayesian inference on the same data</span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a><span class="co">                            </span></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a><span class="co">      evaluate_training_decisions: returns statistics about action selection</span></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a><span class="co">                             during training</span></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a><span class="co">    """</span></span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, bandit):</span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.bandit <span class="op">=</span> bandit</span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.context_dim <span class="op">=</span> bandit.shape[<span class="dv">1</span>]</span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.n_arms <span class="op">=</span> bandit.shape[<span class="dv">0</span>]</span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>        dtype <span class="op">=</span> tf.float32</span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.X <span class="op">=</span> tf.cast(tf.reshape((), (<span class="dv">0</span>, <span class="va">self</span>.context_dim)), tf.float32)</span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.y <span class="op">=</span> tf.cast(tf.reshape((), (<span class="dv">0</span>, <span class="dv">2</span>)), tf.int32)</span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.model <span class="op">=</span> build_model(<span class="va">self</span>.context_dim, <span class="va">self</span>.n_arms, <span class="dv">1</span>, learning_rate<span class="op">=</span><span class="fl">0.008</span>)</span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.loss <span class="op">=</span> []</span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.weights <span class="op">=</span> []</span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a>      </span>
+<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> thompson_randomize(<span class="va">self</span>, X):</span>
+<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> tf.argmax(<span class="va">self</span>.model.randomize(X), axis<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> _update_step(<span class="va">self</span>, X, y, epochs<span class="op">=</span><span class="dv">10</span>):</span>
+<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.X <span class="op">=</span> tf.concat([<span class="va">self</span>.X, X], axis<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.y <span class="op">=</span> tf.concat([<span class="va">self</span>.y, y], axis<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb4-47"><a href="#cb4-47" aria-hidden="true" tabindex="-1"></a>        weights <span class="op">=</span> <span class="va">self</span>.model.get_weights()</span>
+<span id="cb4-48"><a href="#cb4-48" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.model <span class="op">=</span> build_model(<span class="va">self</span>.context_dim, <span class="va">self</span>.n_arms, <span class="va">self</span>.X.shape[<span class="dv">0</span>], learning_rate<span class="op">=</span><span class="fl">0.008</span>)</span>
+<span id="cb4-49"><a href="#cb4-49" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.model.set_weights(weights)</span>
+<span id="cb4-50"><a href="#cb4-50" aria-hidden="true" tabindex="-1"></a>        hist <span class="op">=</span> <span class="va">self</span>.model.fit(<span class="va">self</span>.X, <span class="va">self</span>.y, verbose<span class="op">=</span><span class="va">False</span>, epochs<span class="op">=</span>epochs)</span>
+<span id="cb4-51"><a href="#cb4-51" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.loss.append(hist.history[<span class="st">'loss'</span>])</span>
+<span id="cb4-52"><a href="#cb4-52" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.weights.append(<span class="va">self</span>.model.get_weights_stats())</span>
+<span id="cb4-53"><a href="#cb4-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-54"><a href="#cb4-54" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb4-55"><a href="#cb4-55" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> one_trial(<span class="va">self</span>, n, population, epochs<span class="op">=</span><span class="dv">10</span>):</span>
+<span id="cb4-56"><a href="#cb4-56" aria-hidden="true" tabindex="-1"></a>        X <span class="op">=</span> population.sample(n)</span>
+<span id="cb4-57"><a href="#cb4-57" aria-hidden="true" tabindex="-1"></a>        selected_arms <span class="op">=</span> <span class="va">self</span>.thompson_randomize(X)</span>
+<span id="cb4-58"><a href="#cb4-58" aria-hidden="true" tabindex="-1"></a>        outcomes <span class="op">=</span> <span class="va">self</span>.bandit.pull(selected_arms, X)</span>
+<span id="cb4-59"><a href="#cb4-59" aria-hidden="true" tabindex="-1"></a>        y <span class="op">=</span> tf.concat([tf.cast(selected_arms[:,tf.newaxis], tf.int32), outcomes[:,tf.newaxis]], axis<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb4-60"><a href="#cb4-60" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>._update_step(X, y, epochs)</span>
+<span id="cb4-61"><a href="#cb4-61" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb4-62"><a href="#cb4-62" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb4-63"><a href="#cb4-63" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> train_on_data_step(<span class="va">self</span>, X, all_outcomes, epochs):</span>
+<span id="cb4-64"><a href="#cb4-64" aria-hidden="true" tabindex="-1"></a>        selected_arms <span class="op">=</span> <span class="va">self</span>.thompson_randomize(X)</span>
+<span id="cb4-65"><a href="#cb4-65" aria-hidden="true" tabindex="-1"></a>        column_indices <span class="op">=</span> tf.convert_to_tensor(selected_arms, dtype<span class="op">=</span>tf.int64)</span>
+<span id="cb4-66"><a href="#cb4-66" aria-hidden="true" tabindex="-1"></a>        row_indices <span class="op">=</span> tf.<span class="bu">range</span>(X.shape[<span class="dv">0</span>], dtype<span class="op">=</span>tf.int64)</span>
+<span id="cb4-67"><a href="#cb4-67" aria-hidden="true" tabindex="-1"></a>        full_indices <span class="op">=</span> tf.stack([row_indices, column_indices], axis<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb4-68"><a href="#cb4-68" aria-hidden="true" tabindex="-1"></a>        outcomes <span class="op">=</span> tf.gather_nd(all_outcomes, full_indices)</span>
+<span id="cb4-69"><a href="#cb4-69" aria-hidden="true" tabindex="-1"></a>        y <span class="op">=</span> tf.concat([tf.cast(selected_arms[:,tf.newaxis], tf.int32), outcomes[:,tf.newaxis]], axis<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb4-70"><a href="#cb4-70" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>._update_step(X, y, epochs)</span>
+<span id="cb4-71"><a href="#cb4-71" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb4-72"><a href="#cb4-72" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb4-73"><a href="#cb4-73" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> train_on_data(<span class="va">self</span>, X_train, all_outcomes_train, batch_size<span class="op">=</span><span class="dv">1</span>, epochs<span class="op">=</span><span class="dv">10</span>):</span>
+<span id="cb4-74"><a href="#cb4-74" aria-hidden="true" tabindex="-1"></a>        n_train <span class="op">=</span> X_train.shape[<span class="dv">0</span>]</span>
+<span id="cb4-75"><a href="#cb4-75" aria-hidden="true" tabindex="-1"></a>        ds <span class="op">=</span> tf.data.Dataset.from_tensor_slices((X_train, all_outcomes_train)).batch(batch_size)</span>
+<span id="cb4-76"><a href="#cb4-76" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> (X, all_outcomes) <span class="kw">in</span> ds:</span>
+<span id="cb4-77"><a href="#cb4-77" aria-hidden="true" tabindex="-1"></a>            <span class="va">self</span>.train_on_data_step(X, all_outcomes, epochs)</span>
+<span id="cb4-78"><a href="#cb4-78" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb4-79"><a href="#cb4-79" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb4-80"><a href="#cb4-80" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> train_on_data_standard(<span class="va">self</span>, X_train, all_outcomes_train, epochs<span class="op">=</span><span class="dv">1000</span>):</span>
+<span id="cb4-81"><a href="#cb4-81" aria-hidden="true" tabindex="-1"></a>        n_train <span class="op">=</span> X_train.shape[<span class="dv">0</span>]</span>
+<span id="cb4-82"><a href="#cb4-82" aria-hidden="true" tabindex="-1"></a>        n_zeros <span class="op">=</span> n_train<span class="op">//</span><span class="dv">2</span></span>
+<span id="cb4-83"><a href="#cb4-83" aria-hidden="true" tabindex="-1"></a>        n_ones <span class="op">=</span> n_train <span class="op">-</span> n_zeros</span>
+<span id="cb4-84"><a href="#cb4-84" aria-hidden="true" tabindex="-1"></a>        selected_arms <span class="op">=</span> tf.cast(tf.math.floormod(tf.<span class="bu">range</span>(n_train), <span class="dv">2</span>), tf.int64)</span>
+<span id="cb4-85"><a href="#cb4-85" aria-hidden="true" tabindex="-1"></a>        column_indices <span class="op">=</span> tf.convert_to_tensor(selected_arms, dtype<span class="op">=</span>tf.int64)</span>
+<span id="cb4-86"><a href="#cb4-86" aria-hidden="true" tabindex="-1"></a>        row_indices <span class="op">=</span> tf.<span class="bu">range</span>(n_train, dtype<span class="op">=</span>tf.int64)</span>
+<span id="cb4-87"><a href="#cb4-87" aria-hidden="true" tabindex="-1"></a>        full_indices <span class="op">=</span> tf.stack([row_indices, column_indices], axis<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb4-88"><a href="#cb4-88" aria-hidden="true" tabindex="-1"></a>        outcomes_train <span class="op">=</span> tf.gather_nd(all_outcomes_train, full_indices)</span>
+<span id="cb4-89"><a href="#cb4-89" aria-hidden="true" tabindex="-1"></a>        y_train <span class="op">=</span> tf.concat([tf.cast(selected_arms[:,tf.newaxis], tf.int32), outcomes_train[:,tf.newaxis]], axis<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb4-90"><a href="#cb4-90" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>._update_step(X_train, y_train, epochs)</span>
+<span id="cb4-91"><a href="#cb4-91" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb4-92"><a href="#cb4-92" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb4-93"><a href="#cb4-93" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> evaluate_training_decisions(<span class="va">self</span>):</span>
+<span id="cb4-94"><a href="#cb4-94" aria-hidden="true" tabindex="-1"></a>        best_arm_proportion <span class="op">=</span> tf.reduce_mean(tf.cast(</span>
+<span id="cb4-95"><a href="#cb4-95" aria-hidden="true" tabindex="-1"></a>            tf.cast(<span class="va">self</span>.y[:,<span class="dv">0</span>], tf.int64)<span class="op">==</span><span class="va">self</span>.bandit.get_optimal_arm(<span class="va">self</span>.X), tf.float32)).numpy()</span>
+<span id="cb4-96"><a href="#cb4-96" aria-hidden="true" tabindex="-1"></a>        success_rate <span class="op">=</span> <span class="va">self</span>.y[:,<span class="dv">1</span>].numpy().<span class="bu">sum</span>()<span class="op">/</span><span class="va">self</span>.y.shape[<span class="dv">0</span>]</span>
+<span id="cb4-97"><a href="#cb4-97" aria-hidden="true" tabindex="-1"></a>        prob_of_success <span class="op">=</span> tf.reduce_mean(<span class="va">self</span>.bandit.get_selected_probs(tf.cast(<span class="va">self</span>.y[:,<span class="dv">0</span>], tf.int64), <span class="va">self</span>.X), axis<span class="op">=</span><span class="dv">0</span>).numpy()</span>
+<span id="cb4-98"><a href="#cb4-98" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> {<span class="st">'training_best_arm_proportion'</span>: best_arm_proportion,</span>
+<span id="cb4-99"><a href="#cb4-99" aria-hidden="true" tabindex="-1"></a>                <span class="st">'training_success_rate'</span>: success_rate,</span>
+<span id="cb4-100"><a href="#cb4-100" aria-hidden="true" tabindex="-1"></a>                <span class="st">'training_prob_of_success'</span>: prob_of_success</span>
+<span id="cb4-101"><a href="#cb4-101" aria-hidden="true" tabindex="-1"></a>               }</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>After 60 to 80 iterations, the surrogate posteriors seem to have converged to distributions that are compatible with the true values of the parameters.</p>
+<div class="cell" data-execution_count="9">
+<div class="cell-output cell-output-display">
+<p><img src="2021-02-09-Contextual_bandits_files/figure-html/cell-10-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<p>For comparison, we can train models on the same sample that has been assigned purely randomly to each arm.</p>
+<div class="cell" data-execution_count="10">
+<div class="cell-output cell-output-display">
+<p><img src="2021-02-09-Contextual_bandits_files/figure-html/cell-11-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<p>The surrogate posterior distributions look similar to the ones obtained from Thompson sampling, and the predictive performance on a test set are comparable. In the following table, “best_arm_selection_rate” describes how frequently the best action is selected for contexts in the test set according to the predictions of the two models, and “model_prob_of_success” is the average of the true probabilities of success for the actions selected by the model. For reference, “arms_probs_of_success” shows the average of the true probabilities of success for each action in the case it is always picked. The benefit of Thompson sampling is revealed in the predictive performance during training. In the same table, “training_best_arm_proportion” indicates how often the best action is selected during training (as expected, roughly half the time for standard randomization), “training_success_rate” the observed success rate during training and “training_prob_of_success” the average probability of success following the assignment decisions made during training.</p>
+<div class="cell" data-execution_count="11">
+<div class="cell-output cell-output-display" data-execution_count="11">
+
+<div>
+
+<table class="dataframe table table-sm table-striped">
+  <thead>
+    <tr>
+      <th></th>
+      <th>Thompson randomization</th>
+      <th>Standard randomization</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>training_best_arm_proportion</th>
+      <td>0.775</td>
+      <td>0.5875</td>
+    </tr>
+    <tr>
+      <th>training_success_rate</th>
+      <td>0.4375</td>
+      <td>0.375</td>
+    </tr>
+    <tr>
+      <th>training_prob_of_success</th>
+      <td>0.448006</td>
+      <td>0.357196</td>
+    </tr>
+    <tr>
+      <th>best_arm_selection_rate</th>
+      <td>0.9228</td>
+      <td>0.9126</td>
+    </tr>
+    <tr>
+      <th>model_prob_of_success</th>
+      <td>0.48482</td>
+      <td>0.484251</td>
+    </tr>
+    <tr>
+      <th>arms_probs_of_success</th>
+      <td>[0.35353488, 0.27571228]</td>
+      <td>[0.35353488, 0.27571228]</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+</div>
+<p>In terms of reward, it is clear that training a model with Thompson randomization costs less than with standard randomization, and the inferred arm selection policy after training is very similar. In a clinical trial, that would translate into more enrolled subjects getting the best therapy according to their biomarkers.</p>
+</section>
+<section id="tougher-bandits" class="level2">
+<h2 class="anchored" data-anchor-id="tougher-bandits">Tougher bandits</h2>
+<p>The simple model presented in this note can be expanded in several directions. We can obviously consider more arms and contexts of higher dimensions. In that case, incorporating expert knowledge in the form of more informative priors or more complex surrogate posteriors can be useful. We can also include past observations to achieve faster convergence, and tamper them with lower weights if they are less relevant than the data sampled from the bandits during training. This type of jump start is particularly relevant in fields like online advertising where lower overall probabilities require more observations.</p>
+<p>More complex mechanisms could be modeled with deeper Bayesian neural networks. The important requirement is a layer that can implement Thompson sampling. Moreover, the <code>DistributionLambda</code> top layer is not limited to Bernoulli distributions, and a wide variety of reward distributions can be easily simulated. It is probably reasonable to start with a single <code>DenseVariational</code> layer with adequate priors and variational surrogate posteriors with a top <code>DistributionLambda</code> layer compatible with the rewards, and then try to add layers to improve performance. As in most machine learning problems, the key is experimentation.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    setTimeout(function() {
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const cites = ref.parentNode.getAttribute('data-cites').split(' ');
+    tippyHover(ref, function() {
+      var popup = window.document.createElement('div');
+      cites.forEach(function(cite) {
+        var citeDiv = window.document.createElement('div');
+        citeDiv.classList.add('hanging-indent');
+        citeDiv.classList.add('csl-entry');
+        var biblioDiv = window.document.getElementById('ref-' + cite);
+        if (biblioDiv) {
+          citeDiv.innerHTML = biblioDiv.innerHTML;
+        }
+        popup.appendChild(citeDiv);
+      });
+      return popup.innerHTML;
+    });
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>
