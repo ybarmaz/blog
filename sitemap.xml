@@ -2,38 +2,42 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://ybarmaz.github.io/blog/posts/2021-02-09-contextual_bandits.html</loc>
-    <lastmod>2022-10-02T09:30:55.189Z</lastmod>
+    <lastmod>2022-11-06T17:23:16.299Z</lastmod>
   </url>
   <url>
     <loc>https://ybarmaz.github.io/blog/posts/2021-12-04-hamiltonian-mechanics-with-jax.html</loc>
-    <lastmod>2022-10-02T09:30:55.749Z</lastmod>
+    <lastmod>2022-11-06T17:23:16.771Z</lastmod>
   </url>
   <url>
     <loc>https://ybarmaz.github.io/blog/posts/2021-01-13-anomaly-detection-in-protocol-deviations.html</loc>
-    <lastmod>2022-10-02T09:30:56.281Z</lastmod>
+    <lastmod>2022-11-06T17:23:17.324Z</lastmod>
   </url>
   <url>
     <loc>https://ybarmaz.github.io/blog/posts/2021-02-01-variational-inference-with-tfp.html</loc>
-    <lastmod>2022-10-02T09:30:56.896Z</lastmod>
+    <lastmod>2022-11-06T17:23:17.920Z</lastmod>
   </url>
   <url>
     <loc>https://ybarmaz.github.io/blog/posts/2021-06-05-gaussian-random-walks-with-tfp.html</loc>
-    <lastmod>2022-10-02T09:30:57.301Z</lastmod>
+    <lastmod>2022-11-06T17:23:18.359Z</lastmod>
   </url>
   <url>
     <loc>https://ybarmaz.github.io/blog/posts/2021-01-08-probabilistic assessment-of-safety-underreporting.html</loc>
-    <lastmod>2022-10-02T09:30:57.799Z</lastmod>
+    <lastmod>2022-11-06T17:23:18.838Z</lastmod>
   </url>
   <url>
     <loc>https://ybarmaz.github.io/blog/posts/2022-02-23-bayesian-poisson-factorization.html</loc>
-    <lastmod>2022-10-02T09:30:58.254Z</lastmod>
+    <lastmod>2022-11-06T17:23:19.280Z</lastmod>
+  </url>
+  <url>
+    <loc>https://ybarmaz.github.io/blog/posts/2022-11-05-Cleaning-Strava-data-with-Kalman-filters.html</loc>
+    <lastmod>2022-11-06T17:23:19.761Z</lastmod>
   </url>
   <url>
     <loc>https://ybarmaz.github.io/blog/index.html</loc>
-    <lastmod>2022-10-02T09:30:58.699Z</lastmod>
+    <lastmod>2022-11-06T17:23:20.213Z</lastmod>
   </url>
   <url>
     <loc>https://ybarmaz.github.io/blog/about.html</loc>
-    <lastmod>2022-10-02T09:30:59.040Z</lastmod>
+    <lastmod>2022-11-06T17:23:20.523Z</lastmod>
   </url>
 </urlset>

@@ -2,6 +2,7 @@
   {
     "listing": "/index.html",
     "items": [
+      "/posts/2022-11-05-Cleaning-Strava-data-with-Kalman-filters.html",
       "/posts/2022-02-23-bayesian-poisson-factorization.html",
       "/posts/2021-12-04-hamiltonian-mechanics-with-jax.html",
       "/posts/2021-06-05-gaussian-random-walks-with-tfp.html",
