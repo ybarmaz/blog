@@ -220,14 +220,14 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p>Like many cyclists and mountain bikers, I record and share my rides with <a href="https://strava.com/">Strava</a>. When I use my electric mountain bike, I normally export the relevant data to Strava from the <a href="https://www.bosch-ebike.com/en/products/ebike-flow-app">Bosch eBike Flow app</a> that controls and monitors the performance of the motor and gets geolocation data from the mobile phone. I noticed that this data is sometimes affected by measurement errors that look like weird spikes on my routes. This is visible on this screenshot of a ride I did in Morgins last summer.</p>
 <div class="cell" data-execution_count="1">
 <div class="cell-output cell-output-display" data-execution_count="1">
-<p><img src="2022-11-05-Cleaning-Strava-data-with-Kalman-filters_files/figure-html/cell-2-output-1.jpeg" class="img-fluid"></p>
+<p><img src="2022-11-05-Cleaning-Strava-data-with-Kalman-smoothers_files/figure-html/cell-2-output-1.jpeg" class="img-fluid"></p>
 </div>
 </div>
 <p>To the data scientist in me who likes to correlate how much he rides week on week with the amount of ice cream he eats, this is frustrating because these errors are reflected in the total distances and elevation gains.</p>
 <p>According to my satellite navigation guru friend Yannick, this can happen when the signal from a satellite bounces on cliffs before reaching the receiver, and I assume that the processing software puts strong priors on roads and trails that lead to funky corrections. For instance, the border crossing of Pas de Morgins seems to attract quite a lot of points from the nearby hillside.</p>
 <div class="cell" data-execution_count="2">
 <div class="cell-output cell-output-display" data-execution_count="2">
-<p><img src="2022-11-05-Cleaning-Strava-data-with-Kalman-filters_files/figure-html/cell-3-output-1.jpeg" class="img-fluid"></p>
+<p><img src="2022-11-05-Cleaning-Strava-data-with-Kalman-smoothers_files/figure-html/cell-3-output-1.jpeg" class="img-fluid"></p>
 </div>
 </div>
 <p>Measurement errors can be somewhat corrected with signal processing techniques, but first we need to get the data. Strava allows you to export gpx files of your rides, which can be read with the <a href="https://pypi.org/project/gpxpy/">gpxpy</a> library. The result is a time series of latitude, longitude and elevation measurements collected every second (except when the motor automatically turns off when I spend too much time eating snacks or petting cows and alpacas), and as a preprocessing step we can normalize them.</p>
@@ -466,13 +466,13 @@ z_{t+1} \vert z_t \sim \mathcal{N} \left( (\mathbf{s}_t + \mathbf{v}_t, \mathbf{
 <p>If we overlap the observed time series of normalized geographic coordinates with the filtered ones, it appears that the solid blocks on the observed values that correspond to the back and forth patterns do get corrected by the Kalman smoothing with masked repeated values.</p>
 <div class="cell" data-execution_count="7">
 <div class="cell-output cell-output-display">
-<p><img src="2022-11-05-Cleaning-Strava-data-with-Kalman-filters_files/figure-html/cell-8-output-1.png" class="img-fluid"></p>
+<p><img src="2022-11-05-Cleaning-Strava-data-with-Kalman-smoothers_files/figure-html/cell-8-output-1.png" class="img-fluid"></p>
 </div>
 </div>
 <p>The spikes caused by isolated errors are a bit attenuated by the filter, provided the observation noise scale parameter is large enough. If it is too small, extreme points are interpreted as legitimate measurements because they are unlikely to be observation errors under the model specifications. But too large a scale parameter blurs out the inferred trajectory as it cannot resolve the trail geometry.</p>
 <div class="cell" data-execution_count="8">
 <div class="cell-output cell-output-display">
-<p><img src="2022-11-05-Cleaning-Strava-data-with-Kalman-filters_files/figure-html/cell-9-output-1.png" class="img-fluid"></p>
+<p><img src="2022-11-05-Cleaning-Strava-data-with-Kalman-smoothers_files/figure-html/cell-9-output-1.png" class="img-fluid"></p>
 </div>
 </div>
 <p>So the trick is to run a first Kalman smoother with an observation noise scale parameter that is large enough to identify the individual outliers (while masking the repeated measurements that we already identified), followed by a second one with lower noise while masking the individual outliers in addition to the repeated measurements to infer the true trajectory. The identification of individual outliers after the first smoothing can be achieved by measuring the distance between the observations and the posterior mean of the first Kalman smoother, and rejecting the observations that are beyond a certain threshold.</p>
