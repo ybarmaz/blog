@@ -217,6 +217,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 
 
+<p><em>Note: This is a second version of the article, edited on 2022-11-09, with a better method to reject outliers suggested by Isaac Skog.</em></p>
 <p>Like many cyclists and mountain bikers, I record and share my rides with <a href="https://strava.com/">Strava</a>. When I use my electric mountain bike, I normally export the relevant data to Strava from the <a href="https://www.bosch-ebike.com/en/products/ebike-flow-app">Bosch eBike Flow app</a> that controls and monitors the performance of the motor and gets geolocation data from the mobile phone. I noticed that this data is sometimes affected by measurement errors that look like weird spikes on my routes. This is visible on this screenshot of a ride I did in Morgins last summer.</p>
 <div class="cell" data-execution_count="1">
 <div class="cell-output cell-output-display" data-execution_count="1">
@@ -475,46 +476,45 @@ z_{t+1} \vert z_t \sim \mathcal{N} \left( (\mathbf{s}_t + \mathbf{v}_t, \mathbf{
 <p><img src="2022-11-05-Cleaning-Strava-data-with-Kalman-smoothers_files/figure-html/cell-9-output-1.png" class="img-fluid"></p>
 </div>
 </div>
-<p>So the trick is to run a first Kalman smoother with an observation noise scale parameter that is large enough to identify the individual outliers (while masking the repeated measurements that we already identified), followed by a second one with lower noise while masking the individual outliers in addition to the repeated measurements to infer the true trajectory. The identification of individual outliers after the first smoothing can be achieved by measuring the distance between the observations and the posterior mean of the first Kalman smoother, and rejecting the observations that are beyond a certain threshold.</p>
+<p>So the trick is to run a first Kalman smoother with an observation noise scale parameter that is large enough to identify the individual outliers (while masking the repeated measurements that we already identified), followed by a second one with lower noise while masking the individual outliers in addition to the repeated measurements to infer the true trajectory. For the identification of individual outliers after the first smoothing, we can make use of the posterior marginal distributions <span class="math inline">\(\mathcal{N}(\hat\mu_t, \hat\Sigma_t)\)</span> returned by the smoother that should “explain” the observation <span class="math inline">\(x_t\)</span> after multiplication by the observation matrix <span class="math inline">\(H\)</span>. Concretely, the quantity</p>
+<p><span class="math display">\[Q = \left(x_t - H\, \hat\mu_t\right)^T \, \left(H \, \hat\Sigma_t \, H^T \right)^{-1} \, \left(x_t - H\, \hat\mu_t\right)\]</span></p>
+<p>should follow a <span class="math inline">\(\chi^2_3\)</span> distribution under the model assumptions, so we can use a chi-squared test to pick outliers. Note that the threshold of that test has to be set fairly low to catch all outliers, because of the larger noise scale paramter of the first smoother.</p>
 <div class="cell" data-execution_count="9">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute the distance (Euclidean distance in the space of normalized</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co"># coordinates) and set a mask beyond a threshold of 0.02</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>threshold <span class="op">=</span> <span class="fl">0.02</span></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>filtered_lon <span class="op">=</span> posterior_means[:,<span class="dv">0</span>]</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>filtered_lat <span class="op">=</span> posterior_means[:,<span class="dv">1</span>]</span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>filtered_elev <span class="op">=</span> posterior_means[:,<span class="dv">2</span>]</span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>delta <span class="op">=</span> np.sqrt((route_df[<span class="st">'norm_lon'</span>] <span class="op">-</span> filtered_lon)<span class="op">**</span><span class="dv">2</span></span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>                <span class="op">+</span>(route_df[<span class="st">'norm_lat'</span>] <span class="op">-</span> filtered_lat)<span class="op">**</span><span class="dv">2</span></span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>                <span class="op">+</span>(route_df[<span class="st">'norm_elev'</span>] <span class="op">-</span> filtered_elev)<span class="op">**</span><span class="dv">2</span></span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>               )</span>
-<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>distance_mask <span class="op">=</span> delta <span class="op">&gt;</span> threshold</span>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Run a chi^2 test to reject outliers</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>threshold <span class="op">=</span> <span class="fl">0.01</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>H <span class="op">=</span> tf.pad(tf.eye(ndims), tf.constant([[<span class="dv">0</span>, <span class="dv">0</span>], [<span class="dv">0</span>, <span class="dv">2</span><span class="op">*</span>ndims]]))</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>S <span class="op">=</span> H <span class="op">@</span> posterior_covs <span class="op">@</span> tf.transpose(H)</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>innovation <span class="op">=</span> x <span class="op">-</span> tf.linalg.matvec(H, posterior_means)</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>Q <span class="op">=</span> tf.reduce_sum(innovation <span class="op">*</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>                  tf.linalg.matvec(tf.linalg.inv(S), innovation), axis<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>chi2_score <span class="op">=</span> tfd.Chi2(<span class="dv">3</span>).cdf(Q)</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>chi2_mask <span class="op">=</span> chi2_score<span class="op">&gt;</span>threshold</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="co"># specify a second Kalman smoother with a lower noise parameter</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>noise_std_2 <span class="op">=</span> <span class="fl">.05</span></span>
 <span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="co"># specify a second Kalman smoother with a lower noise parameter</span></span>
-<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>noise_std_2 <span class="op">=</span> <span class="fl">.05</span></span>
-<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>model2 <span class="op">=</span> tfd.LinearGaussianStateSpaceModel(</span>
-<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>  num_timesteps<span class="op">=</span>n_steps,</span>
-<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>  transition_matrix<span class="op">=</span>(tf.linalg.diag(<span class="dv">2</span><span class="op">*</span>ndims<span class="op">*</span>[<span class="fl">1.</span>] <span class="op">+</span> ndims<span class="op">*</span>[<span class="fl">0.</span>])</span>
-<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> tf.pad(tf.eye(<span class="dv">2</span> <span class="op">*</span> ndims), tf.constant([[<span class="dv">0</span>, ndims],[ndims, <span class="dv">0</span>]]))),</span>
-<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>  transition_noise<span class="op">=</span>tfd.MultivariateNormalDiag(</span>
-<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>   scale_diag<span class="op">=</span>tf.concat([<span class="fl">1e-9</span> <span class="op">*</span> tf.ones([ndims]),</span>
-<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>                         <span class="fl">1e-9</span> <span class="op">*</span> tf.ones([ndims]),</span>
-<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>                         <span class="fl">3e-2</span> <span class="op">*</span> tf.ones([ndims])], axis<span class="op">=</span><span class="dv">0</span>)),</span>
-<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>  observation_matrix<span class="op">=</span>tf.pad(tf.eye(ndims), tf.constant([[<span class="dv">0</span>, <span class="dv">0</span>], [<span class="dv">0</span>, <span class="dv">2</span><span class="op">*</span>ndims]])),</span>
-<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>  observation_noise<span class="op">=</span>tfd.MultivariateNormalDiag(</span>
-<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>   scale_diag<span class="op">=</span>noise_std_2 <span class="op">*</span> tf.ones([ndims])),</span>
-<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>  initial_state_prior<span class="op">=</span>tfd.MultivariateNormalDiag(</span>
-<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>   scale_diag<span class="op">=</span><span class="fl">1e-9</span> <span class="op">*</span> tf.ones([<span class="dv">3</span><span class="op">*</span>ndims])))</span>
-<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a><span class="co"># apply the smoother with the combined masks</span></span>
-<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>corrected_posterior_means, corrected_posterior_covs <span class="op">=</span> (</span>
-<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>    model2.posterior_marginals(x, mask<span class="op">=</span>frequency_mask<span class="op">+</span>distance_mask))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>model2 <span class="op">=</span> tfd.LinearGaussianStateSpaceModel(</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>  num_timesteps<span class="op">=</span>n_steps,</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>  transition_matrix<span class="op">=</span>(tf.linalg.diag(<span class="dv">2</span><span class="op">*</span>ndims<span class="op">*</span>[<span class="fl">1.</span>] <span class="op">+</span> ndims<span class="op">*</span>[<span class="fl">0.</span>])</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> tf.pad(tf.eye(<span class="dv">2</span> <span class="op">*</span> ndims), tf.constant([[<span class="dv">0</span>, ndims],[ndims, <span class="dv">0</span>]]))),</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>  transition_noise<span class="op">=</span>tfd.MultivariateNormalDiag(</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>   scale_diag<span class="op">=</span>tf.concat([<span class="fl">1e-9</span> <span class="op">*</span> tf.ones([ndims]),</span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>                         <span class="fl">1e-9</span> <span class="op">*</span> tf.ones([ndims]),</span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>                         <span class="fl">3e-2</span> <span class="op">*</span> tf.ones([ndims])], axis<span class="op">=</span><span class="dv">0</span>)),</span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>  observation_matrix<span class="op">=</span>tf.pad(tf.eye(ndims), tf.constant([[<span class="dv">0</span>, <span class="dv">0</span>], [<span class="dv">0</span>, <span class="dv">2</span><span class="op">*</span>ndims]])),</span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>  observation_noise<span class="op">=</span>tfd.MultivariateNormalDiag(</span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>   scale_diag<span class="op">=</span>noise_std_2 <span class="op">*</span> tf.ones([ndims])),</span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>  initial_state_prior<span class="op">=</span>tfd.MultivariateNormalDiag(</span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>   scale_diag<span class="op">=</span><span class="fl">1e-9</span> <span class="op">*</span> tf.ones([<span class="dv">3</span><span class="op">*</span>ndims])))</span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a><span class="co"># apply the smoother with the combined masks</span></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>corrected_posterior_means, corrected_posterior_covs <span class="op">=</span> (</span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>    model2.posterior_marginals(x, mask<span class="op">=</span>tf.math.logical_or(frequency_mask, chi2_mask)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <p>The posterior mean of the second smoother produces a clean estimation of the real trajectory, free of any weird spike. As a last step, we can rescale it and plot it on OpenStreetMap to admire the result and think of future bike rides!</p>
@@ -527,7 +527,7 @@ z_{t+1} \vert z_t \sim \mathcal{N} \left( (\mathbf{s}_t + \mathbf{v}_t, \mathbf{
 </div>
 <section id="acknowledgement" class="level2">
 <h2 class="anchored" data-anchor-id="acknowledgement">Acknowledgement</h2>
-<p>I would like to thank Maxime Baillifard for showing me his hometrails around Morgins, an area that seems to affect GPS signals like the Bermuda Triangle, and Yannick Stebler for providing a rational explanation about signals bouncing on cliffs that debunked that myth.</p>
+<p>I would like to thank Maxime Baillifard for showing me his hometrails around Morgins, an area that seems to affect GPS signals like the Bermuda Triangle, Yannick Stebler for providing a rational explanation about signals bouncing on cliffs that debunked that myth, and Isaac Skog for suggesting to use a chi-squared test to reject outliers after reading a first version of this article that was using a less robust quadratic form.</p>
 
 
 </section>
