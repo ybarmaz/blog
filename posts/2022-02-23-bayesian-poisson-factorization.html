@@ -220,7 +220,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p>In this blog post, we will be exploring how to implement a model inspired by Gopalan, Hofman and Blei (<a href="https://arxiv.org/abs/1311.1704">Scalable Recommendation with Poisson Factorization</a>) with <a href="https://www.tensorflow.org/probability">TensorFLow Probability</a>.</p>
 <p>In the mean field approximation, where we assume that the variational distribution <span class="math inline">\(q\)</span> factorizes over the latent variables, we can implement variational inference with probabilistic layers from the <code>tfp.layers</code> module. One way to do it is to specify the variational distribution <span class="math inline">\(q\)</span> with a <code>tfpl.DistributionLambda(lambda variational_parameter: ...)</code> layer and add its interaction with the prior in the <a href="https://en.wikipedia.org/wiki/Evidence_lower_bound">ELBO</a> through an activity regularizer, <code>activity_regularizer = tfpl.KLDivergenceRegularizer(prior_distribution)</code>. For probabilistic embeddings, the variational parameters are conveniently expressed as standard embeddings into a space of dimension <span class="math inline">\(n_{params} \times D\)</span>, where <span class="math inline">\(D\)</span> is the dimension of the original latent embeddings, and <span class="math inline">\(n_{params}\)</span> the number of variational parameters of the corresponding component of <span class="math inline">\(q\)</span>.</p>
 <p>A <a href="https://keras.io/guides/making_new_layers_and_models_via_subclassing/">custom Keras layer</a> wraps the construction of a probabilistic embedding, with its <code>__init__</code> method receiving the hyperparameters. Here we picked Gamma distributions for both the priors and the variational distributions.</p>
-<div class="cell" data-execution_count="6">
+<div class="cell" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> GammaEmbedding(tfkl.Layer):</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, num_classes, embedding_size,</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>                 embedding_concentration, embedding_rate, kl_weight<span class="op">=</span><span class="va">None</span>, <span class="op">**</span>kwargs):</span>
@@ -252,8 +252,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>        embedding_param <span class="op">=</span> <span class="va">self</span>.embedding_parameters(inputs)</span>
 <span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span>.embedding_distribution(embedding_param)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>The bias terms mentioned earlier could be implemented as one-dimensional probabilistic embeddings and added to the scalar products of user and item embeddings, but Gopalan <em>et al.</em> suggest to introduce these degrees of freedom as hyperpriors for the rate parameters of the embedding Gamma distributions with a hierarchical model construction. We can still use one-dimensional embeddings to construct these rate distributions, but the same technique is not suitable for the embeddings themselves. The problem is that the priors in <code>tfpl.KLDivergenceRegularizer(prior, weight)</code> are fixed, but we need them to evolve with the variational parameters of their hyperprior during training. As a workaround, we can specify a custom loss term with the <code>add_loss</code> method.</p>
-<div class="cell" data-execution_count="7">
+<p>The bias terms mentioned earlier could be implemented as one-dimensional probabilistic embeddings and added to the scalar products of user and item embeddings, but Gopalan <em>et al.</em> suggest to introduce these degrees of freedom as hyperpriors for the rate parameters of the embedding Gamma distributions with a hierarchical model construction. Compared to the simple Gamma embedding where the priors in <code>tfpl.KLDivergenceRegularizer(prior, weight)</code> were fixed and specified as an <code>activity_regularizer</code> parameter, we now need them to evolve with the variational parameters of their hyperprior during training. As a workaround, we can specify a custom KL divergence loss term with the <code>add_loss</code> method.</p>
+<div class="cell" data-execution_count="6">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> HierarchicalGammaEmbedding(tfkl.Layer):</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, num_classes, embedding_size,</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>                 parent_concentration, parent_rate,</span>
@@ -262,43 +262,56 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.kl_weight <span class="op">=</span> kl_weight</span>
 <span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.embedding_concentration <span class="op">=</span> embedding_concentration</span>
 <span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.rate_distribution <span class="op">=</span> GammaEmbedding(</span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>            num_classes, <span class="dv">1</span>, parent_concentration,</span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>            parent_rate, kl_weight<span class="op">=</span>kl_weight)</span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.embedding_parameters <span class="op">=</span> tfkl.Embedding(</span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>            num_classes,</span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>            <span class="dv">2</span> <span class="op">*</span> embedding_size,</span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>            embeddings_initializer<span class="op">=</span><span class="st">"glorot_normal"</span></span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>        )</span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.embedding_distribution <span class="op">=</span> tfpl.DistributionLambda(</span>
-<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>            <span class="kw">lambda</span> x: tfd.Independent(</span>
-<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>                tfd.Gamma(tf.math.exp(x[:, :embedding_size]),</span>
-<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>                          rate<span class="op">=</span>tf.math.exp(x[:, embedding_size:])),</span>
-<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>                reinterpreted_batch_ndims<span class="op">=</span><span class="dv">1</span></span>
-<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>            )</span>
-<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>        )</span>
-<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>            </span>
-<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__call__</span>(<span class="va">self</span>, inputs):</span>
-<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>        embedding_param <span class="op">=</span> <span class="va">self</span>.embedding_parameters(inputs)</span>
-<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>        embedding_distribution <span class="op">=</span> <span class="va">self</span>.embedding_distribution(embedding_param)</span>
-<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>        embedding_rate <span class="op">=</span> <span class="va">self</span>.rate_distribution(inputs)        </span>
-<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>        embedding_prior <span class="op">=</span> tfd.Independent(</span>
-<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>            tfd.Gamma(<span class="va">self</span>.embedding_concentration,</span>
-<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>                      rate<span class="op">=</span>embedding_rate <span class="op">*</span> tf.ones((<span class="dv">1</span>, EMBEDDING_SIZE))),</span>
-<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>            reinterpreted_batch_ndims<span class="op">=</span><span class="dv">1</span>)</span>
-<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.add_loss(</span>
-<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>            <span class="va">self</span>.kl_weight <span class="op">*</span></span>
-<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>            tf.reduce_sum(embedding_distribution.kl_divergence(embedding_prior))</span>
-<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>        )</span>
-<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> embedding_distribution</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.rate_dist_params <span class="op">=</span> tfpl.VariableLayer((<span class="dv">2</span><span class="op">*</span>embedding_size,))</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.rate_distribution <span class="op">=</span> tfpl.DistributionLambda(</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>            <span class="kw">lambda</span> x: tfd.Independent(</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>                tfd.Gamma(tf.math.exp(x[:embedding_size]),</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>                          rate<span class="op">=</span>tf.math.exp(x[embedding_size:])),</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>                reinterpreted_batch_ndims<span class="op">=</span><span class="dv">1</span>),</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>            activity_regularizer <span class="op">=</span> tfpl.KLDivergenceRegularizer(</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>                tfd.Independent(</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>                    tfd.Gamma(parent_concentration</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>                              <span class="op">*</span> tf.ones(shape<span class="op">=</span>(embedding_size,), dtype<span class="op">=</span>tf.float32),</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>                              rate<span class="op">=</span>parent_rate),</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>                    reinterpreted_batch_ndims<span class="op">=</span><span class="dv">1</span>),</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>                weight<span class="op">=</span>kl_weight,</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>                use_exact_kl<span class="op">=</span><span class="va">True</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>            )</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.embedding_parameters <span class="op">=</span> tfkl.Embedding(</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>            num_classes,</span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>            <span class="dv">2</span> <span class="op">*</span> embedding_size,</span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>            embeddings_initializer<span class="op">=</span><span class="st">"glorot_normal"</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.embedding_distribution <span class="op">=</span> tfpl.DistributionLambda(</span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>            <span class="kw">lambda</span> x: tfd.Independent(</span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>                tfd.Gamma(tf.math.exp(x[:, :embedding_size]),</span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>                          rate<span class="op">=</span>tf.math.exp(x[:, embedding_size:])),</span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>                reinterpreted_batch_ndims<span class="op">=</span><span class="dv">1</span></span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>            )</span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__call__</span>(<span class="va">self</span>, inputs):        </span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>        embedding_param <span class="op">=</span> <span class="va">self</span>.embedding_parameters(inputs)</span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>        embedding_distribution <span class="op">=</span> <span class="va">self</span>.embedding_distribution(embedding_param)</span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a>        rate_dist_params <span class="op">=</span> <span class="va">self</span>.rate_dist_params(inputs)</span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a>        embedding_rate <span class="op">=</span> <span class="va">self</span>.rate_distribution(rate_dist_params)</span>
+<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a>        embedding_prior <span class="op">=</span> tfd.Independent(</span>
+<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a>            tfd.Gamma(<span class="va">self</span>.embedding_concentration,</span>
+<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a>                      rate<span class="op">=</span>embedding_rate <span class="op">*</span> tf.ones((<span class="dv">1</span>, EMBEDDING_SIZE))),</span>
+<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a>            reinterpreted_batch_ndims<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.add_loss(</span>
+<span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a>            <span class="va">self</span>.kl_weight <span class="op">*</span></span>
+<span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a>            tf.reduce_sum(embedding_distribution.kl_divergence(embedding_prior))</span>
+<span id="cb2-53"><a href="#cb2-53" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb2-54"><a href="#cb2-54" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb2-55"><a href="#cb2-55" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> embedding_distribution</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>With the probabilistic embeddings defined as custom layers, the full model only needs a few lines of code. The user and movie embeddings are constructed as hierarchical Gamma embeddings, and their scalar product will be the rate of the Poisson distribution that generates the observations, implemented as a distribution lambda layer.</p>
-<div class="cell" data-execution_count="8">
+<div class="cell" data-execution_count="7">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ProbabilisticRecommender(tfk.Model):</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, num_users, num_movies, embedding_size, kl_weight, <span class="op">**</span>kwargs):</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>        <span class="bu">super</span>(ProbabilisticRecommender, <span class="va">self</span>).<span class="fu">__init__</span>(<span class="op">**</span>kwargs)</span>
@@ -309,18 +322,18 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.user_embedding <span class="op">=</span> HierarchicalGammaEmbedding(</span>
 <span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>            num_users,</span>
 <span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>            embedding_size,</span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>            parent_concentration<span class="op">=</span><span class="dv">1</span>,</span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>            parent_rate<span class="op">=</span><span class="dv">1</span>,</span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>            embedding_concentration<span class="op">=</span><span class="dv">1</span>,</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>            parent_concentration<span class="op">=</span><span class="fl">1.</span>,</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>            parent_rate<span class="op">=</span><span class="fl">100.</span>,</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>            embedding_concentration<span class="op">=</span><span class="fl">1.</span>,</span>
 <span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>            kl_weight<span class="op">=</span>kl_weight</span>
 <span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>        )</span>
 <span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>        </span>
 <span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.movie_embedding <span class="op">=</span> HierarchicalGammaEmbedding(</span>
 <span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>            num_movies,</span>
 <span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>            embedding_size,</span>
-<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>            parent_concentration<span class="op">=</span><span class="dv">1</span>,</span>
-<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>            parent_rate<span class="op">=</span><span class="dv">1</span>,</span>
-<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>            embedding_concentration<span class="op">=</span><span class="dv">1</span>,</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>            parent_concentration<span class="op">=</span><span class="fl">1.</span>,</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>            parent_rate<span class="op">=</span><span class="fl">100.</span>,</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>            embedding_concentration<span class="op">=</span><span class="fl">1.</span>,</span>
 <span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>            kl_weight<span class="op">=</span>kl_weight</span>
 <span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>        )</span>
 <span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a></span>
@@ -333,7 +346,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span>.head(dot_user_movie)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>With a probability distribution as an output, this model requires a negative log-likelihood loss function, otherwise it is straightforward to train it like any Keras model.</p>
-<div class="cell" data-execution_count="9">
+<div class="cell" data-execution_count="8">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>EMBEDDING_SIZE <span class="op">=</span> <span class="dv">50</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>BATCH_SIZE <span class="op">=</span> <span class="dv">128</span></span>
