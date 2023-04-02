@@ -214,150 +214,190 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 
 
+<section id="recommender-systems" class="level2">
+<h2 class="anchored" data-anchor-id="recommender-systems">Recommender systems</h2>
 <p>A lot of recommender systems are built on matrix factorization models, where the partially observed matrix of user/item interactions is approximated by a product of matrices encoding latent characteristics of users and items. They can be corrected by user and item bias terms, and modified by activation functions that map to the data type of the observed interactions (e.g.&nbsp;binary kudos on Strava activities, counts of visits of a YouTube channel, ratings on Tripadvisor, or time spent watching a TikTok video before swiping up).</p>
 <p>In machine learning, these matrix factorizations are often implemented as embeddings into latent spaces followed by scalar products of the user latent vectors by the item latent vectors, and the model is fit to historical data with a gradient descent algorithm. A <a href="https://keras.io/examples/structured_data/collaborative_filtering_movielens/">Keras tutorial on collaborative filtering</a> describes the methodology with the Movielens dataset.</p>
-<p>While the resulting model only provides point estimates of future interactions between users and items, a Bayesian treatment of the problem would add an approximation of the uncertainty of these estimates. Formally, we could express the same model with priors on the vector embeddings in a probabilistic programming library and sample the posteriors with an MCMC algorithm, but computing the likelihood of past interactions can be impractical for very large datasets. Moreover, due to the invariance of the model under permutations of the embedding dimensions, MCMC sampling of the multimodal posterior would be a nightmare. On the other hand, minimizing <span class="math inline">\(KL(q \Vert p)\)</span> through variational inference produces a mode-seeking behavior (see for instance these <a href="https://www.fil.ion.ucl.ac.uk/~wpenny/talks/inference.pdf">lecture notes</a>), a bit like gradient descent in “classical” machine learning finds a local minimum.</p>
+<p>While the resulting model only provides point estimates of future interactions between users and items, a Bayesian treatment of the problem would add an approximation of the uncertainty of these estimates. Formally, we could express the same model with priors on the vector embeddings in a probabilistic programming library and sample the posteriors with an MCMC algorithm, but computing the likelihood of past interactions can be impractical for very large datasets. Moreover, due to the invariance of the model under permutations of the embedding dimensions, MCMC sampling of the multimodal posterior would be a nightmare. On the other hand, minimizing the Kullback-Leibler divergence <span class="math inline">\(D_{KL}\left(Q(Z) \Vert P(Z\vert X)\right)\)</span> between a surrogate posterior and the true posterior distribution through variational inference produces a mode-seeking behavior (see for instance these <a href="https://www.fil.ion.ucl.ac.uk/~wpenny/talks/inference.pdf">lecture notes</a>), a bit like gradient descent in “classical” machine learning finds a local minimum.</p>
 <p>In this blog post, we will be exploring how to implement a model inspired by Gopalan, Hofman and Blei (<a href="https://arxiv.org/abs/1311.1704">Scalable Recommendation with Poisson Factorization</a>) with <a href="https://www.tensorflow.org/probability">TensorFLow Probability</a>.</p>
-<p>In the mean field approximation, where we assume that the variational distribution <span class="math inline">\(q\)</span> factorizes over the latent variables, we can implement variational inference with probabilistic layers from the <code>tfp.layers</code> module. One way to do it is to specify the variational distribution <span class="math inline">\(q\)</span> with a <code>tfpl.DistributionLambda(lambda variational_parameter: ...)</code> layer and add its interaction with the prior in the <a href="https://en.wikipedia.org/wiki/Evidence_lower_bound">ELBO</a> through an activity regularizer, <code>activity_regularizer = tfpl.KLDivergenceRegularizer(prior_distribution)</code>. For probabilistic embeddings, the variational parameters are conveniently expressed as standard embeddings into a space of dimension <span class="math inline">\(n_{params} \times D\)</span>, where <span class="math inline">\(D\)</span> is the dimension of the original latent embeddings, and <span class="math inline">\(n_{params}\)</span> the number of variational parameters of the corresponding component of <span class="math inline">\(q\)</span>.</p>
-<p>A <a href="https://keras.io/guides/making_new_layers_and_models_via_subclassing/">custom Keras layer</a> wraps the construction of a probabilistic embedding, with its <code>__init__</code> method receiving the hyperparameters. Here we picked Gamma distributions for both the priors and the variational distributions.</p>
+</section>
+<section id="bayesian-models-and-variational-inference" class="level2">
+<h2 class="anchored" data-anchor-id="bayesian-models-and-variational-inference">Bayesian models and variational inference</h2>
+<p>As a reminder, minimizing the (intractable) Kullback-Leibler divergence <span class="math inline">\(D_{KL}\left(Q(Z) \Vert P(Z\vert X)\right)\)</span> between the variational distribution <span class="math inline">\(Q(Z)\)</span> and the true posterior <span class="math inline">\(P(Z\vert X)\)</span> is equivalent to maximizing the (computable) <a href="https://en.wikipedia.org/wiki/Evidence_lower_bound">evidence lower bound</a></p>
+<p><span class="math display">\[
+\mathrm{ELBO} = \mathbb{E}_Q\left[ \log P(X \vert Z) \right] - D_{KL}(Q(Z) \Vert P(Z)),
+\]</span></p>
+<p>where the first term is the expectation under the surrogate distribution of the likelihood function of the model and the second term the negative Kullback-Leibler divergence between the surrogate distribution and the prior distribution of the model parameters.</p>
+<p>In the mean field approximation, where we assume that the variational distribution <span class="math inline">\(Q\)</span> factorizes over the latent variables, we can implement variational inference with probabilistic layers from the <code>tfp.layers</code> module, which will automatically keep track of the variational parameters during training. These layers are conveniently combined in a Keras model, where the last layer is typically a distribution layer corresponding to the observed data <span class="math inline">\(X\)</span>, and from which which we can use the <code>log_prob</code> method to compute the log-likelihood of the model. In their forward mode, the probabilistic layers draw samples from the surrogate distribution <span class="math inline">\(Q\)</span> they implement that we can use to compute Monte-Carlo estimates of <span class="math inline">\(\mathbb{E}_Q\left[ \log P(X \vert Z) \right]\)</span>, the first part of the ELBO function.</p>
+<p>The second part, <span class="math inline">\(D_{KL}(Q(Z) \Vert P(Z))\)</span>, can be implemented either through an activity regularizer, <code>activity_regularizer = tfpl.KLDivergenceRegularizer(prior_distribution)</code>, or through a custom loss term added in the call method of the layer. The former is suitable for global parameters of the model that are shared by all training examples, and the latter is required for latent variables associated to specific training examples.</p>
+<p>We will wrap up these initial theoretical considerations with a couple of observations that are important for a good implementation of these methods. The first is that Keras models are trained through minimization of a loss function, so instead of maximizing the ELBO, we will be minimizing the negative ELBO. Concretely, the loss function passed to the <code>model.compile</code> method will be the negative log-likelihood, and <span class="math inline">\(D_{KL}(Q(Z) \Vert P(Z))\)</span> will be added to the loss rather than subtracted from it. The second is that Keras model training routines evaluate the loss function as a sum over the training examples. While this is straightforward for the likelihood part of the loss when observations are assumed to be conditionally independent,</p>
+<p><span class="math display">\[
+- \log P(X \vert Z) = - \sum_i  \log P(X_i \vert Z),
+\]</span></p>
+<p>extra care needs to be taken for the Kullback-Leibler term</p>
+<p><span class="math display">\[
+D_{KL}(Q(Z) \Vert P(Z)) = \mathbb{E}_Q\left[ \log Q(Z) - \log P(Z))\right],
+\]</span></p>
+<p>which has to be expressed as a sum over the training examples like the log-likelihood. In practice, this can often be achieved through a weighted sum. For instance, if we have only parameters that are shared by all training examples, we can apply a <span class="math inline">\(1/N\)</span> weight, where <span class="math inline">\(N\)</span> is the number of data points <span class="math inline">\(X_i\)</span>,</p>
+<p><span class="math display">\[
+- \mathrm{ELBO} =  \mathbb{E}_Q\left[ \sum_i \left( - \log P(X_i \vert Z) + \frac{1}{N}( \log Q(Z) - \log P(Z))\right) \right].
+\]</span></p>
+<p>For parameters linked to only subsets of the data points, or even individual data points (we often speak of latent variables), a bit of algebra might be needed to find the proper weights.</p>
+<p>Constant weights can be specified as optional parameters of methods like <code>tfpl.KLDivergenceRegularizer</code>, but non-uniform weights have to be coded in the <code>add_loss</code> method of the Keras model, which is the reason why this approach is required as mentioned earlier.</p>
+</section>
+<section id="probabilistic-embeddings" class="level2">
+<h2 class="anchored" data-anchor-id="probabilistic-embeddings">Probabilistic embeddings</h2>
+<p>While a standard embedding maps discrete values to vectors in a latent space, a probabilistic embedding specifies a probability distribution over the latent space. It can be constructed as a sequence of a parameter layer, that contains the variational distribution parameters, and a TensorFlow Probability distribution layer that encapsulates the sample method and the prior distribution for the KL term. The parameter layer can be expressed as a standard embedding into a space of dimension <span class="math inline">\(n_{params} \times D\)</span>, where <span class="math inline">\(D\)</span> is the dimension of the original latent space, and <span class="math inline">\(n_{params}\)</span> the number of variational parameters of the corresponding component of the variational distribution <span class="math inline">\(Q\)</span>.</p>
+<p>A <a href="https://keras.io/guides/making_new_layers_and_models_via_subclassing/">custom Keras layer</a> wraps the construction of a probabilistic embedding, with its <code>__init__</code> method receiving the hyperparameters. In the following code example, we picked Gamma distributions for both the priors and the variational distributions. Note how the KL term is added to the loss with <code>self.add_loss</code> and weighted by <code>latent_kl_weights</code> passed as an argument to the call method of the custom Keras layer. It allows us to specify a unique weight for each training example from <code>inputs</code>.</p>
 <div class="cell" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> GammaEmbedding(tfkl.Layer):</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, num_classes, embedding_size,</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>                 embedding_concentration, embedding_rate, kl_weight<span class="op">=</span><span class="va">None</span>, <span class="op">**</span>kwargs):</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>        <span class="bu">super</span>(GammaEmbedding, <span class="va">self</span>).<span class="fu">__init__</span>(<span class="op">**</span>kwargs)</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.embedding_parameters <span class="op">=</span> tfkl.Embedding(</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>            num_classes,</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>            <span class="dv">2</span> <span class="op">*</span> embedding_size,</span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>            embeddings_initializer<span class="op">=</span><span class="st">"he_normal"</span></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>        )</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.embedding_distribution <span class="op">=</span> tfpl.DistributionLambda(</span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>            <span class="kw">lambda</span> x: tfd.Independent(</span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>                tfd.Gamma(tf.math.exp(x[:, :embedding_size]),</span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>                          rate<span class="op">=</span>tf.math.exp(x[:, embedding_size:])),</span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>                reinterpreted_batch_ndims<span class="op">=</span><span class="dv">1</span>),</span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>            activity_regularizer <span class="op">=</span> tfpl.KLDivergenceRegularizer(</span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>                tfd.Independent(</span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>                    tfd.Gamma(embedding_concentration</span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>                              <span class="op">*</span> tf.ones(shape<span class="op">=</span>(embedding_size,), dtype<span class="op">=</span>tf.float32),</span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>                              rate<span class="op">=</span>embedding_rate),</span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>                    reinterpreted_batch_ndims<span class="op">=</span><span class="dv">1</span>),</span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>                weight<span class="op">=</span>kl_weight,</span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>                use_exact_kl<span class="op">=</span><span class="va">True</span></span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>            )</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>                 embedding_concentration, embedding_rate,</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>                 <span class="op">**</span>kwargs):</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>        <span class="bu">super</span>(GammaEmbedding, <span class="va">self</span>).<span class="fu">__init__</span>(<span class="op">**</span>kwargs)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.embedding_parameters <span class="op">=</span> tfkl.Embedding(</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>            num_classes,</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>            <span class="dv">2</span> <span class="op">*</span> embedding_size,</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>            embeddings_initializer<span class="op">=</span><span class="st">"he_normal"</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.embedding_distribution <span class="op">=</span> tfpl.DistributionLambda(</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>            <span class="kw">lambda</span> x: tfd.Independent(</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>                tfd.Gamma(tf.math.exp(x[:, :embedding_size]),</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>                          rate<span class="op">=</span>tf.math.exp(x[:, embedding_size:])),</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>                reinterpreted_batch_ndims<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.embedding_prior <span class="op">=</span> tfd.Independent(</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>            tfd.Gamma(</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>                embedding_concentration <span class="op">*</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>                tf.ones(shape<span class="op">=</span>(embedding_size,), dtype<span class="op">=</span>tf.float32),</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>                rate<span class="op">=</span>embedding_rate),</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>            reinterpreted_batch_ndims<span class="op">=</span><span class="dv">1</span></span>
 <span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>        )</span>
 <span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>            </span>
-<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__call__</span>(<span class="va">self</span>, inputs):</span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__call__</span>(<span class="va">self</span>, inputs, latent_kl_weights):</span>
 <span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>        embedding_param <span class="op">=</span> <span class="va">self</span>.embedding_parameters(inputs)</span>
-<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span>.embedding_distribution(embedding_param)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>        embedding_distribution <span class="op">=</span> <span class="va">self</span>.embedding_distribution(embedding_param)</span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.add_loss(</span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>            tf.reduce_sum(latent_kl_weights <span class="op">*</span></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>                embedding_distribution.kl_divergence(<span class="va">self</span>.embedding_prior)</span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>                         )</span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> embedding_distribution</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>The bias terms mentioned earlier could be implemented as one-dimensional probabilistic embeddings and added to the scalar products of user and item embeddings, but Gopalan <em>et al.</em> suggest to introduce these degrees of freedom as hyperpriors for the rate parameters of the embedding Gamma distributions with a hierarchical model construction. Compared to the simple Gamma embedding where the priors in <code>tfpl.KLDivergenceRegularizer(prior, weight)</code> were fixed and specified as an <code>activity_regularizer</code> parameter, we now need them to evolve with the variational parameters of their hyperprior during training. As a workaround, we can specify a custom KL divergence loss term with the <code>add_loss</code> method.</p>
+<p>The user and item bias terms mentioned earlier could be implemented as one-dimensional probabilistic embeddings and added to the scalar products of user and item embeddings, but Gopalan <em>et al.</em> suggest to introduce these degrees of freedom as random rate parameters of the embedding Gamma distributions with a hierarchical model construction. Compared to the simple Gamma embedding where the embedding priors were fixed and specified in the <code>__init__</code> method, we now need them to evolve with the variational parameters of their parent distribution during training, so they need to be dynamically computed in the <code>__call__</code> method. To model the random rate parameter, we can make use of the Gamma embedding layer we already constructed, with an embedding dimension of 1.</p>
 <div class="cell" data-execution_count="6">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> HierarchicalGammaEmbedding(tfkl.Layer):</span>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> RateAdjustedGammaEmbedding(tfkl.Layer):</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, num_classes, embedding_size,</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>                 parent_concentration, parent_rate,</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>                 embedding_concentration, kl_weight<span class="op">=</span><span class="va">None</span>, <span class="op">**</span>kwargs):</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>        <span class="bu">super</span>(HierarchicalGammaEmbedding, <span class="va">self</span>).<span class="fu">__init__</span>(<span class="op">**</span>kwargs)</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.kl_weight <span class="op">=</span> kl_weight</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.embedding_concentration <span class="op">=</span> embedding_concentration</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>                 embedding_concentration, <span class="op">**</span>kwargs):</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>        <span class="bu">super</span>(RateAdjustedGammaEmbedding, <span class="va">self</span>).<span class="fu">__init__</span>(<span class="op">**</span>kwargs)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.embedding_size <span class="op">=</span> embedding_size</span>
 <span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.rate_dist_params <span class="op">=</span> tfpl.VariableLayer((<span class="dv">2</span><span class="op">*</span>embedding_size,))</span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.rate_distribution <span class="op">=</span> tfpl.DistributionLambda(</span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>            <span class="kw">lambda</span> x: tfd.Independent(</span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>                tfd.Gamma(tf.math.exp(x[:embedding_size]),</span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>                          rate<span class="op">=</span>tf.math.exp(x[embedding_size:])),</span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>                reinterpreted_batch_ndims<span class="op">=</span><span class="dv">1</span>),</span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>            activity_regularizer <span class="op">=</span> tfpl.KLDivergenceRegularizer(</span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>                tfd.Independent(</span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>                    tfd.Gamma(parent_concentration</span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>                              <span class="op">*</span> tf.ones(shape<span class="op">=</span>(embedding_size,), dtype<span class="op">=</span>tf.float32),</span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>                              rate<span class="op">=</span>parent_rate),</span>
-<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>                    reinterpreted_batch_ndims<span class="op">=</span><span class="dv">1</span>),</span>
-<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>                weight<span class="op">=</span>kl_weight,</span>
-<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>                use_exact_kl<span class="op">=</span><span class="va">True</span></span>
-<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>            )</span>
-<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>        )</span>
-<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.embedding_parameters <span class="op">=</span> tfkl.Embedding(</span>
-<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>            num_classes,</span>
-<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>            <span class="dv">2</span> <span class="op">*</span> embedding_size,</span>
-<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>            embeddings_initializer<span class="op">=</span><span class="st">"glorot_normal"</span></span>
-<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>        )</span>
-<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.embedding_distribution <span class="op">=</span> tfpl.DistributionLambda(</span>
-<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>            <span class="kw">lambda</span> x: tfd.Independent(</span>
-<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>                tfd.Gamma(tf.math.exp(x[:, :embedding_size]),</span>
-<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>                          rate<span class="op">=</span>tf.math.exp(x[:, embedding_size:])),</span>
-<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>                reinterpreted_batch_ndims<span class="op">=</span><span class="dv">1</span></span>
-<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>            )</span>
-<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>        )</span>
-<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>            </span>
-<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__call__</span>(<span class="va">self</span>, inputs):        </span>
-<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>        embedding_param <span class="op">=</span> <span class="va">self</span>.embedding_parameters(inputs)</span>
-<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>        embedding_distribution <span class="op">=</span> <span class="va">self</span>.embedding_distribution(embedding_param)</span>
-<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a>        rate_dist_params <span class="op">=</span> <span class="va">self</span>.rate_dist_params(inputs)</span>
-<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a>        embedding_rate <span class="op">=</span> <span class="va">self</span>.rate_distribution(rate_dist_params)</span>
-<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a>        embedding_prior <span class="op">=</span> tfd.Independent(</span>
-<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a>            tfd.Gamma(<span class="va">self</span>.embedding_concentration,</span>
-<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a>                      rate<span class="op">=</span>embedding_rate <span class="op">*</span> tf.ones((<span class="dv">1</span>, EMBEDDING_SIZE))),</span>
-<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a>            reinterpreted_batch_ndims<span class="op">=</span><span class="dv">1</span>)</span>
-<span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.add_loss(</span>
-<span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a>            <span class="va">self</span>.kl_weight <span class="op">*</span></span>
-<span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a>            tf.reduce_sum(embedding_distribution.kl_divergence(embedding_prior))</span>
-<span id="cb2-53"><a href="#cb2-53" aria-hidden="true" tabindex="-1"></a>        )</span>
-<span id="cb2-54"><a href="#cb2-54" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb2-55"><a href="#cb2-55" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> embedding_distribution</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.rate_distribution <span class="op">=</span> GammaEmbedding(num_classes<span class="op">=</span>num_classes,</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>                                                embedding_size<span class="op">=</span><span class="dv">1</span>,</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>                                                embedding_concentration<span class="op">=</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>                                                parent_concentration,</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>                                                embedding_rate<span class="op">=</span>parent_rate</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>                                               )</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.embedding_concentration <span class="op">=</span> embedding_concentration</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.embedding_parameters <span class="op">=</span> tfkl.Embedding(</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>            num_classes,</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>            <span class="dv">2</span> <span class="op">*</span> embedding_size,</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>            embeddings_initializer<span class="op">=</span><span class="st">"he_normal"</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.embedding_distribution <span class="op">=</span> tfpl.DistributionLambda(</span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>            <span class="kw">lambda</span> x: tfd.Independent(</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>                tfd.Gamma(tf.math.exp(x[:, :embedding_size]),</span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>                          rate<span class="op">=</span>tf.math.exp(x[:, embedding_size:])),</span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>                reinterpreted_batch_ndims<span class="op">=</span><span class="dv">1</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>            )</span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__call__</span>(<span class="va">self</span>, inputs, latent_kl_weights):</span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>        embedding_param <span class="op">=</span> <span class="va">self</span>.embedding_parameters(inputs)</span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>        embedding_distribution <span class="op">=</span> <span class="va">self</span>.embedding_distribution(embedding_param)</span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>        embedding_rate <span class="op">=</span> <span class="va">self</span>.rate_distribution(inputs, latent_kl_weights)</span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>        embedding_prior <span class="op">=</span> tfd.Independent(</span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>            tfd.Gamma(<span class="va">self</span>.embedding_concentration,</span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>                      rate<span class="op">=</span>embedding_rate <span class="op">*</span> tf.ones((<span class="dv">1</span>, <span class="va">self</span>.embedding_size))),</span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>            reinterpreted_batch_ndims<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.add_loss(</span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a>            tf.reduce_sum(latent_kl_weights <span class="op">*</span></span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a>                          embedding_distribution.kl_divergence(embedding_prior))</span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> embedding_distribution</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>With the probabilistic embeddings defined as custom layers, the full model only needs a few lines of code. The user and movie embeddings are constructed as hierarchical Gamma embeddings, and their scalar product will be the rate of the Poisson distribution that generates the observations, implemented as a distribution lambda layer.</p>
-<div class="cell" data-execution_count="7">
+</section>
+<section id="probabilistic-recommender" class="level2">
+<h2 class="anchored" data-anchor-id="probabilistic-recommender">Probabilistic recommender</h2>
+<p>With the probabilistic embeddings defined as custom layers, the full model only needs a few lines of code. The user and movie embeddings are constructed as rate-adjusted Gamma embeddings, and their scalar product will be the rate of the Poisson distribution that generates the observations, implemented as a distribution lambda layer.</p>
+<p>The KL weights need to be passed to the corresponding probabilistic layers, so we need to include them in the input of the model, for instance in two additional columns. For the user part, we observe that the KL divergence term is decomposed as a sum over user terms,</p>
+<p><span class="math display">\[
+\mathbb{E}_Q\left[ \log Q(Z_{users}) - \log P(Z_{users})) \right] = \sum_u \mathbb{E}_Q\left[ \log Q(Z_u) - \log P(Z_u)) \right],
+\]</span></p>
+<p>but we need to express it as a sum over all user/movie interactions of the training set. If we simply replace the sum, we are counting the same user once for every movie they have rated, so we can rescale these terms by this number,</p>
+<p><span class="math display">\[
+\mathbb{E}_Q\left[ \log Q(Z_{users}) - \log P(Z_{users})) \right] = \sum_i \mathbb{E}_Q\left[ \log Q(Z_{u[i]}) - \log P(Z_{u[i]})) \right]\frac1{N_{u[i]}},
+\]</span></p>
+<p>where <span class="math inline">\(u[i]\)</span> denotes the user of interaction <span class="math inline">\(i\)</span>, and <span class="math inline">\(N_{u[i]}\)</span> the number of movies rated by this user. The KL weights of the movie part can be derived in the same way.</p>
+<p>With the probabilistic embeddings defined as custom layers, the full model only needs a few lines of code. The user and movie embeddings are constructed as rate-adjusted Gamma embeddings, and their scalar product will be the rate of the Poisson distribution that generates the observations, implemented as a distribution lambda layer.</p>
+<div class="cell" data-execution_count="8">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ProbabilisticRecommender(tfk.Model):</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, num_users, num_movies, embedding_size, kl_weight, <span class="op">**</span>kwargs):</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, num_users, num_movies, embedding_size, <span class="op">**</span>kwargs):</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>        <span class="bu">super</span>(ProbabilisticRecommender, <span class="va">self</span>).<span class="fu">__init__</span>(<span class="op">**</span>kwargs)</span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.num_users <span class="op">=</span> num_users</span>
 <span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.num_movies <span class="op">=</span> num_movies</span>
 <span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.embedding_size <span class="op">=</span> embedding_size</span>
 <span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.user_embedding <span class="op">=</span> HierarchicalGammaEmbedding(</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.user_embedding <span class="op">=</span> RateAdjustedGammaEmbedding(</span>
 <span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>            num_users,</span>
 <span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>            embedding_size,</span>
 <span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>            parent_concentration<span class="op">=</span><span class="fl">1.</span>,</span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>            parent_rate<span class="op">=</span><span class="fl">100.</span>,</span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>            embedding_concentration<span class="op">=</span><span class="fl">1.</span>,</span>
-<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>            kl_weight<span class="op">=</span>kl_weight</span>
-<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>        )</span>
-<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.movie_embedding <span class="op">=</span> HierarchicalGammaEmbedding(</span>
-<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>            num_movies,</span>
-<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>            embedding_size,</span>
-<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>            parent_concentration<span class="op">=</span><span class="fl">1.</span>,</span>
-<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>            parent_rate<span class="op">=</span><span class="fl">100.</span>,</span>
-<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>            embedding_concentration<span class="op">=</span><span class="fl">1.</span>,</span>
-<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>            kl_weight<span class="op">=</span>kl_weight</span>
-<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>        )</span>
-<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.head <span class="op">=</span> tfpl.DistributionLambda(<span class="kw">lambda</span> t: tfd.Poisson(t))</span>
-<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> call(<span class="va">self</span>, inputs):</span>
-<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>        user_vector <span class="op">=</span> <span class="va">self</span>.user_embedding(inputs[:, <span class="dv">0</span>])</span>
-<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>        movie_vector <span class="op">=</span> <span class="va">self</span>.movie_embedding(inputs[:, <span class="dv">1</span>])</span>
-<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>        dot_user_movie <span class="op">=</span> tf.reduce_sum(user_vector <span class="op">*</span> movie_vector, axis<span class="op">=-</span><span class="dv">1</span>)</span>
-<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span>.head(dot_user_movie)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>            parent_rate<span class="op">=</span><span class="fl">.8</span>,</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>            embedding_concentration<span class="op">=</span><span class="fl">1.</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.movie_embedding <span class="op">=</span> RateAdjustedGammaEmbedding(</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>            num_movies,</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>            embedding_size,</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>            parent_concentration<span class="op">=</span><span class="fl">1.</span>,</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>            parent_rate<span class="op">=</span><span class="fl">.8</span>,</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>            embedding_concentration<span class="op">=</span><span class="fl">1.</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.head <span class="op">=</span> tfpl.DistributionLambda(<span class="kw">lambda</span> t: tfd.Poisson(t))</span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> call(<span class="va">self</span>, inputs):</span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>        user_vector <span class="op">=</span> <span class="va">self</span>.user_embedding(inputs[:, <span class="dv">0</span>], inputs[:, <span class="dv">2</span>])</span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>        movie_vector <span class="op">=</span> <span class="va">self</span>.movie_embedding(inputs[:, <span class="dv">1</span>], inputs[:, <span class="dv">3</span>])</span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>        dot_user_movie <span class="op">=</span> tf.reduce_sum(user_vector <span class="op">*</span> movie_vector, axis<span class="op">=-</span><span class="dv">1</span>)</span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span>.head(dot_user_movie)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>With a probability distribution as an output, this model requires a negative log-likelihood loss function, otherwise it is straightforward to train it like any Keras model.</p>
-<div class="cell" data-execution_count="8">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>EMBEDDING_SIZE <span class="op">=</span> <span class="dv">50</span></span>
+<p>As mentioned in the preliminary observations, this model requires a negative log-likelihood loss function, otherwise it is straightforward to train it like any Keras model.</p>
+<div class="cell" data-execution_count="9">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>EMBEDDING_SIZE <span class="op">=</span> <span class="dv">20</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>BATCH_SIZE <span class="op">=</span> <span class="dv">128</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>KL_WEIGHT <span class="op">=</span>  <span class="dv">1</span><span class="op">/</span>x_train.shape[<span class="dv">0</span>]</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>negloglik <span class="op">=</span> <span class="kw">lambda</span> y, rv_y: <span class="op">-</span>rv_y.log_prob(y)</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>prob_model <span class="op">=</span> ProbabilisticRecommender(num_users, num_movies, EMBEDDING_SIZE, KL_WEIGHT)</span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>prob_model.<span class="bu">compile</span>(</span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    loss<span class="op">=</span>negloglik, optimizer<span class="op">=</span>tfk.optimizers.Adam(learning_rate<span class="op">=</span><span class="fl">0.001</span>)</span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>BATCH_SIZE <span class="op">=</span> <span class="dv">1024</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>negloglik <span class="op">=</span> <span class="kw">lambda</span> y, rv_y: <span class="op">-</span>rv_y.log_prob(y)</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>prob_model <span class="op">=</span> ProbabilisticRecommender(num_users,</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>                                      num_movies,</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>                                      embedding_size<span class="op">=</span>EMBEDDING_SIZE</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>                                     )</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>prob_model.<span class="bu">compile</span>(</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    loss<span class="op">=</span>negloglik, optimizer<span class="op">=</span>tfk.optimizers.Adam(learning_rate<span class="op">=</span><span class="fl">0.01</span>)</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Once the model has been trained, we can call it on new user/item pairs to produce a Poisson distribution of posterior predicted observations. We can directly sample user ratings from this distribution with <code>.sample()</code>, or call its <code>.rate_parameter()</code> method to find the posterior predicted rate. The latter offers a higher resolution to rank items for a given user (it is a continuous variable rather than an integer) and is therefore more practical for recommender systems.</p>
 <p>When the model is called, each probabilistic layer returns a single sample from its learned variational distribution. To estimate the posterior predicted Poisson rate of a user/item interaction, one can call the model several times to obtain a sample. In real world applications, drawing a single Poisson rate or only a few of them rather than estimating the posterior mean to score an item might prove more useful as it offers a broader variety of suggestions to users whose tastes are less certain, namely with user embedding distributions of higher variance. It addresses the exploration-exploitation trade-off with a mechanism similar to <a href="https://en.wikipedia.org/wiki/Thompson_sampling">Thompson sampling</a> (see also this previous <a href="https://ybarmaz.github.io/blog/posts/2021-02-09-contextual_bandits.html">blog post</a>).</p>
@@ -366,6 +406,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p>With TensorFlow Probability layers, we can thus add a Bayesian flavor to more traditional recommender systems and address issues such as exploration-exploitation trade-offs or cold starts in a more principled way. From another angle, we can express probabilistic models such as matrix factorization models as Keras models and take advantage of the <code>tf.data.Dataset</code> API for batch training with potentially large datasets.</p>
 
 
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
