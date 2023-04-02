@@ -350,7 +350,6 @@ D_{KL}(Q(Z) \Vert P(Z)) = \mathbb{E}_Q\left[ \log Q(Z) - \log P(Z))\right],
 \mathbb{E}_Q\left[ \log Q(Z_{users}) - \log P(Z_{users})) \right] = \sum_i \mathbb{E}_Q\left[ \log Q(Z_{u[i]}) - \log P(Z_{u[i]})) \right]\frac1{N_{u[i]}},
 \]</span></p>
 <p>where <span class="math inline">\(u[i]\)</span> denotes the user of interaction <span class="math inline">\(i\)</span>, and <span class="math inline">\(N_{u[i]}\)</span> the number of movies rated by this user. The KL weights of the movie part can be derived in the same way.</p>
-<p>With the probabilistic embeddings defined as custom layers, the full model only needs a few lines of code. The user and movie embeddings are constructed as rate-adjusted Gamma embeddings, and their scalar product will be the rate of the Poisson distribution that generates the observations, implemented as a distribution lambda layer.</p>
 <div class="cell" data-execution_count="8">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ProbabilisticRecommender(tfk.Model):</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, num_users, num_movies, embedding_size, <span class="op">**</span>kwargs):</span>
