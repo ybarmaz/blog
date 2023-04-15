@@ -237,20 +237,20 @@ P(\alpha, \beta, \lambda_i, Y_{i,j}) = P(\alpha)P(\beta)\prod_{i=1}^{N_{\mathrm{
 <span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>unique_sites, sites_idx, sites_counts <span class="op">=</span> tf.unique_with_counts(sites)</span>
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>ae_per_site <span class="op">=</span> tf.RaggedTensor.from_value_rowids(</span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    values<span class="op">=</span>observed_ae,</span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    value_rowids<span class="op">=</span>sites_idx)</span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>mdl_ae <span class="op">=</span> tfd.JointDistributionSequential([</span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    <span class="co">#alpha</span></span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    tfd.Gamma(<span class="dv">1</span>, <span class="dv">1</span>, name<span class="op">=</span><span class="st">'alpha'</span>),</span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    <span class="co">#beta</span></span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    tfd.Gamma(<span class="dv">1</span>, <span class="dv">10</span>, name<span class="op">=</span><span class="st">'beta'</span>),</span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>    <span class="co">#Poisson rates for each sites</span></span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>    <span class="kw">lambda</span> beta, alpha: tfd.Sample(tfd.Gamma(alpha, beta), sample_shape<span class="op">=</span>unique_sites.shape, name<span class="op">=</span><span class="st">'rates'</span>),</span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>    <span class="co">#observed AEs</span></span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>    <span class="kw">lambda</span> rates: tfd.Independent(</span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>        tfd.Poisson(tf.gather(rates, sites_idx, axis<span class="op">=-</span><span class="dv">1</span>)), reinterpreted_batch_ndims<span class="op">=</span><span class="dv">1</span>, name<span class="op">=</span><span class="st">'observations'</span>)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>mdl_ae <span class="op">=</span> tfd.JointDistributionSequential([</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">#alpha</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    tfd.Gamma(<span class="dv">1</span>, <span class="dv">1</span>, name<span class="op">=</span><span class="st">'alpha'</span>),</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    <span class="co">#beta</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    tfd.Gamma(<span class="dv">1</span>, <span class="dv">10</span>, name<span class="op">=</span><span class="st">'beta'</span>),</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    <span class="co">#Poisson rates for each sites</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    <span class="kw">lambda</span> beta, alpha: tfd.Sample(tfd.Gamma(alpha, beta),</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>                                   sample_shape<span class="op">=</span>unique_sites.shape,</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>                                   name<span class="op">=</span><span class="st">'rates'</span>),</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>    <span class="co">#observed AEs</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>    <span class="kw">lambda</span> rates: tfd.Independent(</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>        tfd.Poisson(tf.gather(rates, sites_idx, axis<span class="op">=-</span><span class="dv">1</span>)),</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>        reinterpreted_batch_ndims<span class="op">=</span><span class="dv">1</span>,</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>        name<span class="op">=</span><span class="st">'observations'</span>)</span>
 <span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>In Bayesian inference, the analytical derivation of the posterior distribution is often impossible, but the same probabilistic programming libraries provide efficient implementations of MCMC algorithms that return samples of the posterior distribution.</p>
