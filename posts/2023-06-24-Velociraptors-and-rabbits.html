@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.1.251">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Yves Barmaz">
+<meta name="dcterms.date" content="2023-06-24">
+<meta name="description" content="A discussion of differentiable programming and scientific computing in the JAX ecosystem, with an example of simulation-based inference.">
+
+<title>Yves Barmaz’s blog - Velociraptors and rabbits: scientific modelling on steroids</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1.6em;
+  vertical-align: middle;
+}
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { color: #008000; } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { color: #008000; font-weight: bold; } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<script src="../site_libs/quarto-html/quarto.js"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" integrity="sha512-c3Nl8+7g4LMSTdrm621y7kf9v3SDPnhxLNhcjFJbKECVnmZHTdo+IRO05sNLTH/D3vA6u1X32ehoLC7WFVdheg==" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script>
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<link rel="stylesheet" href="../styles.css">
+</head>
+
+<body class="nav-fixed fullcontent">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">Yves Barmaz’s blog</span>
+    </a>
+  </div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../about.html">About</a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/ybarmaz"><i class="bi bi-github" role="img">
+</i> 
+ </a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://twitter.com/YvesBarmaz"><i class="bi bi-twitter" role="img">
+</i> 
+ </a>
+  </li>  
+</ul>
+              <div id="quarto-search" class="" title="Search"></div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">Velociraptors and rabbits: scientific modelling on steroids</h1>
+                  <div>
+        <div class="description">
+          A discussion of differentiable programming and scientific computing in the JAX ecosystem, with an example of simulation-based inference.
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">scientific computing</div>
+                <div class="quarto-category">simulation-based inference</div>
+                <div class="quarto-category">jax</div>
+                <div class="quarto-category">tensorflow-probability</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p>Yves Barmaz </p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">June 24, 2023</p>
+      </div>
+    </div>
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+<section id="differentiable-programming-and-scientific-computing" class="level2">
+<h2 class="anchored" data-anchor-id="differentiable-programming-and-scientific-computing">Differentiable programming and scientific computing</h2>
+<p>Machine learning algorithms are often criticized for their poor interpretability and a lack of uncertainty quantification. They are widely used nonetheless thank to modular libraries that allow us to build flexible models and training pipelines adapted to all kinds of problems. <a href="https://en.wikipedia.org/wiki/Automatic_differentiation">Automatic differentiation</a> and <a href="https://www.tensorflow.org/xla">specialized compilers</a> are technologies at the core of those capabilities, and interestingly they have also been enabling rapid advances in the field of scientific computing, which naturally strives for interpretability and uncertainty awareness. Hamiltonian Monte Carlo and variational inference algorithms implemented in libraries such as PyMC, Pyro or TensorFlow-Probability are examples that immediately come to mind. When it comes to simulation, <a href="https://en.wikipedia.org/wiki/Differentiable_programming">differentiable programming</a> is gaining traction as it simplifies the process of calibrating computer models to experimental data. The idea is that the same principle as backpropagation in machine learning can be used to adjust the model parameters with gradient-based optimization algorithms until the simulated data closely matches the experimental data. The only requirement is that the model has to be written in a language that supports automatic differentiation.</p>
+<p>For a long time, scientific computing relied on libraries written in Fortran, C/C++ or Python, or even MATLAB, by generations upon generations of graduate students and postdocs, and derivatives had to be calculated by hand (I sound like my grand-parents when they were telling me they had to walk several kilometers every day to go to school). Here comes <a href="https://jax.readthedocs.io/en/latest/">JAX</a> in the picture, a high-performance array computing library built around automatic differentiation and the XLA compiler, with a NumPy-like API that makes it easy to express scientific models in a code that will be differentiable and support hardware acceleration out of the box. Moreover, a whole ecosystem of specialized libraries have been built around JAX that can handle common scientific computing tasks, at a more or less high level, for instance:</p>
+<ul>
+<li><a href="https://github.com/deepmind/optax">Optax</a> for gradient-based optimization</li>
+<li><a href="https://docs.kidger.site/diffrax/">Diffrax</a> to integrate differential equations</li>
+<li><a href="https://www.tensorflow.org/probability/examples/TensorFlow_Probability_on_JAX">TensorFlow Probability on JAX</a> and <a href="https://github.com/pyro-ppl/numpyro">NumPyro</a> for probabilistic programming and statistical analysis</li>
+<li><a href="https://github.com/blackjax-devs/blackjax">BlackJAX</a> for efficient sampling</li>
+<li><a href="https://github.com/jax-md/jax-md">JAX, M.D.</a> for molecular dynamics</li>
+<li><a href="https://github.com/google/jax-cfd">JAX-CFD</a> for computational fluid dynamics</li>
+<li><a href="https://github.com/DifferentiableUniverseInitiative/jax_cosmo">JAX-cosmo</a> for cosmology</li>
+</ul>
+<p>The common JAX backend of these libraries allows for a great deal of modularity in the composition of scientific analysis pipelines. As an example, we will see how to quickly specify a predator-prey model in <code>jax.numpy</code>, integrate it with Diffrax, calibrate the resulting simulation to experimental data with Optax, and finally quantify uncertainties with a statistical analysis run in TensorFlow Probability on JAX. People who know me must now be thinking that I am a big fan of the JAX ecosystem because I come from a village called Nax, and they would not be completely wrong…</p>
+</section>
+<section id="lotka-voltera-model" class="level2">
+<h2 class="anchored" data-anchor-id="lotka-voltera-model">Lotka-Voltera model</h2>
+<p>The <a href="https://en.wikipedia.org/wiki/Lotka%E2%80%93Volterra_equations">Lotka-Voltera</a> differential equations describe the time-evolution of the sizes of two populations of preys, denoted by <span class="math inline">\(x(t)\)</span>, and predators, denoted by <span class="math inline">\(y(t)\)</span>.</p>
+<p><span class="math display">\[
+\begin{aligned}
+\frac{dx}{dt} &amp;= \alpha \, x - \beta\, x \, y \\
+\frac{dy}{dt} &amp;= \delta \, x \, y - \gamma \, y
+\end{aligned}
+\]</span></p>
+<p>At first glance, these equations look relatively simple, but the quadratic terms make them painful to solve by hand. They are easily numerically integrated with the <a href="https://docs.kidger.site/diffrax/">Diffrax</a> library, which implements state-of-the-art integrators for differential equations.</p>
+<p>The treatment of the problem presented here is inspired by the <a href="https://www.pymc.io/projects/docs/en/v3/pymc-examples/examples/samplers/SMC-ABC_Lotka-Volterra_example.html">PyMC documentation</a> and the corresponding <a href="https://colab.research.google.com/github/tensorflow/probability/blob/master/tensorflow_probability/python/experimental/mcmc/examples/smc_demo.ipynb#scrollTo=50aOwxwfdPHx">tfp demo</a>.</p>
+<div class="cell" data-execution_count="2">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># definition of parameters</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>a <span class="op">=</span> <span class="fl">1.</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>b <span class="op">=</span> <span class="fl">0.1</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>c <span class="op">=</span> <span class="fl">1.5</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>d <span class="op">=</span> <span class="fl">0.075</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co"># initial population of rabbits and velociraptors</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>X0 <span class="op">=</span> jnp.array([<span class="fl">10.</span>, <span class="fl">5.</span>])</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co"># size of data</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>size <span class="op">=</span> <span class="dv">100</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co"># time lapse</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>time <span class="op">=</span> <span class="dv">15</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>t <span class="op">=</span> jnp.linspace(<span class="dv">0</span>, time, size)</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>saveat <span class="op">=</span> SaveAt(ts<span class="op">=</span>t)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>But here we use a powerful integrator from Diffrax, further sped up with the magic of <a href="https://jax.readthedocs.io/en/latest/jax-101/02-jitting.html">Just in Time compilation</a>.</p>
+<div class="cell" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="at">@jit</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> competition_model(x0, y0, alpha, beta, gamma, delta):</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="co"># solves a Lotka-Volterra system of ODEs</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="co"># definition of the system of ODEs</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> f(t, X, args):</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> jnp.array([alpha <span class="op">*</span> X[<span class="dv">0</span>] <span class="op">-</span> beta <span class="op">*</span> X[<span class="dv">0</span>] <span class="op">*</span> X[<span class="dv">1</span>],</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>                          delta <span class="op">*</span> X[<span class="dv">0</span>] <span class="op">*</span> X[<span class="dv">1</span>] <span class="op">-</span> gamma <span class="op">*</span> X[<span class="dv">1</span>]])</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    stepsize_controller <span class="op">=</span> PIDController(rtol<span class="op">=</span><span class="fl">1e-5</span>, atol<span class="op">=</span><span class="fl">1e-5</span>)</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    soln <span class="op">=</span> diffeqsolve(ODETerm(f), Dopri5(), t0<span class="op">=</span><span class="dv">0</span>, t1<span class="op">=</span>time, dt0<span class="op">=</span><span class="fl">0.1</span>,</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>                       y0<span class="op">=</span>jnp.array([x0, y0]), saveat<span class="op">=</span>saveat,</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>                       stepsize_controller<span class="op">=</span>stepsize_controller)</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> soln</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We can generate synthetic observations with this solver to which we add a bit of noise to make the inference problems more realistic.</p>
+<div class="cell" data-execution_count="5">
+<div class="cell-output cell-output-display">
+<p><img src="2023-06-26-Velociraptors_and_rabbits_files/figure-html/cell-6-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+</section>
+<section id="model-calibration" class="level2">
+<h2 class="anchored" data-anchor-id="model-calibration">Model calibration</h2>
+<p>Since the Diffrax library is written in JAX, we can chain the numerical solution with a loss function that penalizes discrepancies between the simulations and the observations, and apply automatic differentiation on the output with JAX operators such as <code>jax.grad</code>.</p>
+<p>To model the discrepancies, we assume that the observations are normally distributed around the simulated values, and construct a corresponding pseudolikelihood function.</p>
+<div class="cell" data-execution_count="6">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>epsilon <span class="op">=</span> <span class="fl">.5</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>kernel <span class="op">=</span> tfd.Normal(<span class="fl">0.</span>, epsilon)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="at">@jit</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> pseudolikelihood(x0, y0, alpha, beta, gamma, delta):</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    sim_data <span class="op">=</span> competition_model(x0, y0, alpha, beta, gamma, delta)</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    error <span class="op">=</span> observed <span class="op">-</span> jnp.stack(sim_data.ys)</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> jnp.mean(kernel.log_prob(error))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>To find the best fit parameters, we can then maximize this pseudolikelihood with an optimizer from the Optax library.</p>
+<div class="cell" data-execution_count="7">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>params <span class="op">=</span> jnp.array([<span class="fl">5.</span>, <span class="fl">5.</span>, <span class="fl">1.</span>, <span class="fl">1.</span>, <span class="fl">1.</span>, <span class="fl">1.</span>])</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>start_learning_rate <span class="op">=</span> <span class="fl">1e-1</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>optimizer <span class="op">=</span> optax.adam(start_learning_rate)</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>opt_state <span class="op">=</span> optimizer.init(params)</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="at">@jit</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> compute_loss(params):</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">-</span>pseudolikelihood(<span class="op">*</span>params)</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="co"># A simple update loop.</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1000</span>):</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    grads <span class="op">=</span> grad(compute_loss)(params)</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    updates, opt_state <span class="op">=</span> optimizer.update(grads, opt_state)</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>    params <span class="op">=</span> optax.apply_updates(params, updates)</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="co"># computing the best fit solution</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>fitsoln <span class="op">=</span> competition_model(<span class="op">*</span>params)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell" data-execution_count="8">
+<div class="cell-output cell-output-display" data-execution_count="8">
+
+<div>
+
+<table class="dataframe table table-sm table-striped">
+  <thead>
+    <tr>
+      <th></th>
+      <th>true value</th>
+      <th>estimated value</th>
+    </tr>
+    <tr>
+      <th>parameter</th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>x_0</th>
+      <td>10.0</td>
+      <td>10.176</td>
+    </tr>
+    <tr>
+      <th>y_0</th>
+      <td>5.0</td>
+      <td>3.917</td>
+    </tr>
+    <tr>
+      <th>alpha</th>
+      <td>1.000</td>
+      <td>0.821</td>
+    </tr>
+    <tr>
+      <th>beta</th>
+      <td>0.100</td>
+      <td>0.091</td>
+    </tr>
+    <tr>
+      <th>gamma</th>
+      <td>1.500</td>
+      <td>1.854</td>
+    </tr>
+    <tr>
+      <th>delta</th>
+      <td>0.075</td>
+      <td>0.095</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="cell" data-execution_count="9">
+<div class="cell-output cell-output-display">
+<p><img src="2023-06-26-Velociraptors_and_rabbits_files/figure-html/cell-10-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+</section>
+<section id="uncertainty" class="level2">
+<h2 class="anchored" data-anchor-id="uncertainty">Uncertainty</h2>
+<p>The estimated values do not quite match the true parameters, and it would certainly be interesting to get error bars. A Bayesian analysis is a convenient way to achieve this, so the first step is to specify a prior distribution on the parameters.</p>
+<div class="cell" data-execution_count="10">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>ode_prior <span class="op">=</span> tfd.JointDistributionSequential([</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  tfd.Normal(X0[<span class="dv">0</span>], <span class="fl">.25</span>),</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  tfd.Normal(X0[<span class="dv">1</span>], <span class="fl">.25</span>),</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  tfd.Normal(<span class="fl">1.</span>, <span class="fl">.5</span>),</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  tfd.Normal(<span class="fl">.5</span>, <span class="fl">.1</span>),</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  tfd.Normal(<span class="fl">2.</span>, <span class="fl">.5</span>),</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  tfd.Normal(<span class="fl">1.</span>, <span class="fl">.1</span>),</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Samples from the corresponding prior predictive distribution of the observed data provide a good sanity check of the choice of priors.</p>
+<div class="cell" data-execution_count="11">
+<div class="cell-output cell-output-display">
+<p><img src="2023-06-26-Velociraptors_and_rabbits_files/figure-html/cell-12-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<p>The problem now is that we cannot build a joint distribution of the parameters and the observations reflecting our model assumptions that there is an underlying ordinary differential equation governing the dynamic of the system. As a result, we cannot derive a likelihood function that is required by the usual MCMC and variational inference algorithms for Bayesian statistics.</p>
+<p>As a workaround, there exist some likelihood-free inference algorithms for models where we know how to simulate data, but not how to construct a likelihood function. This is the case for a significant portion of scientific models, and the research field of <a href="https://simulation-based-inference.org/">simulation-based inference</a> is growing to address this need. <a href="https://en.wikipedia.org/wiki/Approximate_Bayesian_computation">Approximate Bayesian computation</a> is a family of such algorithms (see this <a href="https://www.annualreviews.org/doi/abs/10.1146/annurev-statistics-030718-105212">review article</a> for more details). It includes a variant of sequential Monte Carlo (SMC) that can be implemented in PyMC and TensorFlow Probability, which we will be using here.</p>
+<p>This algorithm requires a batched version of the pseudolikelihood function, so that it can be applied to a large sample of model parameters, the so-called particles, in parallel. For every particle, the batched pseudolikelihood function calls the differential equation solver, so a simplified version of the solver with no timestep adaptation can help avoid maximum timesteps errors.</p>
+<div class="cell" data-execution_count="12">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="at">@jit</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> batched_competition_model(x0, y0, alpha, beta, gamma, delta):</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="co"># solves a Lotka-Volterra system of ODEs</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> f(t, X, args):</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> jnp.array([alpha <span class="op">*</span> X[<span class="dv">0</span>] <span class="op">-</span> beta <span class="op">*</span> X[<span class="dv">0</span>] <span class="op">*</span> X[<span class="dv">1</span>],</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>                          delta <span class="op">*</span> X[<span class="dv">0</span>] <span class="op">*</span> X[<span class="dv">1</span>] <span class="op">-</span> gamma <span class="op">*</span> X[<span class="dv">1</span>]])</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    soln <span class="op">=</span> diffeqsolve(ODETerm(f), Dopri5(), t0<span class="op">=</span><span class="dv">0</span>, t1<span class="op">=</span>time, dt0<span class="op">=</span><span class="fl">0.1</span>,</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>                       y0<span class="op">=</span>jnp.array([x0, y0]), saveat<span class="op">=</span>saveat)</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> soln</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="at">@jit</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> batched_pseudolikelihood(x0, y0, alpha, beta, gamma, delta):</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    sim_data <span class="op">=</span> batched_competition_model(x0, y0, alpha, beta, gamma, delta)</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    error <span class="op">=</span> observed[...,jnp.newaxis] <span class="op">-</span> jnp.stack(sim_data.ys)</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> jnp.mean(kernel.log_prob(error), axis<span class="op">=</span>[<span class="dv">0</span>, <span class="dv">1</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>A typical SMC sampler requires a prior density function and a likelihood function to build a sequence of (unnormalized) density functions between the prior and the target posterior we are interested in (for a thorough introduction to SMC algorithms, see chapter 13 of <a href="https://probml.github.io/pml-book/">Probabilistic Machine Learning: Advanced Topics</a>). It then applies a particle filter algorithm to get samples of these density functions until the final one provides the desired output. In SMC-ABC, the likelihood function is replaced by a pseudolikelihood function.</p>
+<div class="cell" data-execution_count="13">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>sample_smc_chain <span class="op">=</span> tfp.experimental.mcmc.sample_sequential_monte_carlo</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="at">@jit</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> run_abc():</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    n_stage, final_state, final_kernel_results <span class="op">=</span> sample_smc_chain(</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>      prior_log_prob_fn<span class="op">=</span>ode_prior.log_prob,</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>      likelihood_log_prob_fn<span class="op">=</span>batched_pseudolikelihood,</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>      current_state<span class="op">=</span>ode_prior.sample(<span class="dv">1000</span>, seed<span class="op">=</span>sample_key),</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>      min_num_steps<span class="op">=</span><span class="dv">5</span>,</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>      seed<span class="op">=</span>sample_key,</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>      )</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> n_stage, final_state, final_kernel_results</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>n_stage, final_state, final_kernel_results <span class="op">=</span> run_abc()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>The final state of the particle filter is a sample from the (approximate) posterior distribution.</p>
+<div class="cell" data-execution_count="14">
+<div class="cell-output cell-output-display">
+<p><img src="2023-06-26-Velociraptors_and_rabbits_files/figure-html/cell-15-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<p>The posterior standard deviations provide the desired uncertainty quantification for the parameter estimates.</p>
+<div class="cell" data-execution_count="15">
+<div class="cell-output cell-output-display" data-execution_count="15">
+
+<div>
+
+<table class="dataframe table table-sm table-striped">
+  <thead>
+    <tr>
+      <th></th>
+      <th>true value</th>
+      <th>posterior mean</th>
+      <th>posterior std</th>
+    </tr>
+    <tr>
+      <th>parameter</th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>x_0</th>
+      <td>10.000</td>
+      <td>9.975</td>
+      <td>0.269</td>
+    </tr>
+    <tr>
+      <th>y_0</th>
+      <td>5.000</td>
+      <td>4.949</td>
+      <td>0.277</td>
+    </tr>
+    <tr>
+      <th>alpha</th>
+      <td>1.000</td>
+      <td>0.864</td>
+      <td>0.055</td>
+    </tr>
+    <tr>
+      <th>beta</th>
+      <td>0.100</td>
+      <td>0.091</td>
+      <td>0.007</td>
+    </tr>
+    <tr>
+      <th>gamma</th>
+      <td>1.500</td>
+      <td>1.761</td>
+      <td>0.142</td>
+    </tr>
+    <tr>
+      <th>delta</th>
+      <td>0.075</td>
+      <td>0.090</td>
+      <td>0.007</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+</div>
+<p>Lastly, we can simulate trajectories for parameters from the posterior sample to visualize the posterior predictive distribution of populations and compare it with the observations.</p>
+<div class="cell" data-execution_count="17">
+<div class="cell-output cell-output-display">
+<p><img src="2023-06-26-Velociraptors_and_rabbits_files/figure-html/cell-18-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    setTimeout(function() {
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const cites = ref.parentNode.getAttribute('data-cites').split(' ');
+    tippyHover(ref, function() {
+      var popup = window.document.createElement('div');
+      cites.forEach(function(cite) {
+        var citeDiv = window.document.createElement('div');
+        citeDiv.classList.add('hanging-indent');
+        citeDiv.classList.add('csl-entry');
+        var biblioDiv = window.document.getElementById('ref-' + cite);
+        if (biblioDiv) {
+          citeDiv.innerHTML = biblioDiv.innerHTML;
+        }
+        popup.appendChild(citeDiv);
+      });
+      return popup.innerHTML;
+    });
+  }
+});
+</script>
+<script src="https://utteranc.es/client.js" repo="ybarmaz/blog" issue-term="pathname" theme="github-light" crossorigin="anonymous" async="">
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>

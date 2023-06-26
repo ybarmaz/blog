@@ -2,42 +2,46 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://ybarmaz.github.io/blog/posts/2021-02-09-contextual_bandits.html</loc>
-    <lastmod>2023-04-15T17:05:42.065Z</lastmod>
+    <lastmod>2023-06-26T16:46:49.758Z</lastmod>
+  </url>
+  <url>
+    <loc>https://ybarmaz.github.io/blog/posts/2023-06-24-Velociraptors-and-rabbits.html</loc>
+    <lastmod>2023-06-26T16:46:50.699Z</lastmod>
   </url>
   <url>
     <loc>https://ybarmaz.github.io/blog/posts/2021-12-04-hamiltonian-mechanics-with-jax.html</loc>
-    <lastmod>2023-04-15T17:05:42.608Z</lastmod>
+    <lastmod>2023-06-26T16:46:51.374Z</lastmod>
   </url>
   <url>
     <loc>https://ybarmaz.github.io/blog/posts/2021-01-13-anomaly-detection-in-protocol-deviations.html</loc>
-    <lastmod>2023-04-15T17:05:43.207Z</lastmod>
+    <lastmod>2023-06-26T16:46:52.058Z</lastmod>
   </url>
   <url>
     <loc>https://ybarmaz.github.io/blog/posts/2021-02-01-variational-inference-with-tfp.html</loc>
-    <lastmod>2023-04-15T17:05:43.853Z</lastmod>
+    <lastmod>2023-06-26T16:46:52.801Z</lastmod>
   </url>
   <url>
     <loc>https://ybarmaz.github.io/blog/posts/2021-06-05-gaussian-random-walks-with-tfp.html</loc>
-    <lastmod>2023-04-15T17:05:44.329Z</lastmod>
+    <lastmod>2023-06-26T16:46:53.381Z</lastmod>
   </url>
   <url>
     <loc>https://ybarmaz.github.io/blog/posts/2021-01-08-probabilistic assessment-of-safety-underreporting.html</loc>
-    <lastmod>2023-04-15T17:05:44.831Z</lastmod>
+    <lastmod>2023-06-26T16:46:54.013Z</lastmod>
   </url>
   <url>
     <loc>https://ybarmaz.github.io/blog/posts/2022-02-23-bayesian-poisson-factorization.html</loc>
-    <lastmod>2023-04-15T17:05:45.341Z</lastmod>
+    <lastmod>2023-06-26T16:46:54.702Z</lastmod>
   </url>
   <url>
     <loc>https://ybarmaz.github.io/blog/posts/2022-11-05-Cleaning-Strava-data-with-Kalman-smoothers.html</loc>
-    <lastmod>2023-04-15T17:05:45.857Z</lastmod>
+    <lastmod>2023-06-26T16:46:55.382Z</lastmod>
   </url>
   <url>
     <loc>https://ybarmaz.github.io/blog/index.html</loc>
-    <lastmod>2023-04-15T17:05:46.443Z</lastmod>
+    <lastmod>2023-06-26T16:46:56.164Z</lastmod>
   </url>
   <url>
     <loc>https://ybarmaz.github.io/blog/about.html</loc>
-    <lastmod>2023-04-15T17:05:46.796Z</lastmod>
+    <lastmod>2023-06-26T16:46:56.668Z</lastmod>
   </url>
 </urlset>

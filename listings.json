@@ -2,6 +2,7 @@
   {
     "listing": "/index.html",
     "items": [
+      "/posts/2023-06-24-Velociraptors-and-rabbits.html",
       "/posts/2022-11-05-Cleaning-Strava-data-with-Kalman-smoothers.html",
       "/posts/2022-02-23-bayesian-poisson-factorization.html",
       "/posts/2021-12-04-hamiltonian-mechanics-with-jax.html",
