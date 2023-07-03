@@ -10,7 +10,7 @@
 <meta name="dcterms.date" content="2023-06-24">
 <meta name="description" content="A discussion of differentiable programming and scientific computing in the JAX ecosystem, with an example of simulation-based inference.">
 
-<title>Yves Barmaz’s blog - Velociraptors and rabbits: scientific modelling on steroids</title>
+<title>Yves Barmaz’s blog - Velociraptors and rabbits: scientific modeling on steroids</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -172,7 +172,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <header id="title-block-header" class="quarto-title-block default page-columns page-full">
   <div class="quarto-title-banner page-columns page-full">
     <div class="quarto-title column-body">
-      <h1 class="title">Velociraptors and rabbits: scientific modelling on steroids</h1>
+      <h1 class="title">Velociraptors and rabbits: scientific modeling on steroids</h1>
                   <div>
         <div class="description">
           A discussion of differentiable programming and scientific computing in the JAX ecosystem, with an example of simulation-based inference.
@@ -286,7 +286,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p>We can generate synthetic observations with this solver to which we add a bit of noise to make the inference problems more realistic.</p>
 <div class="cell" data-execution_count="5">
 <div class="cell-output cell-output-display">
-<p><img src="2023-06-26-Velociraptors_and_rabbits_files/figure-html/cell-6-output-1.png" class="img-fluid"></p>
+<p><img src="2023-06-26-Velociraptors-and-rabbits_files/figure-html/cell-6-output-1.png" class="img-fluid"></p>
 </div>
 </div>
 </section>
@@ -385,7 +385,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </div>
 <div class="cell" data-execution_count="9">
 <div class="cell-output cell-output-display">
-<p><img src="2023-06-26-Velociraptors_and_rabbits_files/figure-html/cell-10-output-1.png" class="img-fluid"></p>
+<p><img src="2023-06-26-Velociraptors-and-rabbits_files/figure-html/cell-10-output-1.png" class="img-fluid"></p>
 </div>
 </div>
 </section>
@@ -405,7 +405,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p>Samples from the corresponding prior predictive distribution of the observed data provide a good sanity check of the choice of priors.</p>
 <div class="cell" data-execution_count="11">
 <div class="cell-output cell-output-display">
-<p><img src="2023-06-26-Velociraptors_and_rabbits_files/figure-html/cell-12-output-1.png" class="img-fluid"></p>
+<p><img src="2023-06-26-Velociraptors-and-rabbits_files/figure-html/cell-12-output-1.png" class="img-fluid"></p>
 </div>
 </div>
 <p>The problem now is that we cannot build a joint distribution of the parameters and the observations reflecting our model assumptions that there is an underlying ordinary differential equation governing the dynamic of the system. As a result, we cannot derive a likelihood function that is required by the usual MCMC and variational inference algorithms for Bayesian statistics.</p>
@@ -453,7 +453,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p>The final state of the particle filter is a sample from the (approximate) posterior distribution.</p>
 <div class="cell" data-execution_count="14">
 <div class="cell-output cell-output-display">
-<p><img src="2023-06-26-Velociraptors_and_rabbits_files/figure-html/cell-15-output-1.png" class="img-fluid"></p>
+<p><img src="2023-06-26-Velociraptors-and-rabbits_files/figure-html/cell-15-output-1.png" class="img-fluid"></p>
 </div>
 </div>
 <p>The posterior standard deviations provide the desired uncertainty quantification for the parameter estimates.</p>
@@ -522,7 +522,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p>Lastly, we can simulate trajectories for parameters from the posterior sample to visualize the posterior predictive distribution of populations and compare it with the observations.</p>
 <div class="cell" data-execution_count="17">
 <div class="cell-output cell-output-display">
-<p><img src="2023-06-26-Velociraptors_and_rabbits_files/figure-html/cell-18-output-1.png" class="img-fluid"></p>
+<p><img src="2023-06-26-Velociraptors-and-rabbits_files/figure-html/cell-18-output-1.png" class="img-fluid"></p>
 </div>
 </div>
 
