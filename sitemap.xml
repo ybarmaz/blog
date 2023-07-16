@@ -1,47 +1,51 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>https://ybarmaz.github.io/blog/posts/2023-07-14-Neural-likelihood-estimation.html</loc>
+    <lastmod>2023-07-16T19:34:19.988Z</lastmod>
+  </url>
+  <url>
     <loc>https://ybarmaz.github.io/blog/posts/2021-02-09-contextual_bandits.html</loc>
-    <lastmod>2023-07-12T10:05:32.314Z</lastmod>
+    <lastmod>2023-07-16T19:34:20.924Z</lastmod>
   </url>
   <url>
     <loc>https://ybarmaz.github.io/blog/posts/2023-06-24-Rabbits-and-velociraptors.html</loc>
-    <lastmod>2023-07-12T10:05:33.431Z</lastmod>
+    <lastmod>2023-07-16T19:34:21.732Z</lastmod>
   </url>
   <url>
     <loc>https://ybarmaz.github.io/blog/posts/2021-12-04-hamiltonian-mechanics-with-jax.html</loc>
-    <lastmod>2023-07-12T10:05:34.622Z</lastmod>
+    <lastmod>2023-07-16T19:34:22.391Z</lastmod>
   </url>
   <url>
     <loc>https://ybarmaz.github.io/blog/posts/2021-01-13-anomaly-detection-in-protocol-deviations.html</loc>
-    <lastmod>2023-07-12T10:05:35.330Z</lastmod>
+    <lastmod>2023-07-16T19:34:23.040Z</lastmod>
   </url>
   <url>
     <loc>https://ybarmaz.github.io/blog/posts/2021-02-01-variational-inference-with-tfp.html</loc>
-    <lastmod>2023-07-12T10:05:36.369Z</lastmod>
+    <lastmod>2023-07-16T19:34:23.780Z</lastmod>
   </url>
   <url>
     <loc>https://ybarmaz.github.io/blog/posts/2021-06-05-gaussian-random-walks-with-tfp.html</loc>
-    <lastmod>2023-07-12T10:05:37.171Z</lastmod>
+    <lastmod>2023-07-16T19:34:24.352Z</lastmod>
   </url>
   <url>
     <loc>https://ybarmaz.github.io/blog/posts/2021-01-08-probabilistic assessment-of-safety-underreporting.html</loc>
-    <lastmod>2023-07-12T10:05:37.935Z</lastmod>
+    <lastmod>2023-07-16T19:34:24.970Z</lastmod>
   </url>
   <url>
     <loc>https://ybarmaz.github.io/blog/posts/2022-02-23-bayesian-poisson-factorization.html</loc>
-    <lastmod>2023-07-12T10:05:38.671Z</lastmod>
+    <lastmod>2023-07-16T19:34:25.626Z</lastmod>
   </url>
   <url>
     <loc>https://ybarmaz.github.io/blog/posts/2022-11-05-Cleaning-Strava-data-with-Kalman-smoothers.html</loc>
-    <lastmod>2023-07-12T10:05:39.798Z</lastmod>
+    <lastmod>2023-07-16T19:34:26.290Z</lastmod>
   </url>
   <url>
     <loc>https://ybarmaz.github.io/blog/index.html</loc>
-    <lastmod>2023-07-12T10:05:40.656Z</lastmod>
+    <lastmod>2023-07-16T19:34:26.969Z</lastmod>
   </url>
   <url>
     <loc>https://ybarmaz.github.io/blog/about.html</loc>
-    <lastmod>2023-07-12T10:05:41.273Z</lastmod>
+    <lastmod>2023-07-16T19:34:27.469Z</lastmod>
   </url>
 </urlset>

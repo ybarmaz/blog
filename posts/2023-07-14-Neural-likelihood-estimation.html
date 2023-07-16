@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.1.251">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Yves Barmaz">
+<meta name="dcterms.date" content="2023-07-14">
+<meta name="description" content="A discussion of simulation-based inference fueled by machine learning algorithms, with an example of neural likelihood estimation in TensorFlow Probability.">
+
+<title>Yves Barmaz’s blog - Neural likelihood estimation and simulation-based inference</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1.6em;
+  vertical-align: middle;
+}
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { color: #008000; } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { color: #008000; font-weight: bold; } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<script src="../site_libs/quarto-html/quarto.js"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<link rel="stylesheet" href="../styles.css">
+</head>
+
+<body class="nav-fixed fullcontent">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">Yves Barmaz’s blog</span>
+    </a>
+  </div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../about.html">About</a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/ybarmaz"><i class="bi bi-github" role="img">
+</i> 
+ </a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://twitter.com/YvesBarmaz"><i class="bi bi-twitter" role="img">
+</i> 
+ </a>
+  </li>  
+</ul>
+              <div id="quarto-search" class="" title="Search"></div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">Neural likelihood estimation and simulation-based inference</h1>
+                  <div>
+        <div class="description">
+          A discussion of simulation-based inference fueled by machine learning algorithms, with an example of neural likelihood estimation in TensorFlow Probability.
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">simulation-based inference</div>
+                <div class="quarto-category">machine learning</div>
+                <div class="quarto-category">tensorflow-probability</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p>Yves Barmaz </p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">July 14, 2023</p>
+      </div>
+    </div>
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+<section id="simulation-and-inference" class="level2">
+<h2 class="anchored" data-anchor-id="simulation-and-inference">Simulation and inference</h2>
+<p>The problem of estimating quantities that are not directly observable is very common in science, engineering and business applications, and evaluating the uncertainty of these estimates is often as important as the accuracy of the “best guess”. Hypothesis testing and risk management would not be possible without quantifying uncertainty, which has motivated the development of statistics as the scientific discipline that addresses these questions.</p>
+<p>The usual workflow of a statistical analysis involves the definition of a joint probability distribution of measurements and (hidden) quantities of interest, followed by the application of some inference algorithm to retrieve those quantities from the observed data following the <a href="https://en.wikipedia.org/wiki/Likelihood_principle">likelihood principle</a>, which states that all the evidence in a sample relevant to model parameters is contained in the likelihood function.</p>
+<p>However, scientific models are normally built in the opposite direction: given some model parameters, they prescribe a way to simulate observations, often with intermediate unobserved states. Statistical inference algorithms then effectively aim at solving the inverse problem: given the observations, they prescribe a way to retrieve the model parameters, and hidden states when applicable.</p>
+<p>Sometimes the scientific models are expressed as a probability distribution, which immediately defines a likelihood function, and the statistical analysis can focus on inference. In most cases, though, the joint distribution is only implicit and the statistical analysis must start with the derivation of a likelihood function at best, or at least of an approximation.</p>
+<p>A common approach is to simulate observations from a model and build an empirical distribution of measurements (or summary statistics thereof) to design a statistical test of the validity of the model. This approach is at the heart of the <a href="https://en.wikipedia.org/wiki/Scientific_method">scientific method</a> but is more cumbersome when we want to estimate the value of model parameters.</p>
+</section>
+<section id="simulation-based-inference" class="level2">
+<h2 class="anchored" data-anchor-id="simulation-based-inference">Simulation-based inference</h2>
+<p>In the last <a href="https://ybarmaz.github.io/blog/posts/2023-06-24-Velociraptors-and-rabbits.html">post</a> of this blog, we discussed such a problem where we were interested in inferring the parameters of a population competition model with no known likelihood function. We relied on SMC-ABC, an example of <a href="https://en.wikipedia.org/wiki/Approximate_Bayesian_computation">approximate Bayesian computation</a>, where a surrogate likelihood function is used in a Bayesian inference algorithm.</p>
+<p>This type of algorithm that does not require a likelihood function is often referred to as <a href="https://simulation-based-inference.org/">simulation-based inference</a>, a very active research area in computational statistics. This activity is partly fueled by advances in machine learning, where neural networks have been built to approximate all kinds of mathematical functions. In particular, normalizing flows have proven useful in approximating probability distributions, especially the <a href="https://arxiv.org/abs/1705.07057">masked autoregressive flow for density estimation</a>.</p>
+<p>The benefit of these normalizing flows for simulation-based inference becomes apparent if we sample model parameters <span class="math inline">\(\theta\)</span> from a certain proposal distribution <span class="math inline">\(\pi(\theta)\)</span>, and use the simulator model to generate synthetic data <span class="math inline">\(X\)</span>. We can then use a flow model to learn an estimate <span class="math inline">\(\tilde p(\theta, X)\)</span> of the joint distribution, or even <span class="math inline">\(\tilde p(X \vert \theta)\)</span> of the conditional distribution of the observations given the parameters.</p>
+<p>For an example, we can go back to the Lotka-Volterra competition model discussed in the last <a href="https://ybarmaz.github.io/blog/posts/2023-06-24-Velociraptors-and-rabbits.html">post</a>.</p>
+<div class="cell" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ode_int = tfp.math.ode.BDF()</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>ode_int <span class="op">=</span> tfp.math.ode.DormandPrince()</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># simulator function</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="at">@tf.function</span>(experimental_compile<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> competition_model(x0, y0, alpha, beta, gamma, delta):</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Lotka - Volterra equation</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> ode_fn(t, X):</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">""" Return the growth rate of velociraptor and rabbit populations. """</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    dX_dt <span class="op">=</span> alpha<span class="op">*</span>X[<span class="dv">0</span>] <span class="op">-</span> beta<span class="op">*</span>X[<span class="dv">0</span>]<span class="op">*</span>X[<span class="dv">1</span>]</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    dY_dt <span class="op">=</span> <span class="op">-</span>gamma<span class="op">*</span>X[<span class="dv">1</span>] <span class="op">+</span> delta<span class="op">*</span>X[<span class="dv">0</span>]<span class="op">*</span>X[<span class="dv">1</span>]</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> [dX_dt, dY_dt]</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> ode_int.solve(</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>      ode_fn,</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>      initial_time<span class="op">=</span><span class="fl">0.</span>,</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>      initial_state<span class="op">=</span>[x0, y0],</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>      solution_times<span class="op">=</span>t)</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="co"># Generating noisy data to be used as observed data.</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> add_noise(x0, y0, a, b, c, d):</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>    noise <span class="op">=</span> np.random.normal(size<span class="op">=</span>(size, <span class="dv">2</span>))</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>    simulated <span class="op">=</span> tf.stack(competition_model(</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>      x0, y0, a, b, c, d).states).numpy().T</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>    simulated <span class="op">+=</span> noise</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>    indexes <span class="op">=</span> np.sort(np.random.randint(low<span class="op">=</span><span class="dv">0</span>, high<span class="op">=</span>size, size<span class="op">=</span>size))    </span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> simulated[indexes]</span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>observed <span class="op">=</span> add_noise(X0[<span class="dv">0</span>], X0[<span class="dv">1</span>], a, b, c, d)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We can use the prior distribution as a proposal distribution to sample model parameters, and generate synthetic observations with the <code>competition_model</code> simulator.</p>
+<div class="cell" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>ode_prior <span class="op">=</span> tfd.JointDistributionSequential([</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  tfd.LogNormal(tf.math.log(X0[<span class="dv">0</span>]), <span class="fl">.25</span>,),</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  tfd.LogNormal(tf.math.log(X0[<span class="dv">1</span>]), <span class="fl">.25</span>),</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  tfd.LogNormal(tf.math.log(<span class="fl">.9</span>), <span class="fl">.5</span>),</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  tfd.LogNormal(tf.math.log(<span class="fl">.09</span>), <span class="fl">.5</span>),</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  tfd.LogNormal(tf.math.log(<span class="fl">1.</span>), <span class="fl">.5</span>),</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  tfd.LogNormal(tf.math.log(<span class="fl">.06</span>), <span class="fl">.5</span>),</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>])</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>N <span class="op">=</span> <span class="dv">200</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>proposals <span class="op">=</span> ode_prior.sample(N)</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>simulation <span class="op">=</span> competition_model(<span class="op">*</span>proposals)</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>theta <span class="op">=</span> tf.stack(proposals, axis<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>X <span class="op">=</span> tf.transpose(tf.stack(simulation.states, axis<span class="op">=</span><span class="dv">0</span>))</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>X <span class="op">=</span> tf.reshape(X, [<span class="op">-</span><span class="dv">1</span>, <span class="dv">200</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>For density estimation, TensorFlow Probability readily implements <a href="https://www.tensorflow.org/probability/api_docs/python/tfp/bijectors/AutoregressiveNetwork">autoregressive neural networks</a>. Roughly, the idea is that a mapping <span class="math inline">\(f_{nn}: \mathbb{R}^n \rightarrow \mathbb{R}^n\)</span> defined by a dense neural network is in general not necessarily bijective, but an autoregressive condition can be enforced by applying a mask to the weights of the network, which effectively renders the restricted <span class="math inline">\(f_{nn}\)</span> bijective. This mapping can then be used to define a <a href="https://www.tensorflow.org/probability/api_docs/python/tfp/bijectors/MaskedAutoregressiveFlow">masked autoregressive flow</a> that deforms a base normal distribution into a target distribution that should approximate the simulated data points. The weights of the best fitting flow can be found by minimizing the average negative log-likelihood over the training examples through gradient descent.</p>
+<p>Moreover, a masked autoregressive network can be defined in such a way that it accepts a conditional input, which can be provided during training, and subsequently when we sample from the resulting transformed distribution or evaluate its conditional density.</p>
+<div class="cell" data-execution_count="7">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Conditional density estimation with MADE.</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>made <span class="op">=</span> tfb.AutoregressiveNetwork(</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  params<span class="op">=</span><span class="dv">2</span>,</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  hidden_units<span class="op">=</span>[<span class="dv">8</span>, <span class="dv">8</span>],</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  event_shape<span class="op">=</span>(X.shape[<span class="op">-</span><span class="dv">1</span>],),</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  conditional<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  kernel_initializer<span class="op">=</span>tfk.initializers.VarianceScaling(<span class="fl">0.1</span>, seed<span class="op">=</span><span class="dv">42</span>),</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  conditional_event_shape<span class="op">=</span>(theta.shape[<span class="op">-</span><span class="dv">1</span>],)</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>distribution <span class="op">=</span> tfd.TransformedDistribution(</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  distribution<span class="op">=</span>tfd.Sample(tfd.Normal(loc<span class="op">=</span><span class="fl">0.</span>, scale<span class="op">=</span><span class="fl">1.</span>),</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>                          sample_shape<span class="op">=</span>[X.shape[<span class="op">-</span><span class="dv">1</span>]]),</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>  bijector<span class="op">=</span>tfb.MaskedAutoregressiveFlow(made))</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Construct and fit a model.</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>X_ <span class="op">=</span> tfkl.Input(shape<span class="op">=</span>(X.shape[<span class="op">-</span><span class="dv">1</span>],), dtype<span class="op">=</span>tf.float32)</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>theta_ <span class="op">=</span> tfkl.Input(shape<span class="op">=</span>(theta.shape[<span class="op">-</span><span class="dv">1</span>],), dtype<span class="op">=</span>tf.float32)</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>log_prob_ <span class="op">=</span> distribution.log_prob(</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>  X_, bijector_kwargs<span class="op">=</span>{<span class="st">'conditional_input'</span>: theta_})</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> tfk.Model([X_, theta_], log_prob_)</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>model.<span class="bu">compile</span>(optimizer<span class="op">=</span>tf.optimizers.Adam(learning_rate<span class="op">=</span><span class="fl">0.001</span>),</span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>              loss<span class="op">=</span><span class="kw">lambda</span> _, log_prob: <span class="op">-</span>log_prob)</span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>batch_size <span class="op">=</span> <span class="dv">50</span></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>history <span class="op">=</span> model.fit(x<span class="op">=</span>[X, theta],</span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>                    y<span class="op">=</span>np.zeros((X.shape[<span class="dv">0</span>], <span class="dv">0</span>), dtype<span class="op">=</span>np.float32),</span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>                    batch_size<span class="op">=</span>batch_size,</span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>                    epochs<span class="op">=</span><span class="dv">3000</span>,</span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>                    steps_per_epoch<span class="op">=</span>X.shape[<span class="dv">0</span>] <span class="op">//</span> batch_size,</span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>                    shuffle<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>                    verbose<span class="op">=</span><span class="va">False</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="neural-likelihood-estimation" class="level2">
+<h2 class="anchored" data-anchor-id="neural-likelihood-estimation">Neural likelihood estimation</h2>
+<p>The key idea of the <a href="http://proceedings.mlr.press/v89/papamakarios19a/papamakarios19a.pdf">sequential neural likelihood estimation (SNLE) algorithm</a> is that the estimated density function of the conditional distribution of the measurements given the parameters <span class="math inline">\(\tilde p(X=X_0 \vert \theta)\)</span> evaluated at the observed data <span class="math inline">\(X_0\)</span> is a neural estimate of the likelihood function of the model.</p>
+<div class="cell" data-execution_count="10">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>X_0 <span class="op">=</span> tf.reshape(observed, (<span class="dv">200</span>,))</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> neural_likelihood(<span class="op">*</span>state):</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> distribution.log_prob(X_0,</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>                                 bijector_kwargs<span class="op">=</span>{<span class="st">'conditional_input'</span>: state})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>It can then be combined with the prior density and used in an MCMC algorithm as the target unnormalized density to generate samples of an approximation of the posterior distribution.</p>
+<div class="cell" data-execution_count="11">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> target_log_prob_fn(<span class="op">*</span>state):</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> neural_likelihood(<span class="op">*</span>state) <span class="op">+</span> ode_prior.log_prob(state)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Here we sampled training examples with the prior distribution as the proposal distribution for the model parameters. The problem with this approach is that the neural likelihood estimator is more accurate where the sample parameters are denser, which is not necessarily the case in the region of the actual parameter corresponding to the observation <span class="math inline">\(X_0\)</span>. The SNLE algorithm addresses this issue by first sampling parameters from the prior and generating observations with the simulator model, then estimating the likelihood, and then sampling more parameters through MCMC with corresponding simulated observations, and repeating this sequence of neural model calibration and synthetic data generation a predefined number of times. At each cycle, it should generate training parameters closer to the true posterior and improve the estimation of the likelihood function.</p>
+<div class="cell" data-execution_count="15">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>R <span class="op">=</span> <span class="dv">10</span>  <span class="co"># number of sampling/fitting rounds</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>N <span class="op">=</span> <span class="dv">200</span> <span class="co"># number of simulations sampled at each round</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>synthetic_X <span class="op">=</span> X</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>synthetic_theta <span class="op">=</span> theta</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> sample_params(init_theta, size<span class="op">=</span><span class="dv">100</span>):</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    init_state <span class="op">=</span> <span class="bu">list</span>(init_theta.numpy())</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    samples, _ <span class="op">=</span> run_chain(</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>        init_state, step_size, target_log_prob_fn, unconstraining_bijectors,</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>        num_steps<span class="op">=</span>size, burnin<span class="op">=</span><span class="dv">50</span>)</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> samples</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> sample_synthetic_data(param_samples):</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    simulation <span class="op">=</span> competition_model(<span class="op">*</span>param_samples)</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    new_X <span class="op">=</span> tf.reshape(tf.transpose(tf.stack(simulation.states, axis<span class="op">=</span><span class="dv">0</span>)),</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>                       [<span class="op">-</span><span class="dv">1</span>, <span class="dv">200</span>])</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>    new_theta <span class="op">=</span> tf.stack(param_samples, axis<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> new_theta, new_X</span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(R):</span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f'Step </span><span class="sc">{</span>i<span class="sc">}</span><span class="ss">'</span>)</span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">'sampling simulations'</span>)</span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>    new_theta, new_X <span class="op">=</span> sample_synthetic_data(</span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>        sample_params(synthetic_theta[<span class="op">-</span><span class="dv">1</span>], size<span class="op">=</span>N)</span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>    synthetic_theta <span class="op">=</span> tf.concat([synthetic_theta, new_theta], axis<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>    synthetic_X <span class="op">=</span> tf.concat([synthetic_X, new_X], axis<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">'calibrating neural likelihood'</span>)</span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>    history <span class="op">=</span> model.fit(x<span class="op">=</span>[synthetic_X, synthetic_theta],</span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a>                    y<span class="op">=</span>np.zeros((synthetic_X.shape[<span class="dv">0</span>], <span class="dv">0</span>),</span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>                               dtype<span class="op">=</span>np.float32),</span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a>                    batch_size<span class="op">=</span>batch_size,</span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a>                    epochs<span class="op">=</span><span class="dv">300</span>,</span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a>                    steps_per_epoch<span class="op">=</span>synthetic_X.shape[<span class="dv">0</span>] <span class="op">//</span> batch_size,</span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a>                    shuffle<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a>                    verbose<span class="op">=</span><span class="va">False</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Finally we can run the MCMC algorithm one last time to generate samples of the estimated posterior distribution.</p>
+<div class="cell" data-execution_count="18">
+<div class="cell-output cell-output-display">
+<p><img src="2023-07-14-Neural-likelihood-estimation_files/figure-html/cell-19-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+</section>
+<section id="further-resources" class="level2">
+<h2 class="anchored" data-anchor-id="further-resources">Further resources</h2>
+<p>The SNLE algorithm presented here is only one algorithm among a big family of simulation-based inference algorithms leveraging neural density estimation. Other members of this family try to estimate the posterior distribution directly, or the likelihood ratio that is used in the rejection step of MCMC samplers. They also vary in the way they define a proposal distribution for model parameters, and the way they schedule the simulation of synthetic observations, whether they do it in one go before the inference, or in different steps alternating with inference operations. The review paper “<a href="https://www.pnas.org/doi/10.1073/pnas.1912789117">The frontier of simulation-based inference</a>” gives an overview of these various designs and discusses current research areas. The website <a href="https://simulation-based-inference.org/">simulation-based-inference.org</a> is a great resource for applications, articles and software. The <a href="https://www.mackelab.org/sbi/">sbi</a> package is probably the easiest way to get started and implements the most <a href="https://www.mackelab.org/sbi/tutorial/16_implemented_methods/">common algorithms</a>, along with a thorough <a href="https://sbi-benchmark.github.io/">benchmark</a>.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    setTimeout(function() {
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const cites = ref.parentNode.getAttribute('data-cites').split(' ');
+    tippyHover(ref, function() {
+      var popup = window.document.createElement('div');
+      cites.forEach(function(cite) {
+        var citeDiv = window.document.createElement('div');
+        citeDiv.classList.add('hanging-indent');
+        citeDiv.classList.add('csl-entry');
+        var biblioDiv = window.document.getElementById('ref-' + cite);
+        if (biblioDiv) {
+          citeDiv.innerHTML = biblioDiv.innerHTML;
+        }
+        popup.appendChild(citeDiv);
+      });
+      return popup.innerHTML;
+    });
+  }
+});
+</script>
+<script src="https://utteranc.es/client.js" repo="ybarmaz/blog" issue-term="pathname" theme="github-light" crossorigin="anonymous" async="">
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>
