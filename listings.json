@@ -2,6 +2,7 @@
   {
     "listing": "/index.html",
     "items": [
+      "/posts/2023-11-11-Differentiable-programming-for-risk-management-and-investment-decisions.html",
       "/posts/2023-07-14-Neural-likelihood-estimation.html",
       "/posts/2023-06-24-Rabbits-and-velociraptors.html",
       "/posts/2022-11-05-Cleaning-Strava-data-with-Kalman-smoothers.html",
