@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.1.251">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Yves Barmaz">
+<meta name="dcterms.date" content="2023-11-12">
+<meta name="description" content="Common methods for solving SDEs are discussed, along with their limitations for solving inference problems. Conditional masked autoregressive flows are presented as a flexible alternative.">
+
+<title>Yves Barmaz’s blog - Masked autoregressive flows for stochastic differential equations</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1.6em;
+  vertical-align: middle;
+}
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { color: #008000; } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { color: #008000; font-weight: bold; } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<script src="../site_libs/quarto-html/quarto.js"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<link rel="stylesheet" href="../styles.css">
+</head>
+
+<body class="nav-fixed fullcontent">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">Yves Barmaz’s blog</span>
+    </a>
+  </div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../about.html">About</a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/ybarmaz"><i class="bi bi-github" role="img">
+</i> 
+ </a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://twitter.com/YvesBarmaz"><i class="bi bi-twitter" role="img">
+</i> 
+ </a>
+  </li>  
+</ul>
+              <div id="quarto-search" class="" title="Search"></div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">Masked autoregressive flows for stochastic differential equations</h1>
+                  <div>
+        <div class="description">
+          Common methods for solving SDEs are discussed, along with their limitations for solving inference problems. Conditional masked autoregressive flows are presented as a flexible alternative.
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">probabilistic programming</div>
+                <div class="quarto-category">tensorflow-probability</div>
+                <div class="quarto-category">machine learning</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p>Yves Barmaz </p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">November 12, 2023</p>
+      </div>
+    </div>
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+<section id="stochastic-differential-equations" class="level2">
+<h2 class="anchored" data-anchor-id="stochastic-differential-equations">Stochastic differential equations</h2>
+<p>A <a href="https://en.wikipedia.org/wiki/Stochastic_process">stochastic process</a> is a sequence of random variables <span class="math inline">\(X_t\)</span> indexed by a time parameter <span class="math inline">\(t\)</span> that can be discrete or continuous. The dynamics of a continuous process is often described by a <a href="https://en.wikipedia.org/wiki/Stochastic_differential_equation">stochastic differential equation</a> (SDE) of the form</p>
+<p><span class="math display">\[
+dX_t = \mu(X_t, t)dt + \sigma(X_t, t)dW_t,
+\]</span></p>
+<p>with a drift <span class="math inline">\(\mu(X, t)\)</span> and a volatility <span class="math inline">\(\sigma(X, t)\)</span>.</p>
+<p>In statistical physics, the random variable <span class="math inline">\(X_t\)</span> can describe the positions at time <span class="math inline">\(t\)</span> of a population of molecules swimming around in water, bumping randomly into smaller molecules following a <a href="https://en.wikipedia.org/wiki/Wiener_process">Wiener process</a> <span class="math inline">\(W_t\)</span>. In finance, <span class="math inline">\(X_t\)</span> can describe the uncertainty over an asset price in the future due to the random behavior of market participants.</p>
+<p>Solving this SDE means finding the probability distribution of <span class="math inline">\(X_t\)</span> for <span class="math inline">\(t&gt;0\)</span>, given the initial distribution of <span class="math inline">\(X_{t=0}\)</span>. This can be done by specifying the probability density function (PDF) <span class="math inline">\(p(x; t)\)</span> for <span class="math inline">\(t&gt;0\)</span> given the initial PDF <span class="math inline">\(p(x; t=0)\)</span> (here the semicolon indicates that <span class="math inline">\(x\)</span> is the value realized by the random variable and <span class="math inline">\(t\)</span> the time parameter).</p>
+<p>For certain special cases of <span class="math inline">\(\mu(X, t)\)</span> and <span class="math inline">\(\sigma(X, t)\)</span>, that include Brownian motions (where <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\sigma\)</span> are both constant), the solution follows a normal distribution <span class="math inline">\(X_t \sim \mathcal{N}(m(t), s(t))\)</span> where the parameters <span class="math inline">\(m(t)\)</span> and <span class="math inline">\(s(t)\)</span> obey certain ordinary differential equations, which can be solved with standard methods.</p>
+</section>
+<section id="euler-maruyama" class="level2">
+<h2 class="anchored" data-anchor-id="euler-maruyama">Euler-Maruyama</h2>
+<p>In general, one relies instead on numerical approximations, for instance the <a href="https://en.wikipedia.org/wiki/Euler%E2%80%93Maruyama_method">Euler–Maruyama method</a> that generates approximated samples of the process <span class="math inline">\(X_t\)</span> at discretized time steps <span class="math inline">\(t_1, \dots, t_N\)</span>,</p>
+<p><span class="math display">\[
+X_{i+1} = X_i + \mu(X_i, t_i)\Delta t_i + \sigma(X_i, t_i)\,\sqrt{\Delta t_i}\, Z_i, \quad Z_i \sim \mathcal{N}(0,1).
+\]</span></p>
+<p>In TensorFlow Probability, this can be implemented as a <code>tfd.MarkovChain</code> distribution. The following code snippet implements a geometric Brownian motion.</p>
+<div class="cell" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>drift <span class="op">=</span> <span class="fl">.1</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>volatility <span class="op">=</span> <span class="fl">.2</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>n_steps <span class="op">=</span> <span class="dv">51</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>time <span class="op">=</span> tf.linspace(<span class="fl">0.</span>, <span class="dv">10</span>, n_steps)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>time_step <span class="op">=</span> np.mean(np.diff(time))</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>geom_brownian_motion <span class="op">=</span> tfd.MarkovChain(</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>            initial_state_prior<span class="op">=</span>tfd.Deterministic(<span class="fl">1.</span>),</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>            transition_fn<span class="op">=</span><span class="kw">lambda</span> _, x: tfd.Normal(</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>                loc<span class="op">=</span>x <span class="op">+</span> x <span class="op">*</span> drift <span class="op">*</span> time_step,</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>                scale<span class="op">=</span>x <span class="op">*</span> volatility <span class="op">*</span> tf.sqrt(time_step)),</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>            num_steps<span class="op">=</span>n_steps,</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>            name<span class="op">=</span><span class="st">'geometric_brownian_motion'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="3">
+<div class="cell-output cell-output-display">
+<p><img src="2023-11-12-Masked-autoregressive-flows-for-stochastic-differential-equations_files/figure-html/cell-4-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<p>Sometimes, one is interested only in expected values of the form</p>
+<p><span class="math display">\[
+\mathbb{E}\left[f(X_t)\right] = \int f(x)\,p(x; t)\,\mathrm{d}x,
+\]</span></p>
+<p>for instance in asset pricing problems, and these samples are usually good enough to find Monte Carlo estimates</p>
+<p><span class="math display">\[
+\mathbb{E}\left[f(X_t)\right] \approx \sum_k f(\hat X_{t, k}),
+\]</span></p>
+<p>where the sum is taken over several realizations of the Euler-Maruyama integration.</p>
+<p>Other times, one needs to know the probability density function at a given time <span class="math inline">\(t\)</span>, for instance in inference problems with models that have a stochastic process component. Markov chains could provide that in theory, but at the expense of marginalizing out all the intermediate steps.</p>
+</section>
+<section id="fokker-planck" class="level2">
+<h2 class="anchored" data-anchor-id="fokker-planck">Fokker-Planck</h2>
+<p>Physicists came up with an alternative solution by deriving a partial differential equation (PDE) for <span class="math inline">\(p(x;t)\)</span> that is equivalent to the SDE, the <a href="https://en.wikipedia.org/wiki/Fokker%E2%80%93Planck_equation">Fokker-Planck</a> equation</p>
+<p><span class="math display">\[
+\frac{\partial p(x; t)}{\partial t} = -\frac{\partial}{\partial x}[\mu(x, t)p(x; t)] + \frac{1}{2}\frac{\partial^2}{\partial x^2}[\sigma^2(x, t)p(x; t)].
+\]</span></p>
+<p>It describes how the initial distribution <span class="math inline">\(p(x;0)\)</span> is shifting under the influence of the drift term and diffusing because of the volatility term. For the non-physicists who want to try this at home, <span class="math inline">\(p(x;0)\)</span> could indicate the position of a tea bag in a cup of hot water, <span class="math inline">\(\mu(x, t)\)</span> could describe how the water has been swirled, and <span class="math inline">\(\sigma^2(x, t)\)</span> would depend on the thermal agitation of the water.</p>
+<p>These PDEs are usually solved numerically. This can be difficult when <span class="math inline">\(\mu(X, t)\)</span> renders the equation stiff (this happens often in models of noisy electric circuits used for biophysical measurements) or in high-dimensional problems (for instance joint distributions of stock prices in large markets).</p>
+<p>A limitation of this modelling approach is the difficulty to sample from a distribution given by its probability density function. This requires specialized algorithms, so in practice it is probably better to rely on Euler-Maruyama methods for sampling, and Fokker-Planck equations for density evaluation. Furthermore, the log-densities should be compatible with automatic differentiation to be useful in probabilistic inference algorithms, which is not always straightforward with PDE solvers.</p>
+</section>
+<section id="probabilistic-machine-learning" class="level2">
+<h2 class="anchored" data-anchor-id="probabilistic-machine-learning">Probabilistic machine learning</h2>
+<p>Probabilistic machine learning provides a third approach, where one gets a model that can both generate new samples and evaluate densities in an a framework supporting automatic differentiation. The idea is to first generate training data with the Euler-Maruyama method, and then use machine learning to fit a probability distribution parameterized by a neural network to this synthetic data. The training objective is conditional density estimation of the synthetic training data. This distribution should both be convenient to sample from and have a density that can be evaluated easily.</p>
+<p>Such distributions can be constructed with <a href="https://arxiv.org/abs/1705.07057">normalizing flows</a> parameterized by conditional <a href="https://arxiv.org/abs/1502.03509">autoregressive networks</a>. In a nutshell, a normalizing flow deforms a normal distribution into a more generic one through an invertible mapping. This mapping can be implemented as a neural network, provided the network is invertible, and the autoregressive condition imposed by masking certain weights ensures just that. Moreover, these autoregressive networks can accept conditional variables, so that they can estimate the conditional density <span class="math inline">\(p(x; t)\)</span> if <span class="math inline">\(t\)</span> is passed to the model as a conditional variable.</p>
+<div class="cell" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Generate synthetic training data</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>n <span class="op">=</span> <span class="dv">1000</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>s <span class="op">=</span> geom_brownian_motion.sample(n)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>t <span class="op">=</span> tf.reshape(tf.stack(s.shape[<span class="dv">0</span>]<span class="op">*</span>[time], axis<span class="op">=</span><span class="dv">0</span>)[:,<span class="dv">1</span>:], (<span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>))</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>X <span class="op">=</span> tf.reshape(s[:, <span class="dv">1</span>:], (<span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>))</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Conditional density estimation with MADE.</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>made <span class="op">=</span> tfb.AutoregressiveNetwork(</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  params<span class="op">=</span><span class="dv">2</span>,</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  hidden_units<span class="op">=</span>[<span class="dv">32</span>, <span class="dv">32</span>],</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  event_shape<span class="op">=</span>(<span class="dv">1</span>,),</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  conditional<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  kernel_initializer<span class="op">=</span>tfk.initializers.VarianceScaling(<span class="fl">0.1</span>, seed<span class="op">=</span><span class="dv">42</span>),</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  conditional_event_shape<span class="op">=</span>(<span class="dv">1</span>,)</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>distribution <span class="op">=</span> tfd.TransformedDistribution(</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>  distribution<span class="op">=</span>tfd.Sample(tfd.Normal(loc<span class="op">=</span><span class="fl">0.</span>, scale<span class="op">=</span><span class="fl">1.</span>),</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>                          sample_shape<span class="op">=</span>(<span class="dv">1</span>,)),</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>  bijector<span class="op">=</span> tfb.Chain([tfb.Exp(), tfb.MaskedAutoregressiveFlow(made, name<span class="op">=</span><span class="st">'maf'</span>)])</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="co"># Construct and fit a model.</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>X_ <span class="op">=</span> tfkl.Input(shape<span class="op">=</span>(X.shape[<span class="op">-</span><span class="dv">1</span>],), dtype<span class="op">=</span>tf.float32)</span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>t_ <span class="op">=</span> tfkl.Input(shape<span class="op">=</span>(t.shape[<span class="op">-</span><span class="dv">1</span>],), dtype<span class="op">=</span>tf.float32)</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>log_prob_ <span class="op">=</span> distribution.log_prob(</span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>  X_, bijector_kwargs<span class="op">=</span>{<span class="st">'maf'</span>: {<span class="st">'conditional_input'</span>: t_}})</span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> tfk.Model([X_, t_], log_prob_)</span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>model.<span class="bu">compile</span>(optimizer<span class="op">=</span>tf.optimizers.Adam(learning_rate<span class="op">=</span><span class="fl">0.003</span>),</span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>              loss<span class="op">=</span><span class="kw">lambda</span> _, log_prob: <span class="op">-</span>log_prob)</span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>batch_size <span class="op">=</span> <span class="dv">500</span></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>history <span class="op">=</span> model.fit(x<span class="op">=</span>[X, t],</span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>                    y<span class="op">=</span>np.zeros((X.shape[<span class="dv">0</span>], <span class="dv">0</span>), dtype<span class="op">=</span>np.float32),</span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>                    batch_size<span class="op">=</span>batch_size,</span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>                    epochs<span class="op">=</span><span class="dv">70</span>,</span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>                    steps_per_epoch<span class="op">=</span>X.shape[<span class="dv">0</span>] <span class="op">//</span> batch_size,</span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>                    shuffle<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>                    verbose<span class="op">=</span><span class="va">False</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Here the autoregressive flow was chained with an exponential map to constrain its output to the support of the target distribution, <span class="math inline">\(\mathbb{R}_{&gt;0}\)</span>. Note how the conditional variable <span class="math inline">\(t\)</span> is passed to the <code>log_prob</code> method in a dictionary of keyword arguments to make sure it ends up in the right neural network.</p>
+<div class="cell" data-execution_count="6">
+<div class="cell-output cell-output-display">
+<p><img src="2023-11-12-Masked-autoregressive-flows-for-stochastic-differential-equations_files/figure-html/cell-7-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<p>These learned probability density functions can be compared with the true solution</p>
+<p><span class="math display">\[
+X_t = X_0 e^{(\mu - \frac{\sigma^2}{2})t + \sigma W_t}
+\]</span></p>
+<p>of the geometric Brownian motion SDE, which follows a log-normal distribution. This was the main reason for using this example.</p>
+<div class="cell" data-execution_count="7">
+<div class="cell-output cell-output-display">
+<p><img src="2023-11-12-Masked-autoregressive-flows-for-stochastic-differential-equations_files/figure-html/cell-8-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<p>In the same plot, one can see they more or less agree.</p>
+<div class="cell" data-execution_count="9">
+<div class="cell-output cell-output-display">
+<p><img src="2023-11-12-Masked-autoregressive-flows-for-stochastic-differential-equations_files/figure-html/cell-9-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+</section>
+<section id="flexible-models-for-complex-applications" class="level2">
+<h2 class="anchored" data-anchor-id="flexible-models-for-complex-applications">Flexible models for complex applications</h2>
+<p>For the sake of the example, the model presented here only accepted the time as a conditional variable, and the initial value was deterministic. One can of course draw the drift and volatility parameters as well as the initial value from proposal distributions and pass them as further conditional variables to the model in order to learn a parameterized conditional distribution <span class="math inline">\(p(x;t\vert \mu, \sigma, x_0)\)</span>. This is particularly useful if the ultimate goal is to perform Bayesian inference of these parameters from experimental data. Or one can learn a transition function <span class="math inline">\(p(x; t\vert t_0; x_0)\)</span> of a Markov chain if the problem involves discrete observations of an underlying stochastic process.</p>
+<p>Of course, this approach generalizes beyond geometric Brownian motions, and the implementation in TensorFlow makes it easy to run these models on accelerated hardware. I hope this blog post will trigger some ideas!</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    setTimeout(function() {
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const cites = ref.parentNode.getAttribute('data-cites').split(' ');
+    tippyHover(ref, function() {
+      var popup = window.document.createElement('div');
+      cites.forEach(function(cite) {
+        var citeDiv = window.document.createElement('div');
+        citeDiv.classList.add('hanging-indent');
+        citeDiv.classList.add('csl-entry');
+        var biblioDiv = window.document.getElementById('ref-' + cite);
+        if (biblioDiv) {
+          citeDiv.innerHTML = biblioDiv.innerHTML;
+        }
+        popup.appendChild(citeDiv);
+      });
+      return popup.innerHTML;
+    });
+  }
+});
+</script>
+<script src="https://utteranc.es/client.js" repo="ybarmaz/blog" issue-term="pathname" theme="github-light" crossorigin="anonymous" async="">
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>
