@@ -8,7 +8,7 @@
 
 <meta name="author" content="Yves Barmaz">
 <meta name="dcterms.date" content="2023-11-12">
-<meta name="description" content="Common methods for solving SDEs are discussed, along with their limitations for solving inference problems. Conditional masked autoregressive flows are presented as a flexible alternative.">
+<meta name="description" content="Common methods for solving SDEs are discussed, along with their limitations when it comes to statistical inference. Conditional masked autoregressive flows are presented as a flexible alternative.">
 
 <title>Yves Barmaz’s blog - Masked autoregressive flows for stochastic differential equations</title>
 <style>
@@ -172,7 +172,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
       <h1 class="title">Masked autoregressive flows for stochastic differential equations</h1>
                   <div>
         <div class="description">
-          Common methods for solving SDEs are discussed, along with their limitations for solving inference problems. Conditional masked autoregressive flows are presented as a flexible alternative.
+          Common methods for solving SDEs are discussed, along with their limitations when it comes to statistical inference. Conditional masked autoregressive flows are presented as a flexible alternative.
         </div>
       </div>
                           <div class="quarto-categories">
@@ -219,23 +219,24 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p><span class="math display">\[
 dX_t = \mu(X_t, t)dt + \sigma(X_t, t)dW_t,
 \]</span></p>
-<p>with a drift <span class="math inline">\(\mu(X, t)\)</span> and a volatility <span class="math inline">\(\sigma(X, t)\)</span>.</p>
+<p>where <span class="math inline">\(\mu(X, t)\)</span> is called the drift and <span class="math inline">\(\sigma(X, t)\)</span> the volatility.</p>
 <p>In statistical physics, the random variable <span class="math inline">\(X_t\)</span> can describe the positions at time <span class="math inline">\(t\)</span> of a population of molecules swimming around in water, bumping randomly into smaller molecules following a <a href="https://en.wikipedia.org/wiki/Wiener_process">Wiener process</a> <span class="math inline">\(W_t\)</span>. In finance, <span class="math inline">\(X_t\)</span> can describe the uncertainty over an asset price in the future due to the random behavior of market participants.</p>
-<p>Solving this SDE means finding the probability distribution of <span class="math inline">\(X_t\)</span> for <span class="math inline">\(t&gt;0\)</span>, given the initial distribution of <span class="math inline">\(X_{t=0}\)</span>. This can be done by specifying the probability density function (PDF) <span class="math inline">\(p(x; t)\)</span> for <span class="math inline">\(t&gt;0\)</span> given the initial PDF <span class="math inline">\(p(x; t=0)\)</span> (here the semicolon indicates that <span class="math inline">\(x\)</span> is the value realized by the random variable and <span class="math inline">\(t\)</span> the time parameter).</p>
-<p>For certain special cases of <span class="math inline">\(\mu(X, t)\)</span> and <span class="math inline">\(\sigma(X, t)\)</span>, that include Brownian motions (where <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\sigma\)</span> are both constant), the solution follows a normal distribution <span class="math inline">\(X_t \sim \mathcal{N}(m(t), s(t))\)</span> where the parameters <span class="math inline">\(m(t)\)</span> and <span class="math inline">\(s(t)\)</span> obey certain ordinary differential equations, which can be solved with standard methods.</p>
+<p>Solving this SDE means finding the probability distribution of <span class="math inline">\(X_t\)</span> for <span class="math inline">\(t&gt;0\)</span>, given the initial distribution of <span class="math inline">\(X_{t=0}\)</span>. This can be done by specifying the probability density function (PDF) <span class="math inline">\(p(x; t)\)</span> for <span class="math inline">\(t&gt;0\)</span> given the initial PDF <span class="math inline">\(p(x; t=0)\)</span> (here the semicolon indicates that <span class="math inline">\(x\)</span> is the value realized by the random variable, and <span class="math inline">\(t\)</span> the time parameter that indexes the distributions).</p>
+<p>For certain special cases of <span class="math inline">\(\mu(X, t)\)</span> and <span class="math inline">\(\sigma(X, t)\)</span>, the SDE can be solved explicitly (see these <a href="https://ethz.ch/content/dam/ethz/special-interest/mavt/dynamic-systems-n-control/idsc-dam/Lectures/Stochastic-Systems/SDE.pdf">lecture notes</a> for some examples). In general, one has to rely on numerical methods.</p>
 </section>
 <section id="euler-maruyama" class="level2">
 <h2 class="anchored" data-anchor-id="euler-maruyama">Euler-Maruyama</h2>
-<p>In general, one relies instead on numerical approximations, for instance the <a href="https://en.wikipedia.org/wiki/Euler%E2%80%93Maruyama_method">Euler–Maruyama method</a> that generates approximated samples of the process <span class="math inline">\(X_t\)</span> at discretized time steps <span class="math inline">\(t_1, \dots, t_N\)</span>,</p>
+<p>The <a href="https://en.wikipedia.org/wiki/Euler%E2%80%93Maruyama_method">Euler–Maruyama method</a> is probably the most flexible one. It generates approximated samples of the process <span class="math inline">\(X_t\)</span> at discretized time steps <span class="math inline">\(t_1, \dots, t_N\)</span>,</p>
 <p><span class="math display">\[
-X_{i+1} = X_i + \mu(X_i, t_i)\Delta t_i + \sigma(X_i, t_i)\,\sqrt{\Delta t_i}\, Z_i, \quad Z_i \sim \mathcal{N}(0,1).
+X_{i+1} = X_i + \mu(X_i, t_i)\Delta t_i + \sigma(X_i, t_i)\,\sqrt{\Delta t_i}\, Z_i,
 \]</span></p>
-<p>In TensorFlow Probability, this can be implemented as a <code>tfd.MarkovChain</code> distribution. The following code snippet implements a geometric Brownian motion.</p>
-<div class="cell" data-execution_count="2">
+<p>where every <span class="math inline">\(Z_i\)</span> is drawn from a standard normal distribution.</p>
+<p>In TensorFlow Probability, this method can be implemented as a <code>tfd.MarkovChain</code> distribution. The following code snippet illustrates it with a geometric Brownian motion.</p>
+<div class="cell" data-execution_count="12">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>drift <span class="op">=</span> <span class="fl">.1</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>volatility <span class="op">=</span> <span class="fl">.2</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>n_steps <span class="op">=</span> <span class="dv">51</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>n_steps <span class="op">=</span> <span class="dv">501</span></span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>time <span class="op">=</span> tf.linspace(<span class="fl">0.</span>, <span class="dv">10</span>, n_steps)</span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>time_step <span class="op">=</span> np.mean(np.diff(time))</span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
@@ -247,7 +248,7 @@ X_{i+1} = X_i + \mu(X_i, t_i)\Delta t_i + \sigma(X_i, t_i)\,\sqrt{\Delta t_i}\, 
 <span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>            num_steps<span class="op">=</span>n_steps,</span>
 <span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>            name<span class="op">=</span><span class="st">'geometric_brownian_motion'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="cell" data-execution_count="3">
+<div class="cell" data-execution_count="13">
 <div class="cell-output cell-output-display">
 <p><img src="2023-11-12-Masked-autoregressive-flows-for-stochastic-differential-equations_files/figure-html/cell-4-output-1.png" class="img-fluid"></p>
 </div>
@@ -256,11 +257,11 @@ X_{i+1} = X_i + \mu(X_i, t_i)\Delta t_i + \sigma(X_i, t_i)\,\sqrt{\Delta t_i}\, 
 <p><span class="math display">\[
 \mathbb{E}\left[f(X_t)\right] = \int f(x)\,p(x; t)\,\mathrm{d}x,
 \]</span></p>
-<p>for instance in asset pricing problems, and these samples are usually good enough to find Monte Carlo estimates</p>
+<p>for instance in asset pricing problems. Samples generated by the Euler-Maruyama methods can be used in Monte Carlo estimates</p>
 <p><span class="math display">\[
 \mathbb{E}\left[f(X_t)\right] \approx \sum_k f(\hat X_{t, k}),
 \]</span></p>
-<p>where the sum is taken over several realizations of the Euler-Maruyama integration.</p>
+<p>where the sum is taken over several realizations of the stochastic numerical integration.</p>
 <p>Other times, one needs to know the probability density function at a given time <span class="math inline">\(t\)</span>, for instance in inference problems with models that have a stochastic process component. Markov chains could provide that in theory, but at the expense of marginalizing out all the intermediate steps.</p>
 </section>
 <section id="fokker-planck" class="level2">
@@ -269,17 +270,17 @@ X_{i+1} = X_i + \mu(X_i, t_i)\Delta t_i + \sigma(X_i, t_i)\,\sqrt{\Delta t_i}\, 
 <p><span class="math display">\[
 \frac{\partial p(x; t)}{\partial t} = -\frac{\partial}{\partial x}[\mu(x, t)p(x; t)] + \frac{1}{2}\frac{\partial^2}{\partial x^2}[\sigma^2(x, t)p(x; t)].
 \]</span></p>
-<p>It describes how the initial distribution <span class="math inline">\(p(x;0)\)</span> is shifting under the influence of the drift term and diffusing because of the volatility term. For the non-physicists who want to try this at home, <span class="math inline">\(p(x;0)\)</span> could indicate the position of a tea bag in a cup of hot water, <span class="math inline">\(\mu(x, t)\)</span> could describe how the water has been swirled, and <span class="math inline">\(\sigma^2(x, t)\)</span> would depend on the thermal agitation of the water.</p>
-<p>These PDEs are usually solved numerically. This can be difficult when <span class="math inline">\(\mu(X, t)\)</span> renders the equation stiff (this happens often in models of noisy electric circuits used for biophysical measurements) or in high-dimensional problems (for instance joint distributions of stock prices in large markets).</p>
-<p>A limitation of this modelling approach is the difficulty to sample from a distribution given by its probability density function. This requires specialized algorithms, so in practice it is probably better to rely on Euler-Maruyama methods for sampling, and Fokker-Planck equations for density evaluation. Furthermore, the log-densities should be compatible with automatic differentiation to be useful in probabilistic inference algorithms, which is not always straightforward with PDE solvers.</p>
+<p>It describes how the initial distribution <span class="math inline">\(p(x;0)\)</span> is shifting under the influence of the drift term and diffusing because of the volatility term. For the non-physicists who want to try this at home, <span class="math inline">\(p(x;0)\)</span> could indicate the position of a tea bag in a cup of hot water, <span class="math inline">\(\mu(x, t)\)</span> could describe how the water has been stirred, and <span class="math inline">\(\sigma(x, t)\)</span> would depend on the thermal agitation of the water.</p>
+<p>These PDEs are usually solved numerically. This can be difficult when <span class="math inline">\(\mu(X, t)\)</span> renders the equation <a href="https://en.wikipedia.org/wiki/Stiff_equation">stiff</a> (this happens in models of noisy microcircuits) or in high-dimensional problems (for instance models of the joint distribution of stock prices in large markets).</p>
+<p>A limitation of this modelling approach is the difficulty to sample from a distribution given by an arbitrary probability density function. This requires specialized algorithms, so in practice it is probably better to rely on Euler-Maruyama methods for sampling, and Fokker-Planck equations for density evaluation. Furthermore, the log-densities should be compatible with automatic differentiation to be useful in probabilistic inference algorithms, which is not always straightforward with PDE solvers.</p>
 </section>
 <section id="probabilistic-machine-learning" class="level2">
 <h2 class="anchored" data-anchor-id="probabilistic-machine-learning">Probabilistic machine learning</h2>
-<p>Probabilistic machine learning provides a third approach, where one gets a model that can both generate new samples and evaluate densities in an a framework supporting automatic differentiation. The idea is to first generate training data with the Euler-Maruyama method, and then use machine learning to fit a probability distribution parameterized by a neural network to this synthetic data. The training objective is conditional density estimation of the synthetic training data. This distribution should both be convenient to sample from and have a density that can be evaluated easily.</p>
-<p>Such distributions can be constructed with <a href="https://arxiv.org/abs/1705.07057">normalizing flows</a> parameterized by conditional <a href="https://arxiv.org/abs/1502.03509">autoregressive networks</a>. In a nutshell, a normalizing flow deforms a normal distribution into a more generic one through an invertible mapping. This mapping can be implemented as a neural network, provided the network is invertible, and the autoregressive condition imposed by masking certain weights ensures just that. Moreover, these autoregressive networks can accept conditional variables, so that they can estimate the conditional density <span class="math inline">\(p(x; t)\)</span> if <span class="math inline">\(t\)</span> is passed to the model as a conditional variable.</p>
-<div class="cell" data-execution_count="4">
+<p>Probabilistic machine learning provides a third approach, where one gets a model that can both generate new samples and evaluate densities in an a framework supporting automatic differentiation. The idea is to first generate training data with the Euler-Maruyama method, and then use machine learning to fit a probability distribution parameterized by a neural network to this synthetic data. The training objective is the conditional density estimation of the synthetic training data. This distribution should both be convenient to sample from and have a density that can be evaluated easily.</p>
+<p>Such distributions can be constructed with <a href="https://arxiv.org/abs/1705.07057">autoregressive normalizing flows</a> parameterized by conditional <a href="https://arxiv.org/abs/1502.03509">masked autoregressive networks</a>. In a nutshell, a normalizing flow deforms a normal distribution into a more generic one through an invertible mapping. This mapping can be implemented as a neural network, provided the network is invertible, and the autoregressive condition imposed by masking certain weights ensures just that. Moreover, these autoregressive networks can accept conditional variables, so that they can estimate the parametric density <span class="math inline">\(p(x; t)\)</span> if <span class="math inline">\(t\)</span> is passed to the model as a conditional variable.</p>
+<div class="cell" data-execution_count="32">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Generate synthetic training data</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>n <span class="op">=</span> <span class="dv">1000</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>n <span class="op">=</span> <span class="dv">200</span></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>s <span class="op">=</span> geom_brownian_motion.sample(n)</span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>t <span class="op">=</span> tf.reshape(tf.stack(s.shape[<span class="dv">0</span>]<span class="op">*</span>[time], axis<span class="op">=</span><span class="dv">0</span>)[:,<span class="dv">1</span>:], (<span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>))</span>
@@ -316,13 +317,13 @@ X_{i+1} = X_i + \mu(X_i, t_i)\Delta t_i + \sigma(X_i, t_i)\,\sqrt{\Delta t_i}\, 
 <span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>history <span class="op">=</span> model.fit(x<span class="op">=</span>[X, t],</span>
 <span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>                    y<span class="op">=</span>np.zeros((X.shape[<span class="dv">0</span>], <span class="dv">0</span>), dtype<span class="op">=</span>np.float32),</span>
 <span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>                    batch_size<span class="op">=</span>batch_size,</span>
-<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>                    epochs<span class="op">=</span><span class="dv">70</span>,</span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>                    epochs<span class="op">=</span><span class="dv">40</span>,</span>
 <span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>                    steps_per_epoch<span class="op">=</span>X.shape[<span class="dv">0</span>] <span class="op">//</span> batch_size,</span>
 <span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>                    shuffle<span class="op">=</span><span class="va">True</span>,</span>
 <span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>                    verbose<span class="op">=</span><span class="va">False</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Here the autoregressive flow was chained with an exponential map to constrain its output to the support of the target distribution, <span class="math inline">\(\mathbb{R}_{&gt;0}\)</span>. Note how the conditional variable <span class="math inline">\(t\)</span> is passed to the <code>log_prob</code> method in a dictionary of keyword arguments to make sure it ends up in the right neural network.</p>
-<div class="cell" data-execution_count="6">
+<div class="cell" data-execution_count="34">
 <div class="cell-output cell-output-display">
 <p><img src="2023-11-12-Masked-autoregressive-flows-for-stochastic-differential-equations_files/figure-html/cell-7-output-1.png" class="img-fluid"></p>
 </div>
@@ -332,13 +333,13 @@ X_{i+1} = X_i + \mu(X_i, t_i)\Delta t_i + \sigma(X_i, t_i)\,\sqrt{\Delta t_i}\, 
 X_t = X_0 e^{(\mu - \frac{\sigma^2}{2})t + \sigma W_t}
 \]</span></p>
 <p>of the geometric Brownian motion SDE, which follows a log-normal distribution. This was the main reason for using this example.</p>
-<div class="cell" data-execution_count="7">
+<div class="cell" data-execution_count="35">
 <div class="cell-output cell-output-display">
 <p><img src="2023-11-12-Masked-autoregressive-flows-for-stochastic-differential-equations_files/figure-html/cell-8-output-1.png" class="img-fluid"></p>
 </div>
 </div>
 <p>In the same plot, one can see they more or less agree.</p>
-<div class="cell" data-execution_count="9">
+<div class="cell" data-execution_count="36">
 <div class="cell-output cell-output-display">
 <p><img src="2023-11-12-Masked-autoregressive-flows-for-stochastic-differential-equations_files/figure-html/cell-9-output-1.png" class="img-fluid"></p>
 </div>
@@ -346,8 +347,8 @@ X_t = X_0 e^{(\mu - \frac{\sigma^2}{2})t + \sigma W_t}
 </section>
 <section id="flexible-models-for-complex-applications" class="level2">
 <h2 class="anchored" data-anchor-id="flexible-models-for-complex-applications">Flexible models for complex applications</h2>
-<p>For the sake of the example, the model presented here only accepted the time as a conditional variable, and the initial value was deterministic. One can of course draw the drift and volatility parameters as well as the initial value from proposal distributions and pass them as further conditional variables to the model in order to learn a parameterized conditional distribution <span class="math inline">\(p(x;t\vert \mu, \sigma, x_0)\)</span>. This is particularly useful if the ultimate goal is to perform Bayesian inference of these parameters from experimental data. Or one can learn a transition function <span class="math inline">\(p(x; t\vert t_0; x_0)\)</span> of a Markov chain if the problem involves discrete observations of an underlying stochastic process.</p>
-<p>Of course, this approach generalizes beyond geometric Brownian motions, and the implementation in TensorFlow makes it easy to run these models on accelerated hardware. I hope this blog post will trigger some ideas!</p>
+<p>For the sake of example, the model presented here only accepted the time <span class="math inline">\(t\)</span> as a conditional variable, and the initial value was deterministic. One can generate richer training data by drawing the drift and volatility parameters as well as the initial value from proposal distributions and pass them as further conditional variables to the model. This makes it possible to learn a parameterized conditional distribution <span class="math inline">\(p(x;t\vert \mu, \sigma, x_0)\)</span> (here <span class="math inline">\(t\)</span> is the parameter indexing the distributions, and <span class="math inline">\(\mu\)</span>, <span class="math inline">\(\sigma\)</span> and <span class="math inline">\(x_0\)</span> are conditioning it). This is particularly useful if the ultimate goal is to perform Bayesian inference of the parameters <span class="math inline">\(\mu\)</span>, <span class="math inline">\(\sigma\)</span> or <span class="math inline">\(x_0\)</span> from experimental data. Or one can use it to construct a transition function <span class="math inline">\(p(x; t\vert t_0; x_0)\)</span> of a Markov chain if the problem involves discrete observations of an underlying stochastic process.</p>
+<p>The general methodology applied here falls under the scope of <a href="https://simulation-based-inference.org/">simulation based inference</a>. This growing field of computational statistics addresses problems where a model can accurately simulate data, but it has no tractable <a href="https://en.wikipedia.org/wiki/Likelihood_principle">likelihood</a> function that would enable statistical inference. The Euler-Maruyama method is a good example as deriving a likelihood function would require integrating over all intermediate time steps. As a workaround, some simulation based inference algorithms propose to derive a surrogate likelihood function through machine learning, which is what was done here with the conditional masked autoregressive flow.</p>
 
 
 </section>
