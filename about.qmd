@@ -19,7 +19,7 @@ about:
 
 ---
 
-I am a data scientist at Roche, where I work on large language model applications to accelerate clinical development. I also spent some time in the clinical quality assurance organization, and in the statistical modeling group supporting the development of next generation nanopore sequencers.
+I am a data scientist at Roche, where I work on large language model solutions for clinical development. I also spent some time in the clinical quality assurance organization, and in the statistical modeling group supporting the development of [nanopore sequencers](https://sequencing.roche.com/global/en/home.html).
 
 My background is in theoretical physics (quantum fields and strings) and I have some experience working in finance.
 
@@ -28,7 +28,7 @@ In my spare time, I enjoy ski touring, mountain biking and cycling, especially i
 In this blog, I am sharing learnings from my data science and applied mathematics journey.
   
 ## Get in touch
-You can email me at yves.barmaz@gmail.com.
+You can message me on [LinkedIn](https://www.linkedin.com/in/yves-barmaz-454a8a6/).
 
 ## Selected publications
 - [Bayesian modeling for the detection of adverse events underreporting in clinical trials](https://link.springer.com/article/10.1007/s40264-021-01094-8)
