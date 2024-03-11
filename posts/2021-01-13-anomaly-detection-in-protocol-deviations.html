@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.1.251">
+<meta name="generator" content="quarto-1.4.551">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -20,11 +20,12 @@ div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
 ul.task-list{list-style: none;}
 ul.task-list li input[type="checkbox"] {
   width: 0.8em;
-  margin: 0 0.8em 0.2em -1.6em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span { line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -49,47 +50,17 @@ pre.numberSource code > span > a:first-child::before
     -khtml-user-select: none; -moz-user-select: none;
     -ms-user-select: none; user-select: none;
     padding: 0 4px; width: 4em;
-    color: #aaaaaa;
   }
-pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
 div.sourceCode
   {   }
 @media screen {
 pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
-code span.al { color: #ff0000; font-weight: bold; } /* Alert */
-code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
-code span.at { color: #7d9029; } /* Attribute */
-code span.bn { color: #40a070; } /* BaseN */
-code span.bu { color: #008000; } /* BuiltIn */
-code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
-code span.ch { color: #4070a0; } /* Char */
-code span.cn { color: #880000; } /* Constant */
-code span.co { color: #60a0b0; font-style: italic; } /* Comment */
-code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
-code span.do { color: #ba2121; font-style: italic; } /* Documentation */
-code span.dt { color: #902000; } /* DataType */
-code span.dv { color: #40a070; } /* DecVal */
-code span.er { color: #ff0000; font-weight: bold; } /* Error */
-code span.ex { } /* Extension */
-code span.fl { color: #40a070; } /* Float */
-code span.fu { color: #06287e; } /* Function */
-code span.im { color: #008000; font-weight: bold; } /* Import */
-code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
-code span.kw { color: #007020; font-weight: bold; } /* Keyword */
-code span.op { color: #666666; } /* Operator */
-code span.ot { color: #007020; } /* Other */
-code span.pp { color: #bc7a00; } /* Preprocessor */
-code span.sc { color: #4070a0; } /* SpecialChar */
-code span.ss { color: #bb6688; } /* SpecialString */
-code span.st { color: #4070a0; } /* String */
-code span.va { color: #19177c; } /* Variable */
-code span.vs { color: #4070a0; } /* VerbatimString */
-code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
 </style>
 
 
-<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script><script src="../site_libs/quarto-nav/quarto-nav.js"></script>
 <script src="../site_libs/quarto-nav/headroom.min.js"></script>
 <script src="../site_libs/clipboard/clipboard.min.js"></script>
 <script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
@@ -111,7 +82,13 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   "collapse-after": 3,
   "panel-placement": "end",
   "type": "overlay",
-  "limit": 20,
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
   "language": {
     "search-no-results-text": "No results",
     "search-matching-documents-text": "matching documents",
@@ -120,15 +97,45 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     "search-more-match-text": "more match in this document",
     "search-more-matches-text": "more matches in this document",
     "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
     "search-detached-cancel-button-title": "Cancel",
-    "search-submit-button-title": "Submit"
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
   }
 }</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" integrity="sha512-c3Nl8+7g4LMSTdrm621y7kf9v3SDPnhxLNhcjFJbKECVnmZHTdo+IRO05sNLTH/D3vA6u1X32ehoLC7WFVdheg==" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script>
+
 <script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 <link rel="stylesheet" href="../styles.css">
 </head>
@@ -136,35 +143,38 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <body class="nav-fixed fullcontent">
 
 <div id="quarto-search-results"></div>
-  <header id="quarto-header" class="headroom fixed-top">
-    <nav class="navbar navbar-expand-lg navbar-dark ">
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
-      <div class="navbar-brand-container">
+      <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="../index.html">
     <span class="navbar-title">Yves Barmaz’s blog</span>
     </a>
   </div>
+            <div id="quarto-search" class="" title="Search"></div>
           <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
-    <a class="nav-link" href="../about.html">About</a>
+    <a class="nav-link" href="../about.html"> 
+<span class="menu-text">About</span></a>
   </li>  
   <li class="nav-item compact">
-    <a class="nav-link" href="https://github.com/ybarmaz"><i class="bi bi-github" role="img">
+    <a class="nav-link" href="https://github.com/ybarmaz"> <i class="bi bi-github" role="img">
 </i> 
- </a>
+<span class="menu-text"></span></a>
   </li>  
   <li class="nav-item compact">
-    <a class="nav-link" href="https://twitter.com/YvesBarmaz"><i class="bi bi-twitter" role="img">
+    <a class="nav-link" href="https://twitter.com/YvesBarmaz"> <i class="bi bi-twitter" role="img">
 </i> 
- </a>
+<span class="menu-text"></span></a>
   </li>  
 </ul>
-              <div id="quarto-search" class="" title="Search"></div>
           </div> <!-- /navcollapse -->
+          <div class="quarto-navbar-tools">
+</div>
       </div> <!-- /container-fluid -->
     </nav>
 </header>
@@ -201,6 +211,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
         <p class="date">January 13, 2021</p>
       </div>
     </div>
+    
       
     </div>
     
@@ -215,62 +226,70 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 
 
+
 <p>Deviations from the approved protocol of a clinical trial are common but need to be reported by investigators to the trial sponsor for review. Failing to do so can put patients at risk and affect the scientific quality of the trial, so detecting protocol deviation underreporting is part of the standard quality assurance activities. Investigator sites that report more deviations than their peers should also raise an alarm as this might indicate underlying quality issues. A statistical tool that quantifies the risk of over- and underreporting of protocol deviations could significantly improve quality activities, much like in the case of <a href="https://ybarmaz.github.io/blog/posts/2021-01-08-probabilistic%20assessment-of-safety-underreporting.html">adverse event reporting</a>.</p>
 <p>The number of protocol deviations <span class="math inline">\(n_{pdevs}\)</span> reported by an investigator site should depend linearly on the number of patients <span class="math inline">\(n_{pats}\)</span> enrolled at that site, as more patients mean more chances of deviations, so these are the minimal attributes that should get collected prior to the analysis. The following table is a sample of the data we will use as an example.</p>
-<div class="cell" data-execution_count="3">
+<div id="cell-4" class="cell" data-execution_count="3">
 <div class="cell-output cell-output-display" data-execution_count="3">
-
+<div>
 <div>
 
-<table class="dataframe table table-sm table-striped">
-  <thead>
-    <tr>
-      <th></th>
-      <th>site_id</th>
-      <th>n_pats</th>
-      <th>n_pdevs</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>site_0</td>
-      <td>9</td>
-      <td>15</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>site_1</td>
-      <td>10</td>
-      <td>14</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>site_2</td>
-      <td>15</td>
-      <td>18</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>site_3</td>
-      <td>9</td>
-      <td>10</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>site_4</td>
-      <td>5</td>
-      <td>4</td>
-    </tr>
-  </tbody>
+
+<table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">site_id</th>
+<th data-quarto-table-cell-role="th">n_pats</th>
+<th data-quarto-table-cell-role="th">n_pdevs</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>site_0</td>
+<td>9</td>
+<td>15</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>site_1</td>
+<td>10</td>
+<td>14</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>site_2</td>
+<td>15</td>
+<td>18</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>site_3</td>
+<td>9</td>
+<td>10</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">4</td>
+<td>site_4</td>
+<td>5</td>
+<td>4</td>
+</tr>
+</tbody>
 </table>
+
+</div>
 </div>
 </div>
 </div>
 <p>A quick glance at the full dataset reveals there is indeed a relationship that looks linear, so a potential approach would be to build a regression model <span class="math inline">\(n_{pdevs} \sim \theta \cdot n_{pats}\)</span> and quantify how every observation of <span class="math inline">\(n_{pdevs}\)</span> deviates from its estimation.</p>
-<div class="cell" data-execution_count="4">
+<div id="cell-6" class="cell" data-execution_count="4">
 <div class="cell-output cell-output-display">
-<p><img src="2021-01-13-Anomaly-detection-in-protocol-deviations_files/figure-html/cell-5-output-1.png" class="img-fluid"></p>
+<div>
+<figure class="figure">
+<p><img src="2021-01-13-Anomaly-detection-in-protocol-deviations_files/figure-html/cell-5-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
 </div>
 </div>
 <p>From that scatterplot, it also appears that the residuals of a regression would not be iid. Rather, their variance would grow as the number of patients increases. This rules out least square regression, as it assumes iid normal residuals. Since we are dealing with count data, working with the Poisson distribution is a natural approach,</p>
@@ -278,8 +297,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p>and we can set <span class="math inline">\(\lambda(n_{pats}) = \theta \cdot n_{pats}\)</span> to reflect our assumption of a linear relationship between <span class="math inline">\(n_{pdevs}\)</span> and <span class="math inline">\(n_{pats}\)</span>. Note that a regular Poisson regression would fail to capture that linear relationship due to its exponential link function.</p>
 <p>In this model, we immediately have <span class="math inline">\(E\left[n_{pdevs} \vert n_{pats}\right] = Var\left[n_{pdevs} \vert n_{pats}\right] = \theta \cdot n_{pats}\)</span>, which seems to reproduce the increasing spread of <span class="math inline">\(n_{pdevs}\)</span>.</p>
 <p>We can infer the value of <span class="math inline">\(\theta\)</span> through maximum likelihood estimation and use the resulting conditional Poisson model at each site to compute the cumulative distribution function (CDF) of the observed numbers of protocol deviations.</p>
-<div class="cell" data-execution_count="5">
-<details>
+<div id="cell-8" class="cell" data-execution_count="5">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> loss(par, n_pat, n_dev):</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    theta <span class="op">=</span> tf.math.exp(par[<span class="dv">0</span>])</span>
@@ -319,14 +338,18 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </details>
 </div>
 <p>These CDF values are concentrated around 0 and 1, which makes this approach quite impractical and suggests that the variance of the model is lower than the variance of the data.</p>
-<div class="cell" data-execution_count="6">
+<div id="cell-10" class="cell" data-execution_count="6">
 <div class="cell-output cell-output-display">
-<p><img src="2021-01-13-Anomaly-detection-in-protocol-deviations_files/figure-html/cell-7-output-1.png" class="img-fluid"></p>
+<div>
+<figure class="figure">
+<p><img src="2021-01-13-Anomaly-detection-in-protocol-deviations_files/figure-html/cell-7-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
 </div>
 </div>
 <p>The low variance can be increased by treating <span class="math inline">\(\lambda(n_{pats})\)</span> as a random function, rather than a deterministic one. So we assume that <span class="math inline">\(\lambda(n_{pats})\)</span> is drawn from a gamma distribution, <span class="math inline">\(\lambda(n_{pats}) \sim \Gamma(\alpha, \beta)\)</span>, where the rate parameter <span class="math inline">\(\beta\)</span> is inversely proportional to the expected number of protocol deviations from a given site, <span class="math inline">\(\beta = \beta_{pat} / n_{pats}\)</span>, in order to ensure linearity in <span class="math inline">\(n_{pats}\)</span>. In this context, maximum likelihood estimation would be a nightmare to implement (because of the rate parameters of the Poisson distribution) and probably not very stable, so it is best to turn to Bayesian inference via MCMC algorithms. We thus pick gamma priors for <span class="math inline">\(\alpha\)</span> and <span class="math inline">\(\beta_{pat}\)</span> with a shape parameters of 2 to prevent the corresponding Markov chains from drifting too close to zero, where pathological behaviors seem to occur with more permissive priors in this model.</p>
-<div class="cell" data-execution_count="7">
-<details>
+<div id="cell-12" class="cell" data-execution_count="7">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>sites <span class="op">=</span> tf.constant(data[<span class="st">'site_id'</span>])</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>n_pats <span class="op">=</span> tf.constant(data[<span class="st">'n_pats'</span>], dtype<span class="op">=</span>tf.float32)</span>
@@ -348,8 +371,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </details>
 </div>
 <p>We can sample the posterior distribution of this model with a Hamiltonian Monte Carlo algorithm and assess the convergence of the Markov chains before computing the posterior probabilities of interest.</p>
-<div class="cell" data-execution_count="8">
-<details>
+<div id="cell-14" class="cell" data-execution_count="8">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>dtype <span class="op">=</span> tf.dtypes.float32</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>nchain <span class="op">=</span> <span class="dv">5</span></span>
@@ -425,144 +448,167 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <pre><code>MCMC acceptance rate: 0.73832</code></pre>
 </div>
 <div class="cell-output cell-output-display">
-<p><img src="2021-01-13-Anomaly-detection-in-protocol-deviations_files/figure-html/cell-9-output-2.png" class="img-fluid"></p>
+<div>
+<figure class="figure">
+<p><img src="2021-01-13-Anomaly-detection-in-protocol-deviations_files/figure-html/cell-9-output-2.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
 </div>
 </div>
 <p>Given a Markov chain sample <span class="math inline">\((\hat\alpha, \hat\beta_{pat}, (\hat\lambda_i)_{i=1,\dots,N})\)</span>, where <span class="math inline">\(i\)</span> indexes the investigator sites, we can evaluate the CDF of <span class="math inline">\(\Gamma(\hat\alpha, \hat\beta_{pat} / n_{pats, i})\)</span> at <span class="math inline">\(\hat\lambda_i\)</span> and average these quantities along the whole Markov chain to obtain an indicator of over- and underreporting. This indicator corresponds to the rate tail area of the inferred Poisson rates under their posterior predictive distribution. Low values mean a risk of underreporting, and high values a risk of overreporting (see the last column of the following sample table).</p>
-<div class="cell" data-execution_count="11">
+<div id="cell-18" class="cell" data-execution_count="11">
 <div class="cell-output cell-output-display" data-execution_count="11">
-
+<div>
 <div>
 
-<table class="dataframe table table-sm table-striped">
-  <thead>
-    <tr>
-      <th></th>
-      <th>site</th>
-      <th>n_pats</th>
-      <th>n_pdev</th>
-      <th>mean_pdev_rate</th>
-      <th>std_pdev_rate</th>
-      <th>rate_tail_area</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>site_0</td>
-      <td>9</td>
-      <td>15</td>
-      <td>15.51</td>
-      <td>3.82</td>
-      <td>0.42</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>site_1</td>
-      <td>10</td>
-      <td>14</td>
-      <td>14.56</td>
-      <td>3.72</td>
-      <td>0.36</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>site_2</td>
-      <td>15</td>
-      <td>18</td>
-      <td>18.73</td>
-      <td>4.28</td>
-      <td>0.31</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>site_3</td>
-      <td>9</td>
-      <td>10</td>
-      <td>10.77</td>
-      <td>3.19</td>
-      <td>0.30</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>site_4</td>
-      <td>5</td>
-      <td>4</td>
-      <td>4.86</td>
-      <td>2.08</td>
-      <td>0.24</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>site_5</td>
-      <td>7</td>
-      <td>19</td>
-      <td>18.98</td>
-      <td>4.26</td>
-      <td>0.61</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td>site_6</td>
-      <td>25</td>
-      <td>31</td>
-      <td>31.74</td>
-      <td>5.59</td>
-      <td>0.32</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td>site_7</td>
-      <td>2</td>
-      <td>11</td>
-      <td>9.82</td>
-      <td>2.83</td>
-      <td>0.82</td>
-    </tr>
-    <tr>
-      <th>8</th>
-      <td>site_8</td>
-      <td>6</td>
-      <td>7</td>
-      <td>7.75</td>
-      <td>2.71</td>
-      <td>0.32</td>
-    </tr>
-    <tr>
-      <th>9</th>
-      <td>site_9</td>
-      <td>17</td>
-      <td>27</td>
-      <td>27.65</td>
-      <td>5.17</td>
-      <td>0.40</td>
-    </tr>
-  </tbody>
+
+<table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">site</th>
+<th data-quarto-table-cell-role="th">n_pats</th>
+<th data-quarto-table-cell-role="th">n_pdev</th>
+<th data-quarto-table-cell-role="th">mean_pdev_rate</th>
+<th data-quarto-table-cell-role="th">std_pdev_rate</th>
+<th data-quarto-table-cell-role="th">rate_tail_area</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>site_0</td>
+<td>9</td>
+<td>15</td>
+<td>15.51</td>
+<td>3.82</td>
+<td>0.42</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>site_1</td>
+<td>10</td>
+<td>14</td>
+<td>14.56</td>
+<td>3.72</td>
+<td>0.36</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>site_2</td>
+<td>15</td>
+<td>18</td>
+<td>18.73</td>
+<td>4.28</td>
+<td>0.31</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>site_3</td>
+<td>9</td>
+<td>10</td>
+<td>10.77</td>
+<td>3.19</td>
+<td>0.30</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">4</td>
+<td>site_4</td>
+<td>5</td>
+<td>4</td>
+<td>4.86</td>
+<td>2.08</td>
+<td>0.24</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">5</td>
+<td>site_5</td>
+<td>7</td>
+<td>19</td>
+<td>18.98</td>
+<td>4.26</td>
+<td>0.61</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">6</td>
+<td>site_6</td>
+<td>25</td>
+<td>31</td>
+<td>31.74</td>
+<td>5.59</td>
+<td>0.32</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">7</td>
+<td>site_7</td>
+<td>2</td>
+<td>11</td>
+<td>9.82</td>
+<td>2.83</td>
+<td>0.82</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">8</td>
+<td>site_8</td>
+<td>6</td>
+<td>7</td>
+<td>7.75</td>
+<td>2.71</td>
+<td>0.32</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">9</td>
+<td>site_9</td>
+<td>17</td>
+<td>27</td>
+<td>27.65</td>
+<td>5.17</td>
+<td>0.40</td>
+</tr>
+</tbody>
 </table>
+
+</div>
 </div>
 </div>
 </div>
 <p>The distribution of the rate tail areas looks more convenient than in the first simple model. Not only did we add variance with a mixture model, but we also assess the inferred Poisson parameters rather than the observations, and the former are shrunk by their prior.</p>
-<div class="cell" data-execution_count="12">
+<div id="cell-20" class="cell" data-execution_count="12">
 <div class="cell-output cell-output-display">
-<p><img src="2021-01-13-Anomaly-detection-in-protocol-deviations_files/figure-html/cell-13-output-1.png" class="img-fluid"></p>
+<div>
+<figure class="figure">
+<p><img src="2021-01-13-Anomaly-detection-in-protocol-deviations_files/figure-html/cell-13-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
 </div>
 </div>
 <p>This metric also seems to agree with the intuition of what underreporting and overreporting should look like.</p>
-<div class="cell" data-execution_count="13">
+<div id="cell-22" class="cell" data-execution_count="13">
 <div class="cell-output cell-output-display">
-<p><img src="2021-01-13-Anomaly-detection-in-protocol-deviations_files/figure-html/cell-14-output-1.png" class="img-fluid"></p>
+<div>
+<figure class="figure">
+<p><img src="2021-01-13-Anomaly-detection-in-protocol-deviations_files/figure-html/cell-14-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
 </div>
 </div>
 <p>We can set thresholds for over- and underreporting alerts at .8 and .2 respectively to illustrate how an auditor could use this model to select investigator sites to focus on.</p>
-<div class="cell" data-execution_count="15">
+<div id="cell-25" class="cell" data-execution_count="15">
 <div class="cell-output cell-output-display">
-<p><img src="2021-01-13-Anomaly-detection-in-protocol-deviations_files/figure-html/cell-16-output-1.png" class="img-fluid"></p>
+<div>
+<figure class="figure">
+<p><img src="2021-01-13-Anomaly-detection-in-protocol-deviations_files/figure-html/cell-16-output-1.png" class="img-fluid figure-img"></p>
+</figure>
 </div>
 </div>
-<div class="cell" data-execution_count="16">
+</div>
+<div id="cell-26" class="cell" data-execution_count="16">
 <div class="cell-output cell-output-display">
-<p><img src="2021-01-13-Anomaly-detection-in-protocol-deviations_files/figure-html/cell-17-output-1.png" class="img-fluid"></p>
+<div>
+<figure class="figure">
+<p><img src="2021-01-13-Anomaly-detection-in-protocol-deviations_files/figure-html/cell-17-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
 </div>
 </div>
 <p>This method illustrates the potential of Bayesian modeling to supercharge a regression analysis toolbox with a variety of likelihood functions that can capture the intricacies of the data generating process and inference methods that are more flexible in quantifying uncertainties than the standard GLM methods. These properties are particularly helpful in practical tasks such as anomaly detection or risk management that combine expert insights with quantitative modeling.</p>
@@ -597,9 +643,23 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     icon: icon
   };
   anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
   const clipboard = new window.ClipboardJS('.code-copy-button', {
-    target: function(trigger) {
-      return trigger.previousElementSibling;
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
     }
   });
   clipboard.on('success', function(e) {
@@ -611,17 +671,51 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     button.classList.add('code-copy-button-checked');
     var currentTitle = button.getAttribute("title");
     button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
     setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
       button.setAttribute("title", currentTitle);
       button.classList.remove('code-copy-button-checked');
     }, 1000);
     // clear code selection
     e.clearSelection();
   });
-  function tippyHover(el, contentFn) {
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/ybarmaz\.github\.io\/blog\/");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
     const config = {
       allowHTML: true,
-      content: contentFn,
       maxWidth: 500,
       delay: 100,
       arrow: false,
@@ -631,8 +725,17 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       interactive: true,
       interactiveBorder: 10,
       theme: 'quarto',
-      placement: 'bottom-start'
+      placement: 'bottom-start',
     };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
     window.tippy(el, config); 
   }
   const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
@@ -644,33 +747,288 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       try { href = new URL(href).hash; } catch {}
       const id = href.replace(/^#\/?/, "");
       const note = window.document.getElementById(id);
-      return note.innerHTML;
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
     });
   }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
   var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
   for (var i=0; i<bibliorefs.length; i++) {
     const ref = bibliorefs[i];
-    const cites = ref.parentNode.getAttribute('data-cites').split(' ');
-    tippyHover(ref, function() {
-      var popup = window.document.createElement('div');
-      cites.forEach(function(cite) {
-        var citeDiv = window.document.createElement('div');
-        citeDiv.classList.add('hanging-indent');
-        citeDiv.classList.add('csl-entry');
-        var biblioDiv = window.document.getElementById('ref-' + cite);
-        if (biblioDiv) {
-          citeDiv.innerHTML = biblioDiv.innerHTML;
-        }
-        popup.appendChild(citeDiv);
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
       });
-      return popup.innerHTML;
-    });
+    }
   }
 });
 </script>
 <script src="https://utteranc.es/client.js" repo="ybarmaz/blog" issue-term="pathname" theme="github-light" crossorigin="anonymous" async="">
 </script>
 </div> <!-- /content -->
+
 
 
 

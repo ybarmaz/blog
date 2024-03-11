@@ -2,6 +2,7 @@
   {
     "listing": "/index.html",
     "items": [
+      "/posts/2024-03-10-SDE-model-calibration-with-Diffrax.html",
       "/posts/2023-11-12-Masked-autoregressive-flows-for-stochastic-differential-equations.html",
       "/posts/2023-11-11-Differentiable-programming-for-risk-management-and-investment-decisions.html",
       "/posts/2023-07-14-Neural-likelihood-estimation.html",

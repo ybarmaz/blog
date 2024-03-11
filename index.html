@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.1.251">
+<meta name="generator" content="quarto-1.4.551">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -17,7 +17,7 @@ div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
 ul.task-list{list-style: none;}
 ul.task-list li input[type="checkbox"] {
   width: 0.8em;
-  margin: 0 0.8em 0.2em -1.6em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
 </style>
@@ -47,7 +47,13 @@ ul.task-list li input[type="checkbox"] {
   "collapse-after": 3,
   "panel-placement": "end",
   "type": "overlay",
-  "limit": 20,
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
   "language": {
     "search-no-results-text": "No results",
     "search-matching-documents-text": "matching documents",
@@ -56,8 +62,10 @@ ul.task-list li input[type="checkbox"] {
     "search-more-match-text": "more match in this document",
     "search-more-matches-text": "more matches in this document",
     "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
     "search-detached-cancel-button-title": "Cancel",
-    "search-submit-button-title": "Submit"
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
   }
 }</script>
 <script>
@@ -90,7 +98,35 @@ ul.task-list li input[type="checkbox"] {
   })
   </script>
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 <link rel="stylesheet" href="styles.css">
 </head>
@@ -98,35 +134,38 @@ ul.task-list li input[type="checkbox"] {
 <body class="nav-fixed">
 
 <div id="quarto-search-results"></div>
-  <header id="quarto-header" class="headroom fixed-top">
-    <nav class="navbar navbar-expand-lg navbar-dark ">
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
-      <div class="navbar-brand-container">
+      <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="./index.html">
     <span class="navbar-title">Yves Barmaz’s blog</span>
     </a>
   </div>
+            <div id="quarto-search" class="" title="Search"></div>
           <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
-    <a class="nav-link" href="./about.html">About</a>
+    <a class="nav-link" href="./about.html"> 
+<span class="menu-text">About</span></a>
   </li>  
   <li class="nav-item compact">
-    <a class="nav-link" href="https://github.com/ybarmaz"><i class="bi bi-github" role="img">
+    <a class="nav-link" href="https://github.com/ybarmaz"> <i class="bi bi-github" role="img">
 </i> 
- </a>
+<span class="menu-text"></span></a>
   </li>  
   <li class="nav-item compact">
-    <a class="nav-link" href="https://twitter.com/YvesBarmaz"><i class="bi bi-twitter" role="img">
+    <a class="nav-link" href="https://twitter.com/YvesBarmaz"> <i class="bi bi-twitter" role="img">
 </i> 
- </a>
+<span class="menu-text"></span></a>
   </li>  
 </ul>
-              <div id="quarto-search" class="" title="Search"></div>
           </div> <!-- /navcollapse -->
+          <div class="quarto-navbar-tools">
+</div>
       </div> <!-- /container-fluid -->
     </nav>
 </header>
@@ -139,9 +178,10 @@ ul.task-list li input[type="checkbox"] {
   </div>
     
   
-  <div class="quarto-title-meta">
+  <div class="quarto-title-meta column-page-left">
 
       
+    
       
     </div>
     
@@ -151,7 +191,7 @@ ul.task-list li input[type="checkbox"] {
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
         
-    <h5 class="quarto-listing-category-title">Categories</h5><div class="quarto-listing-category category-default"><div class="category" data-category="">All <span class="quarto-category-count">(12)</span></div><div class="category" data-category="JAX">JAX <span class="quarto-category-count">(1)</span></div><div class="category" data-category="autograd">autograd <span class="quarto-category-count">(1)</span></div><div class="category" data-category="bayesian modeling">bayesian modeling <span class="quarto-category-count">(6)</span></div><div class="category" data-category="classical mechanics">classical mechanics <span class="quarto-category-count">(1)</span></div><div class="category" data-category="clinical quality">clinical quality <span class="quarto-category-count">(2)</span></div><div class="category" data-category="contextual bandits">contextual bandits <span class="quarto-category-count">(1)</span></div><div class="category" data-category="differentiable programming">differentiable programming <span class="quarto-category-count">(1)</span></div><div class="category" data-category="differential geometry">differential geometry <span class="quarto-category-count">(1)</span></div><div class="category" data-category="drug development">drug development <span class="quarto-category-count">(1)</span></div><div class="category" data-category="jax">jax <span class="quarto-category-count">(1)</span></div><div class="category" data-category="machine learning">machine learning <span class="quarto-category-count">(3)</span></div><div class="category" data-category="mountain biking">mountain biking <span class="quarto-category-count">(1)</span></div><div class="category" data-category="probabilistic machine learning">probabilistic machine learning <span class="quarto-category-count">(1)</span></div><div class="category" data-category="probabilistic programming">probabilistic programming <span class="quarto-category-count">(2)</span></div><div class="category" data-category="quantitative finance">quantitative finance <span class="quarto-category-count">(1)</span></div><div class="category" data-category="random walks">random walks <span class="quarto-category-count">(1)</span></div><div class="category" data-category="reinforcement learning">reinforcement learning <span class="quarto-category-count">(1)</span></div><div class="category" data-category="risk management">risk management <span class="quarto-category-count">(1)</span></div><div class="category" data-category="satellite navigation">satellite navigation <span class="quarto-category-count">(1)</span></div><div class="category" data-category="scientific computing">scientific computing <span class="quarto-category-count">(1)</span></div><div class="category" data-category="signal processing">signal processing <span class="quarto-category-count">(1)</span></div><div class="category" data-category="simulation-based inference">simulation-based inference <span class="quarto-category-count">(2)</span></div><div class="category" data-category="tensorflow-probability">tensorflow-probability <span class="quarto-category-count">(9)</span></div><div class="category" data-category="time series">time series <span class="quarto-category-count">(1)</span></div><div class="category" data-category="variational inference">variational inference <span class="quarto-category-count">(3)</span></div></div></div>
+    <h5 class="quarto-listing-category-title">Categories</h5><div class="quarto-listing-category category-default"><div class="category" data-category="">All <span class="quarto-category-count">(13)</span></div><div class="category" data-category="autograd">autograd <span class="quarto-category-count">(1)</span></div><div class="category" data-category="bayesian modeling">bayesian modeling <span class="quarto-category-count">(6)</span></div><div class="category" data-category="classical mechanics">classical mechanics <span class="quarto-category-count">(1)</span></div><div class="category" data-category="clinical quality">clinical quality <span class="quarto-category-count">(2)</span></div><div class="category" data-category="contextual bandits">contextual bandits <span class="quarto-category-count">(1)</span></div><div class="category" data-category="differentiable programming">differentiable programming <span class="quarto-category-count">(1)</span></div><div class="category" data-category="differential geometry">differential geometry <span class="quarto-category-count">(1)</span></div><div class="category" data-category="diffrax">diffrax <span class="quarto-category-count">(1)</span></div><div class="category" data-category="drug development">drug development <span class="quarto-category-count">(1)</span></div><div class="category" data-category="jax">jax <span class="quarto-category-count">(3)</span></div><div class="category" data-category="machine learning">machine learning <span class="quarto-category-count">(3)</span></div><div class="category" data-category="mountain biking">mountain biking <span class="quarto-category-count">(1)</span></div><div class="category" data-category="probabilistic machine learning">probabilistic machine learning <span class="quarto-category-count">(1)</span></div><div class="category" data-category="probabilistic programming">probabilistic programming <span class="quarto-category-count">(2)</span></div><div class="category" data-category="quantitative finance">quantitative finance <span class="quarto-category-count">(2)</span></div><div class="category" data-category="random walks">random walks <span class="quarto-category-count">(1)</span></div><div class="category" data-category="reinforcement learning">reinforcement learning <span class="quarto-category-count">(1)</span></div><div class="category" data-category="risk management">risk management <span class="quarto-category-count">(1)</span></div><div class="category" data-category="satellite navigation">satellite navigation <span class="quarto-category-count">(1)</span></div><div class="category" data-category="scientific computing">scientific computing <span class="quarto-category-count">(1)</span></div><div class="category" data-category="sde">sde <span class="quarto-category-count">(1)</span></div><div class="category" data-category="signal processing">signal processing <span class="quarto-category-count">(1)</span></div><div class="category" data-category="simulation-based inference">simulation-based inference <span class="quarto-category-count">(2)</span></div><div class="category" data-category="tensorflow-probability">tensorflow-probability <span class="quarto-category-count">(9)</span></div><div class="category" data-category="time series">time series <span class="quarto-category-count">(1)</span></div><div class="category" data-category="variational inference">variational inference <span class="quarto-category-count">(3)</span></div></div></div>
 <!-- main -->
 <main class="content quarto-banner-title-block column-page-left" id="quarto-document-content">
 
@@ -162,25 +202,64 @@ ul.task-list li input[type="checkbox"] {
 
 
 
+
 <div class="quarto-listing quarto-listing-container-default" id="listing-listing">
 <div class="list quarto-listing-default">
-<div class="quarto-post image-right" data-index="0" data-categories="probabilistic programming,tensorflow-probability,machine learning" data-listing-date-sort="1699743600000" data-listing-file-modified-sort="1699892843712" data-listing-reading-time-sort="5.465">
+<div class="quarto-post image-right" data-index="0" data-categories="jax,diffrax,sde,quantitative finance" data-listing-date-sort="1710025200000" data-listing-file-modified-sort="1710153752782" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="6" data-listing-word-count-sort="1105">
 <div class="thumbnail">
-<a href="./posts/2023-11-12-Masked-autoregressive-flows-for-stochastic-differential-equations.html">
-<div class="thumbnail-image">
-
-</div>
-</a><p><a href="./posts/2023-11-12-Masked-autoregressive-flows-for-stochastic-differential-equations.html"></a></p>
+<p><a href="./posts/2024-03-10-SDE-model-calibration-with-Diffrax.html" class="no-external"></a></p><a href="./posts/2024-03-10-SDE-model-calibration-with-Diffrax.html" class="no-external">
+<p class="card-img-top"><img src="posts/2024-03-10-SDE-model-calibration-with-diffrax_files/figure-html/cell-4-output-1.png"  class="thumbnail-image card-img"/></p>
+</a><p><a href="./posts/2024-03-10-SDE-model-calibration-with-Diffrax.html" class="no-external"></a></p>
 </div>
 <div class="body">
-<a href="./posts/2023-11-12-Masked-autoregressive-flows-for-stochastic-differential-equations.html">
 <h3 class="no-anchor listing-title">
-Masked autoregressive flows for stochastic differential equations
+<a href="./posts/2024-03-10-SDE-model-calibration-with-Diffrax.html" class="no-external">SDE model calibration with Diffrax</a>
 </h3>
 <div class="listing-subtitle">
-
+<a href="./posts/2024-03-10-SDE-model-calibration-with-Diffrax.html" class="no-external"></a>
+</div>
+<div class="listing-categories">
+<div class="listing-category" onclick="window.quartoListingCategory('jax'); return false;">
+jax
+</div>
+<div class="listing-category" onclick="window.quartoListingCategory('diffrax'); return false;">
+diffrax
+</div>
+<div class="listing-category" onclick="window.quartoListingCategory('sde'); return false;">
+sde
+</div>
+<div class="listing-category" onclick="window.quartoListingCategory('quantitative finance'); return false;">
+quantitative finance
+</div>
+</div>
+<div class="listing-description">
+<a href="./posts/2024-03-10-SDE-model-calibration-with-Diffrax.html" class="no-external">A discussion of numerical integration and flexible gradient-based calibration of SDE models in the JAX ecosystem, with an example from finance.</a>
+</div>
+</div>
+<div class="metadata">
+<a href="./posts/2024-03-10-SDE-model-calibration-with-Diffrax.html" class="no-external">
+<div class="listing-date">
+Mar 10, 2024
+</div>
+<div class="listing-author">
+Yves Barmaz
 </div>
 </a>
+</div>
+</div>
+<div class="quarto-post image-right" data-index="1" data-categories="probabilistic programming,tensorflow-probability,machine learning" data-listing-date-sort="1699743600000" data-listing-file-modified-sort="1710105718367" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="6" data-listing-word-count-sort="1093">
+<div class="thumbnail">
+<p><a href="./posts/2023-11-12-Masked-autoregressive-flows-for-stochastic-differential-equations.html" class="no-external"></a></p><a href="./posts/2023-11-12-Masked-autoregressive-flows-for-stochastic-differential-equations.html" class="no-external">
+<p class="card-img-top"><img src="posts/2023-11-12-Masked-autoregressive-flows-for-stochastic-differential-equations_files/figure-html/cell-4-output-1.png"  class="thumbnail-image card-img"/></p>
+</a><p><a href="./posts/2023-11-12-Masked-autoregressive-flows-for-stochastic-differential-equations.html" class="no-external"></a></p>
+</div>
+<div class="body">
+<h3 class="no-anchor listing-title">
+<a href="./posts/2023-11-12-Masked-autoregressive-flows-for-stochastic-differential-equations.html" class="no-external">Masked autoregressive flows for stochastic differential equations</a>
+</h3>
+<div class="listing-subtitle">
+<a href="./posts/2023-11-12-Masked-autoregressive-flows-for-stochastic-differential-equations.html" class="no-external"></a>
+</div>
 <div class="listing-categories">
 <div class="listing-category" onclick="window.quartoListingCategory('probabilistic programming'); return false;">
 probabilistic programming
@@ -192,14 +271,12 @@ tensorflow-probability
 machine learning
 </div>
 </div>
-<a href="./posts/2023-11-12-Masked-autoregressive-flows-for-stochastic-differential-equations.html">
 <div class="listing-description">
-<p>Common methods for solving SDEs are discussed, along with their limitations when it comes to statistical inference. Conditional masked autoregressive flows are presented as a flexible alternative.</p>
+<a href="./posts/2023-11-12-Masked-autoregressive-flows-for-stochastic-differential-equations.html" class="no-external">Common methods for solving SDEs are discussed, along with their limitations when it comes to statistical inference. Conditional masked autoregressive flows are presented as a flexible alternative.</a>
 </div>
-</a>
 </div>
 <div class="metadata">
-<a href="./posts/2023-11-12-Masked-autoregressive-flows-for-stochastic-differential-equations.html">
+<a href="./posts/2023-11-12-Masked-autoregressive-flows-for-stochastic-differential-equations.html" class="no-external">
 <div class="listing-date">
 Nov 12, 2023
 </div>
@@ -209,23 +286,19 @@ Yves Barmaz
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="1" data-categories="differentiable programming,probabilistic programming,tensorflow-probability,quantitative finance,drug development,risk management" data-listing-date-sort="1699657200000" data-listing-file-modified-sort="1699717216565" data-listing-reading-time-sort="7.675">
+<div class="quarto-post image-right" data-index="2" data-categories="differentiable programming,probabilistic programming,tensorflow-probability,quantitative finance,drug development,risk management" data-listing-date-sort="1699657200000" data-listing-file-modified-sort="1710105013210" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="8" data-listing-word-count-sort="1535">
 <div class="thumbnail">
-<a href="./posts/2023-11-11-Differentiable-programming-for-risk-management-and-investment-decisions.html">
-<div class="thumbnail-image">
-
-</div>
-</a><p><a href="./posts/2023-11-11-Differentiable-programming-for-risk-management-and-investment-decisions.html"></a></p>
+<p><a href="./posts/2023-11-11-Differentiable-programming-for-risk-management-and-investment-decisions.html" class="no-external"></a></p><a href="./posts/2023-11-11-Differentiable-programming-for-risk-management-and-investment-decisions.html" class="no-external">
+<p class="card-img-top"><img src="posts/2023-11-11-Differentiable-programming-for-risk-management-and-decisions_files/figure-html/cell-7-output-1.png"  class="thumbnail-image card-img"/></p>
+</a><p><a href="./posts/2023-11-11-Differentiable-programming-for-risk-management-and-investment-decisions.html" class="no-external"></a></p>
 </div>
 <div class="body">
-<a href="./posts/2023-11-11-Differentiable-programming-for-risk-management-and-investment-decisions.html">
 <h3 class="no-anchor listing-title">
-Differentiable and probabilistic programming for risk management and investment decisions
+<a href="./posts/2023-11-11-Differentiable-programming-for-risk-management-and-investment-decisions.html" class="no-external">Differentiable and probabilistic programming for risk management and investment decisions</a>
 </h3>
 <div class="listing-subtitle">
-
+<a href="./posts/2023-11-11-Differentiable-programming-for-risk-management-and-investment-decisions.html" class="no-external"></a>
 </div>
-</a>
 <div class="listing-categories">
 <div class="listing-category" onclick="window.quartoListingCategory('differentiable programming'); return false;">
 differentiable programming
@@ -246,14 +319,12 @@ drug development
 risk management
 </div>
 </div>
-<a href="./posts/2023-11-11-Differentiable-programming-for-risk-management-and-investment-decisions.html">
 <div class="listing-description">
-<p>Some applications of differentiable programming in data science beyond the usual machine learning algorithms, with an example in drug development valuation.</p>
+<a href="./posts/2023-11-11-Differentiable-programming-for-risk-management-and-investment-decisions.html" class="no-external">Some applications of differentiable programming in data science beyond the usual machine learning algorithms, with an example in drug development valuation.</a>
 </div>
-</a>
 </div>
 <div class="metadata">
-<a href="./posts/2023-11-11-Differentiable-programming-for-risk-management-and-investment-decisions.html">
+<a href="./posts/2023-11-11-Differentiable-programming-for-risk-management-and-investment-decisions.html" class="no-external">
 <div class="listing-date">
 Nov 11, 2023
 </div>
@@ -263,23 +334,19 @@ Yves Barmaz
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="2" data-categories="simulation-based inference,machine learning,tensorflow-probability" data-listing-date-sort="1689285600000" data-listing-file-modified-sort="1690291611567" data-listing-reading-time-sort="5.115">
+<div class="quarto-post image-right" data-index="3" data-categories="simulation-based inference,machine learning,tensorflow-probability" data-listing-date-sort="1689285600000" data-listing-file-modified-sort="1710105013206" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="6" data-listing-word-count-sort="1023">
 <div class="thumbnail">
-<a href="./posts/2023-07-14-Neural-likelihood-estimation.html">
-<div class="thumbnail-image">
-
-</div>
-</a><p><a href="./posts/2023-07-14-Neural-likelihood-estimation.html"></a></p>
+<p><a href="./posts/2023-07-14-Neural-likelihood-estimation.html" class="no-external"></a></p><a href="./posts/2023-07-14-Neural-likelihood-estimation.html" class="no-external">
+<p class="card-img-top"><img src="posts/2023-07-14-Neural-likelihood-estimation_files/figure-html/cell-19-output-1.png"  class="thumbnail-image card-img"/></p>
+</a><p><a href="./posts/2023-07-14-Neural-likelihood-estimation.html" class="no-external"></a></p>
 </div>
 <div class="body">
-<a href="./posts/2023-07-14-Neural-likelihood-estimation.html">
 <h3 class="no-anchor listing-title">
-Neural likelihood estimation and simulation-based inference
+<a href="./posts/2023-07-14-Neural-likelihood-estimation.html" class="no-external">Neural likelihood estimation and simulation-based inference</a>
 </h3>
 <div class="listing-subtitle">
-
+<a href="./posts/2023-07-14-Neural-likelihood-estimation.html" class="no-external"></a>
 </div>
-</a>
 <div class="listing-categories">
 <div class="listing-category" onclick="window.quartoListingCategory('simulation-based inference'); return false;">
 simulation-based inference
@@ -291,14 +358,12 @@ machine learning
 tensorflow-probability
 </div>
 </div>
-<a href="./posts/2023-07-14-Neural-likelihood-estimation.html">
 <div class="listing-description">
-<p>A discussion of simulation-based inference fueled by machine learning algorithms, with an example of neural likelihood estimation in TensorFlow Probability.</p>
+<a href="./posts/2023-07-14-Neural-likelihood-estimation.html" class="no-external">A discussion of simulation-based inference fueled by machine learning algorithms, with an example of neural likelihood estimation in TensorFlow Probability.</a>
 </div>
-</a>
 </div>
 <div class="metadata">
-<a href="./posts/2023-07-14-Neural-likelihood-estimation.html">
+<a href="./posts/2023-07-14-Neural-likelihood-estimation.html" class="no-external">
 <div class="listing-date">
 Jul 14, 2023
 </div>
@@ -308,23 +373,19 @@ Yves Barmaz
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="3" data-categories="scientific computing,simulation-based inference,jax,tensorflow-probability" data-listing-date-sort="1687557600000" data-listing-file-modified-sort="1689156286439" data-listing-reading-time-sort="5.235">
+<div class="quarto-post image-right" data-index="4" data-categories="scientific computing,simulation-based inference,jax,tensorflow-probability" data-listing-date-sort="1687557600000" data-listing-file-modified-sort="1710105013164" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="6" data-listing-word-count-sort="1047">
 <div class="thumbnail">
-<a href="./posts/2023-06-24-Rabbits-and-velociraptors.html">
-<div class="thumbnail-image">
-
-</div>
-</a><p><a href="./posts/2023-06-24-Rabbits-and-velociraptors.html"></a></p>
+<p><a href="./posts/2023-06-24-Rabbits-and-velociraptors.html" class="no-external"></a></p><a href="./posts/2023-06-24-Rabbits-and-velociraptors.html" class="no-external">
+<p class="card-img-top"><img src="posts/2023-06-26-Rabbits-and-velociraptors_files/figure-html/cell-6-output-1.png"  class="thumbnail-image card-img"/></p>
+</a><p><a href="./posts/2023-06-24-Rabbits-and-velociraptors.html" class="no-external"></a></p>
 </div>
 <div class="body">
-<a href="./posts/2023-06-24-Rabbits-and-velociraptors.html">
 <h3 class="no-anchor listing-title">
-Rabbits and velociraptors: scientific modeling on steroids
+<a href="./posts/2023-06-24-Rabbits-and-velociraptors.html" class="no-external">Rabbits and velociraptors: scientific modeling on steroids</a>
 </h3>
 <div class="listing-subtitle">
-
+<a href="./posts/2023-06-24-Rabbits-and-velociraptors.html" class="no-external"></a>
 </div>
-</a>
 <div class="listing-categories">
 <div class="listing-category" onclick="window.quartoListingCategory('scientific computing'); return false;">
 scientific computing
@@ -339,14 +400,12 @@ jax
 tensorflow-probability
 </div>
 </div>
-<a href="./posts/2023-06-24-Rabbits-and-velociraptors.html">
 <div class="listing-description">
-<p>A discussion of differentiable programming and scientific computing in the JAX ecosystem, with an example of simulation-based inference.</p>
+<a href="./posts/2023-06-24-Rabbits-and-velociraptors.html" class="no-external">A discussion of differentiable programming and scientific computing in the JAX ecosystem, with an example of simulation-based inference.</a>
 </div>
-</a>
 </div>
 <div class="metadata">
-<a href="./posts/2023-06-24-Rabbits-and-velociraptors.html">
+<a href="./posts/2023-06-24-Rabbits-and-velociraptors.html" class="no-external">
 <div class="listing-date">
 Jun 24, 2023
 </div>
@@ -356,23 +415,19 @@ Yves Barmaz
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="4" data-categories="mountain biking,signal processing,tensorflow-probability,satellite navigation" data-listing-date-sort="1667602800000" data-listing-file-modified-sort="1668013749266" data-listing-reading-time-sort="6.52">
+<div class="quarto-post image-right" data-index="5" data-categories="mountain biking,signal processing,tensorflow-probability,satellite navigation" data-listing-date-sort="1667602800000" data-listing-file-modified-sort="1710105013144" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="7" data-listing-word-count-sort="1304">
 <div class="thumbnail">
-<a href="./posts/2022-11-05-Cleaning-Strava-data-with-Kalman-smoothers.html">
-<div class="thumbnail-image">
-
-</div>
-</a><p><a href="./posts/2022-11-05-Cleaning-Strava-data-with-Kalman-smoothers.html"></a></p>
+<p><a href="./posts/2022-11-05-Cleaning-Strava-data-with-Kalman-smoothers.html" class="no-external"></a></p><a href="./posts/2022-11-05-Cleaning-Strava-data-with-Kalman-smoothers.html" class="no-external">
+<p class="card-img-top"><img src="posts/2022-11-05-Cleaning-Strava-data-with-Kalman-smoothers_files/figure-html/cell-2-output-1.jpeg"  class="thumbnail-image card-img"/></p>
+</a><p><a href="./posts/2022-11-05-Cleaning-Strava-data-with-Kalman-smoothers.html" class="no-external"></a></p>
 </div>
 <div class="body">
-<a href="./posts/2022-11-05-Cleaning-Strava-data-with-Kalman-smoothers.html">
 <h3 class="no-anchor listing-title">
-Cleaning Strava data with Kalman smoothers
+<a href="./posts/2022-11-05-Cleaning-Strava-data-with-Kalman-smoothers.html" class="no-external">Cleaning Strava data with Kalman smoothers</a>
 </h3>
 <div class="listing-subtitle">
-
+<a href="./posts/2022-11-05-Cleaning-Strava-data-with-Kalman-smoothers.html" class="no-external"></a>
 </div>
-</a>
 <div class="listing-categories">
 <div class="listing-category" onclick="window.quartoListingCategory('mountain biking'); return false;">
 mountain biking
@@ -387,14 +442,12 @@ tensorflow-probability
 satellite navigation
 </div>
 </div>
-<a href="./posts/2022-11-05-Cleaning-Strava-data-with-Kalman-smoothers.html">
 <div class="listing-description">
-<p>A tale of mountain biking, paranormal activity and signal processing.</p>
+<a href="./posts/2022-11-05-Cleaning-Strava-data-with-Kalman-smoothers.html" class="no-external">A tale of mountain biking, paranormal activity and signal processing.</a>
 </div>
-</a>
 </div>
 <div class="metadata">
-<a href="./posts/2022-11-05-Cleaning-Strava-data-with-Kalman-smoothers.html">
+<a href="./posts/2022-11-05-Cleaning-Strava-data-with-Kalman-smoothers.html" class="no-external">
 <div class="listing-date">
 Nov 5, 2022
 </div>
@@ -404,23 +457,19 @@ Yves Barmaz
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="5" data-categories="bayesian modeling,variational inference,tensorflow-probability,machine learning" data-listing-date-sort="1645570800000" data-listing-file-modified-sort="1680466426614" data-listing-reading-time-sort="8.955">
+<div class="quarto-post image-right" data-index="6" data-categories="bayesian modeling,variational inference,tensorflow-probability,machine learning" data-listing-date-sort="1645570800000" data-listing-file-modified-sort="1710105013140" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="9" data-listing-word-count-sort="1791">
 <div class="thumbnail">
-<a href="./posts/2022-02-23-bayesian-poisson-factorization.html">
-<div class="thumbnail-image">
-
-</div>
-</a><p><a href="./posts/2022-02-23-bayesian-poisson-factorization.html"></a></p>
+<p><a href="./posts/2022-02-23-bayesian-poisson-factorization.html" class="no-external"></a></p><a href="./posts/2022-02-23-bayesian-poisson-factorization.html" class="no-external">
+<div class="listing-item-img-placeholder card-img-top" >&nbsp;</div>
+</a><p><a href="./posts/2022-02-23-bayesian-poisson-factorization.html" class="no-external"></a></p>
 </div>
 <div class="body">
-<a href="./posts/2022-02-23-bayesian-poisson-factorization.html">
 <h3 class="no-anchor listing-title">
-Bayesian Poisson factorization
+<a href="./posts/2022-02-23-bayesian-poisson-factorization.html" class="no-external">Bayesian Poisson factorization</a>
 </h3>
 <div class="listing-subtitle">
-
+<a href="./posts/2022-02-23-bayesian-poisson-factorization.html" class="no-external"></a>
 </div>
-</a>
 <div class="listing-categories">
 <div class="listing-category" onclick="window.quartoListingCategory('bayesian modeling'); return false;">
 bayesian modeling
@@ -435,14 +484,12 @@ tensorflow-probability
 machine learning
 </div>
 </div>
-<a href="./posts/2022-02-23-bayesian-poisson-factorization.html">
 <div class="listing-description">
-<p>A probabilistic recommender system implemented with TensorFlow Probability layers.</p>
+<a href="./posts/2022-02-23-bayesian-poisson-factorization.html" class="no-external">A probabilistic recommender system implemented with TensorFlow Probability layers.</a>
 </div>
-</a>
 </div>
 <div class="metadata">
-<a href="./posts/2022-02-23-bayesian-poisson-factorization.html">
+<a href="./posts/2022-02-23-bayesian-poisson-factorization.html" class="no-external">
 <div class="listing-date">
 Feb 23, 2022
 </div>
@@ -452,26 +499,22 @@ Yves Barmaz
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="6" data-categories="JAX,autograd,differential geometry,classical mechanics" data-listing-date-sort="1638572400000" data-listing-file-modified-sort="1667926917205" data-listing-reading-time-sort="5.065">
+<div class="quarto-post image-right" data-index="7" data-categories="jax,autograd,differential geometry,classical mechanics" data-listing-date-sort="1638572400000" data-listing-file-modified-sort="1710109382454" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="6" data-listing-word-count-sort="1013">
 <div class="thumbnail">
-<a href="./posts/2021-12-04-hamiltonian-mechanics-with-jax.html">
-<div class="thumbnail-image">
-
-</div>
-</a><p><a href="./posts/2021-12-04-hamiltonian-mechanics-with-jax.html"></a></p>
+<p><a href="./posts/2021-12-04-hamiltonian-mechanics-with-jax.html" class="no-external"></a></p><a href="./posts/2021-12-04-hamiltonian-mechanics-with-jax.html" class="no-external">
+<p class="card-img-top"><img src="posts/2021-12-04-Hamiltonian-mechanics-with-JAX_files/figure-html/cell-7-output-1.png"  class="thumbnail-image card-img"/></p>
+</a><p><a href="./posts/2021-12-04-hamiltonian-mechanics-with-jax.html" class="no-external"></a></p>
 </div>
 <div class="body">
-<a href="./posts/2021-12-04-hamiltonian-mechanics-with-jax.html">
 <h3 class="no-anchor listing-title">
-Hamiltonian mechanics with JAX
+<a href="./posts/2021-12-04-hamiltonian-mechanics-with-jax.html" class="no-external">Hamiltonian mechanics with JAX</a>
 </h3>
 <div class="listing-subtitle">
-
+<a href="./posts/2021-12-04-hamiltonian-mechanics-with-jax.html" class="no-external"></a>
 </div>
-</a>
 <div class="listing-categories">
-<div class="listing-category" onclick="window.quartoListingCategory('JAX'); return false;">
-JAX
+<div class="listing-category" onclick="window.quartoListingCategory('jax'); return false;">
+jax
 </div>
 <div class="listing-category" onclick="window.quartoListingCategory('autograd'); return false;">
 autograd
@@ -483,14 +526,12 @@ differential geometry
 classical mechanics
 </div>
 </div>
-<a href="./posts/2021-12-04-hamiltonian-mechanics-with-jax.html">
 <div class="listing-description">
-<p>An application of automatic differentiation with JAX in classical mechanics.</p>
+<a href="./posts/2021-12-04-hamiltonian-mechanics-with-jax.html" class="no-external">An application of automatic differentiation with JAX in classical mechanics.</a>
 </div>
-</a>
 </div>
 <div class="metadata">
-<a href="./posts/2021-12-04-hamiltonian-mechanics-with-jax.html">
+<a href="./posts/2021-12-04-hamiltonian-mechanics-with-jax.html" class="no-external">
 <div class="listing-date">
 Dec 4, 2021
 </div>
@@ -500,23 +541,19 @@ Yves Barmaz
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="7" data-categories="random walks,bayesian modeling,time series,tensorflow-probability" data-listing-date-sort="1622844000000" data-listing-file-modified-sort="1667926945306" data-listing-reading-time-sort="1.335">
+<div class="quarto-post image-right" data-index="8" data-categories="random walks,bayesian modeling,time series,tensorflow-probability" data-listing-date-sort="1622844000000" data-listing-file-modified-sort="1710105013140" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="267">
 <div class="thumbnail">
-<a href="./posts/2021-06-05-gaussian-random-walks-with-tfp.html">
-<div class="thumbnail-image">
-
-</div>
-</a><p><a href="./posts/2021-06-05-gaussian-random-walks-with-tfp.html"></a></p>
+<p><a href="./posts/2021-06-05-gaussian-random-walks-with-tfp.html" class="no-external"></a></p><a href="./posts/2021-06-05-gaussian-random-walks-with-tfp.html" class="no-external">
+<p class="card-img-top"><img src="posts/2021-06-05-Gaussian-random-walks-with-tfp_files/figure-html/cell-4-output-1.png"  class="thumbnail-image card-img"/></p>
+</a><p><a href="./posts/2021-06-05-gaussian-random-walks-with-tfp.html" class="no-external"></a></p>
 </div>
 <div class="body">
-<a href="./posts/2021-06-05-gaussian-random-walks-with-tfp.html">
 <h3 class="no-anchor listing-title">
-Gaussian random walks
+<a href="./posts/2021-06-05-gaussian-random-walks-with-tfp.html" class="no-external">Gaussian random walks</a>
 </h3>
 <div class="listing-subtitle">
-
+<a href="./posts/2021-06-05-gaussian-random-walks-with-tfp.html" class="no-external"></a>
 </div>
-</a>
 <div class="listing-categories">
 <div class="listing-category" onclick="window.quartoListingCategory('random walks'); return false;">
 random walks
@@ -531,14 +568,12 @@ time series
 tensorflow-probability
 </div>
 </div>
-<a href="./posts/2021-06-05-gaussian-random-walks-with-tfp.html">
 <div class="listing-description">
-<p>A construction of a TensorFlow-Probability distribution implementing Gaussian random walks, with an application to stochastic volatility modeling.</p>
+<a href="./posts/2021-06-05-gaussian-random-walks-with-tfp.html" class="no-external">A construction of a TensorFlow-Probability distribution implementing Gaussian random walks, with an application to stochastic volatility modeling.</a>
 </div>
-</a>
 </div>
 <div class="metadata">
-<a href="./posts/2021-06-05-gaussian-random-walks-with-tfp.html">
+<a href="./posts/2021-06-05-gaussian-random-walks-with-tfp.html" class="no-external">
 <div class="listing-date">
 Jun 5, 2021
 </div>
@@ -548,23 +583,19 @@ Yves Barmaz
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="8" data-categories="contextual bandits,reinforcement learning,bayesian modeling,variational inference,probabilistic machine learning,tensorflow-probability" data-listing-date-sort="1612825200000" data-listing-file-modified-sort="1667926964465" data-listing-reading-time-sort="7.015">
+<div class="quarto-post image-right" data-index="9" data-categories="contextual bandits,reinforcement learning,bayesian modeling,variational inference,probabilistic machine learning,tensorflow-probability" data-listing-date-sort="1612825200000" data-listing-file-modified-sort="1710105013138" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="8" data-listing-word-count-sort="1403">
 <div class="thumbnail">
-<a href="./posts/2021-02-09-contextual_bandits.html">
-<div class="thumbnail-image">
-
-</div>
-</a><p><a href="./posts/2021-02-09-contextual_bandits.html"></a></p>
+<p><a href="./posts/2021-02-09-contextual_bandits.html" class="no-external"></a></p><a href="./posts/2021-02-09-contextual_bandits.html" class="no-external">
+<p class="card-img-top"><img src="posts/2021-02-09-Contextual_bandits_files/figure-html/cell-5-output-1.png"  class="thumbnail-image card-img"/></p>
+</a><p><a href="./posts/2021-02-09-contextual_bandits.html" class="no-external"></a></p>
 </div>
 <div class="body">
-<a href="./posts/2021-02-09-contextual_bandits.html">
 <h3 class="no-anchor listing-title">
-Thompson sampling for contextual bandits
+<a href="./posts/2021-02-09-contextual_bandits.html" class="no-external">Thompson sampling for contextual bandits</a>
 </h3>
 <div class="listing-subtitle">
-
+<a href="./posts/2021-02-09-contextual_bandits.html" class="no-external"></a>
 </div>
-</a>
 <div class="listing-categories">
 <div class="listing-category" onclick="window.quartoListingCategory('contextual bandits'); return false;">
 contextual bandits
@@ -585,14 +616,12 @@ probabilistic machine learning
 tensorflow-probability
 </div>
 </div>
-<a href="./posts/2021-02-09-contextual_bandits.html">
 <div class="listing-description">
-<p>An introduction to Thompson sampling and how to implement it with probabilistic machine learning to tackle contextual bandits.</p>
+<a href="./posts/2021-02-09-contextual_bandits.html" class="no-external">An introduction to Thompson sampling and how to implement it with probabilistic machine learning to tackle contextual bandits.</a>
 </div>
-</a>
 </div>
 <div class="metadata">
-<a href="./posts/2021-02-09-contextual_bandits.html">
+<a href="./posts/2021-02-09-contextual_bandits.html" class="no-external">
 <div class="listing-date">
 Feb 9, 2021
 </div>
@@ -602,23 +631,19 @@ Yves Barmaz
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="9" data-categories="bayesian modeling,variational inference,tensorflow-probability" data-listing-date-sort="1612134000000" data-listing-file-modified-sort="1667926976992" data-listing-reading-time-sort="5.8">
+<div class="quarto-post image-right" data-index="10" data-categories="bayesian modeling,variational inference,tensorflow-probability" data-listing-date-sort="1612134000000" data-listing-file-modified-sort="1710105013136" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="6" data-listing-word-count-sort="1160">
 <div class="thumbnail">
-<a href="./posts/2021-02-01-variational-inference-with-tfp.html">
-<div class="thumbnail-image">
-
-</div>
-</a><p><a href="./posts/2021-02-01-variational-inference-with-tfp.html"></a></p>
+<p><a href="./posts/2021-02-01-variational-inference-with-tfp.html" class="no-external"></a></p><a href="./posts/2021-02-01-variational-inference-with-tfp.html" class="no-external">
+<p class="card-img-top"><img src="posts/2021-02-01-Variational-inference-with-tfp_files/figure-html/cell-6-output-1.png"  class="thumbnail-image card-img"/></p>
+</a><p><a href="./posts/2021-02-01-variational-inference-with-tfp.html" class="no-external"></a></p>
 </div>
 <div class="body">
-<a href="./posts/2021-02-01-variational-inference-with-tfp.html">
 <h3 class="no-anchor listing-title">
-Variational inference with TensorFlow-Probability
+<a href="./posts/2021-02-01-variational-inference-with-tfp.html" class="no-external">Variational inference with TensorFlow-Probability</a>
 </h3>
 <div class="listing-subtitle">
-
+<a href="./posts/2021-02-01-variational-inference-with-tfp.html" class="no-external"></a>
 </div>
-</a>
 <div class="listing-categories">
 <div class="listing-category" onclick="window.quartoListingCategory('bayesian modeling'); return false;">
 bayesian modeling
@@ -630,14 +655,12 @@ variational inference
 tensorflow-probability
 </div>
 </div>
-<a href="./posts/2021-02-01-variational-inference-with-tfp.html">
 <div class="listing-description">
-<p>An overview of the variational inference APIs available in TensorFlow-Probability.</p>
+<a href="./posts/2021-02-01-variational-inference-with-tfp.html" class="no-external">An overview of the variational inference APIs available in TensorFlow-Probability.</a>
 </div>
-</a>
 </div>
 <div class="metadata">
-<a href="./posts/2021-02-01-variational-inference-with-tfp.html">
+<a href="./posts/2021-02-01-variational-inference-with-tfp.html" class="no-external">
 <div class="listing-date">
 Feb 1, 2021
 </div>
@@ -647,23 +670,19 @@ Yves Barmaz
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="10" data-categories="bayesian modeling,clinical quality" data-listing-date-sort="1610492400000" data-listing-file-modified-sort="1667926989656" data-listing-reading-time-sort="4.005">
+<div class="quarto-post image-right" data-index="11" data-categories="bayesian modeling,clinical quality" data-listing-date-sort="1610492400000" data-listing-file-modified-sort="1710107197709" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="5" data-listing-word-count-sort="801">
 <div class="thumbnail">
-<a href="./posts/2021-01-13-anomaly-detection-in-protocol-deviations.html">
-<div class="thumbnail-image">
-
-</div>
-</a><p><a href="./posts/2021-01-13-anomaly-detection-in-protocol-deviations.html"></a></p>
+<p><a href="./posts/2021-01-13-anomaly-detection-in-protocol-deviations.html" class="no-external"></a></p><a href="./posts/2021-01-13-anomaly-detection-in-protocol-deviations.html" class="no-external">
+<p class="card-img-top"><img src="posts/2021-01-13-Anomaly-detection-in-protocol-deviations_files/figure-html/cell-5-output-1.png"  class="thumbnail-image card-img"/></p>
+</a><p><a href="./posts/2021-01-13-anomaly-detection-in-protocol-deviations.html" class="no-external"></a></p>
 </div>
 <div class="body">
-<a href="./posts/2021-01-13-anomaly-detection-in-protocol-deviations.html">
 <h3 class="no-anchor listing-title">
-Anomaly detection in protocol deviations
+<a href="./posts/2021-01-13-anomaly-detection-in-protocol-deviations.html" class="no-external">Anomaly detection in protocol deviations</a>
 </h3>
 <div class="listing-subtitle">
-
+<a href="./posts/2021-01-13-anomaly-detection-in-protocol-deviations.html" class="no-external"></a>
 </div>
-</a>
 <div class="listing-categories">
 <div class="listing-category" onclick="window.quartoListingCategory('bayesian modeling'); return false;">
 bayesian modeling
@@ -672,14 +691,12 @@ bayesian modeling
 clinical quality
 </div>
 </div>
-<a href="./posts/2021-01-13-anomaly-detection-in-protocol-deviations.html">
 <div class="listing-description">
-<p>When math helps you define <em>too many</em> and <em>too few</em> protocol deviations.</p>
+<a href="./posts/2021-01-13-anomaly-detection-in-protocol-deviations.html" class="no-external">When math helps you define <em>too many</em> and <em>too few</em> protocol deviations.</a>
 </div>
-</a>
 </div>
 <div class="metadata">
-<a href="./posts/2021-01-13-anomaly-detection-in-protocol-deviations.html">
+<a href="./posts/2021-01-13-anomaly-detection-in-protocol-deviations.html" class="no-external">
 <div class="listing-date">
 Jan 13, 2021
 </div>
@@ -689,19 +706,19 @@ Yves Barmaz
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="11" data-categories="bayesian modeling,clinical quality" data-listing-date-sort="1610060400000" data-listing-file-modified-sort="1681578293152" data-listing-reading-time-sort="3.795">
+<div class="quarto-post image-right" data-index="12" data-categories="bayesian modeling,clinical quality" data-listing-date-sort="1610060400000" data-listing-file-modified-sort="1710107201563" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="4" data-listing-word-count-sort="759">
 <div class="thumbnail">
-<p><a href="./posts/2021-01-08-probabilistic assessment-of-safety-underreporting.html"> <img src="./posts/my_images/graph_ae_reporting.png" class="thumnail-image"> </a></p>
+<p><a href="./posts/2021-01-08-probabilistic assessment-of-safety-underreporting.html" class="no-external"></a></p><a href="./posts/2021-01-08-probabilistic assessment-of-safety-underreporting.html" class="no-external">
+<p class="card-img-top"><img src="posts/my_images/graph_ae_reporting.png"  class="thumbnail-image card-img"/></p>
+</a><p><a href="./posts/2021-01-08-probabilistic assessment-of-safety-underreporting.html" class="no-external"></a></p>
 </div>
 <div class="body">
-<a href="./posts/2021-01-08-probabilistic assessment-of-safety-underreporting.html">
 <h3 class="no-anchor listing-title">
-Probabilistic assessment of safety underreporting
+<a href="./posts/2021-01-08-probabilistic assessment-of-safety-underreporting.html" class="no-external">Probabilistic assessment of safety underreporting</a>
 </h3>
 <div class="listing-subtitle">
-
+<a href="./posts/2021-01-08-probabilistic assessment-of-safety-underreporting.html" class="no-external"></a>
 </div>
-</a>
 <div class="listing-categories">
 <div class="listing-category" onclick="window.quartoListingCategory('bayesian modeling'); return false;">
 bayesian modeling
@@ -710,14 +727,12 @@ bayesian modeling
 clinical quality
 </div>
 </div>
-<a href="./posts/2021-01-08-probabilistic assessment-of-safety-underreporting.html">
 <div class="listing-description">
-<p>Adverse event underreporting is a problem that sometimes affects clinical trials. Probabilistic programming is the modern way to address this issue.</p>
+<a href="./posts/2021-01-08-probabilistic assessment-of-safety-underreporting.html" class="no-external">Adverse event underreporting is a problem that sometimes affects clinical trials. Probabilistic programming is the modern way to address this issue.</a>
 </div>
-</a>
 </div>
 <div class="metadata">
-<a href="./posts/2021-01-08-probabilistic assessment-of-safety-underreporting.html">
+<a href="./posts/2021-01-08-probabilistic assessment-of-safety-underreporting.html" class="no-external">
 <div class="listing-date">
 Jan 8, 2021
 </div>
@@ -759,9 +774,23 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     icon: icon
   };
   anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
   const clipboard = new window.ClipboardJS('.code-copy-button', {
-    target: function(trigger) {
-      return trigger.previousElementSibling;
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
     }
   });
   clipboard.on('success', function(e) {
@@ -773,17 +802,51 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     button.classList.add('code-copy-button-checked');
     var currentTitle = button.getAttribute("title");
     button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
     setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
       button.setAttribute("title", currentTitle);
       button.classList.remove('code-copy-button-checked');
     }, 1000);
     // clear code selection
     e.clearSelection();
   });
-  function tippyHover(el, contentFn) {
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/ybarmaz\.github\.io\/blog\/");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
     const config = {
       allowHTML: true,
-      content: contentFn,
       maxWidth: 500,
       delay: 100,
       arrow: false,
@@ -793,8 +856,17 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       interactive: true,
       interactiveBorder: 10,
       theme: 'quarto',
-      placement: 'bottom-start'
+      placement: 'bottom-start',
     };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
     window.tippy(el, config); 
   }
   const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
@@ -806,31 +878,286 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       try { href = new URL(href).hash; } catch {}
       const id = href.replace(/^#\/?/, "");
       const note = window.document.getElementById(id);
-      return note.innerHTML;
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
     });
   }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
   var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
   for (var i=0; i<bibliorefs.length; i++) {
     const ref = bibliorefs[i];
-    const cites = ref.parentNode.getAttribute('data-cites').split(' ');
-    tippyHover(ref, function() {
-      var popup = window.document.createElement('div');
-      cites.forEach(function(cite) {
-        var citeDiv = window.document.createElement('div');
-        citeDiv.classList.add('hanging-indent');
-        citeDiv.classList.add('csl-entry');
-        var biblioDiv = window.document.getElementById('ref-' + cite);
-        if (biblioDiv) {
-          citeDiv.innerHTML = biblioDiv.innerHTML;
-        }
-        popup.appendChild(citeDiv);
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
       });
-      return popup.innerHTML;
-    });
+    }
   }
 });
 </script>
 </div> <!-- /content -->
+
 
 
 

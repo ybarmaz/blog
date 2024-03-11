@@ -1,59 +1,63 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://ybarmaz.github.io/blog/posts/2023-07-14-Neural-likelihood-estimation.html</loc>
-    <lastmod>2023-11-20T09:05:50.123Z</lastmod>
-  </url>
-  <url>
-    <loc>https://ybarmaz.github.io/blog/posts/2021-02-09-contextual_bandits.html</loc>
-    <lastmod>2023-11-20T09:05:51.066Z</lastmod>
-  </url>
-  <url>
-    <loc>https://ybarmaz.github.io/blog/posts/2023-06-24-Rabbits-and-velociraptors.html</loc>
-    <lastmod>2023-11-20T09:05:52.090Z</lastmod>
-  </url>
-  <url>
-    <loc>https://ybarmaz.github.io/blog/posts/2023-11-12-Masked-autoregressive-flows-for-stochastic-differential-equations.html</loc>
-    <lastmod>2023-11-20T09:05:52.810Z</lastmod>
-  </url>
-  <url>
-    <loc>https://ybarmaz.github.io/blog/posts/2023-11-11-Differentiable-programming-for-risk-management-and-investment-decisions.html</loc>
-    <lastmod>2023-11-20T09:05:53.563Z</lastmod>
-  </url>
-  <url>
-    <loc>https://ybarmaz.github.io/blog/posts/2021-12-04-hamiltonian-mechanics-with-jax.html</loc>
-    <lastmod>2023-11-20T09:05:54.216Z</lastmod>
-  </url>
-  <url>
-    <loc>https://ybarmaz.github.io/blog/posts/2021-01-13-anomaly-detection-in-protocol-deviations.html</loc>
-    <lastmod>2023-11-20T09:05:54.860Z</lastmod>
-  </url>
-  <url>
-    <loc>https://ybarmaz.github.io/blog/posts/2021-02-01-variational-inference-with-tfp.html</loc>
-    <lastmod>2023-11-20T09:05:55.577Z</lastmod>
-  </url>
-  <url>
-    <loc>https://ybarmaz.github.io/blog/posts/2021-06-05-gaussian-random-walks-with-tfp.html</loc>
-    <lastmod>2023-11-20T09:05:56.151Z</lastmod>
-  </url>
-  <url>
-    <loc>https://ybarmaz.github.io/blog/posts/2021-01-08-probabilistic assessment-of-safety-underreporting.html</loc>
-    <lastmod>2023-11-20T09:05:56.761Z</lastmod>
-  </url>
-  <url>
-    <loc>https://ybarmaz.github.io/blog/posts/2022-02-23-bayesian-poisson-factorization.html</loc>
-    <lastmod>2023-11-20T09:05:57.430Z</lastmod>
+    <loc>https://ybarmaz.github.io/blog/about.html</loc>
+    <lastmod>2024-03-10T21:10:13.127Z</lastmod>
   </url>
   <url>
     <loc>https://ybarmaz.github.io/blog/posts/2022-11-05-Cleaning-Strava-data-with-Kalman-smoothers.html</loc>
-    <lastmod>2023-11-20T09:05:58.102Z</lastmod>
+    <lastmod>2024-03-10T21:10:13.144Z</lastmod>
+  </url>
+  <url>
+    <loc>https://ybarmaz.github.io/blog/posts/2021-01-08-probabilistic assessment-of-safety-underreporting.html</loc>
+    <lastmod>2024-03-10T21:46:41.563Z</lastmod>
+  </url>
+  <url>
+    <loc>https://ybarmaz.github.io/blog/posts/2024-03-10-SDE-model-calibration-with-Diffrax.html</loc>
+    <lastmod>2024-03-11T10:42:32.782Z</lastmod>
+  </url>
+  <url>
+    <loc>https://ybarmaz.github.io/blog/posts/2021-01-13-anomaly-detection-in-protocol-deviations.html</loc>
+    <lastmod>2024-03-10T21:46:37.709Z</lastmod>
+  </url>
+  <url>
+    <loc>https://ybarmaz.github.io/blog/posts/2023-11-11-Differentiable-programming-for-risk-management-and-investment-decisions.html</loc>
+    <lastmod>2024-03-10T21:10:13.210Z</lastmod>
+  </url>
+  <url>
+    <loc>https://ybarmaz.github.io/blog/posts/2023-06-24-Rabbits-and-velociraptors.html</loc>
+    <lastmod>2024-03-10T21:10:13.164Z</lastmod>
+  </url>
+  <url>
+    <loc>https://ybarmaz.github.io/blog/posts/2023-07-14-Neural-likelihood-estimation.html</loc>
+    <lastmod>2024-03-10T21:10:13.206Z</lastmod>
+  </url>
+  <url>
+    <loc>https://ybarmaz.github.io/blog/posts/2021-02-09-contextual_bandits.html</loc>
+    <lastmod>2024-03-10T21:10:13.138Z</lastmod>
+  </url>
+  <url>
+    <loc>https://ybarmaz.github.io/blog/posts/2023-11-12-Masked-autoregressive-flows-for-stochastic-differential-equations.html</loc>
+    <lastmod>2024-03-10T21:21:58.367Z</lastmod>
+  </url>
+  <url>
+    <loc>https://ybarmaz.github.io/blog/posts/2021-12-04-hamiltonian-mechanics-with-jax.html</loc>
+    <lastmod>2024-03-10T22:23:02.454Z</lastmod>
+  </url>
+  <url>
+    <loc>https://ybarmaz.github.io/blog/posts/2021-02-01-variational-inference-with-tfp.html</loc>
+    <lastmod>2024-03-10T21:10:13.136Z</lastmod>
+  </url>
+  <url>
+    <loc>https://ybarmaz.github.io/blog/posts/2021-06-05-gaussian-random-walks-with-tfp.html</loc>
+    <lastmod>2024-03-10T21:10:13.140Z</lastmod>
+  </url>
+  <url>
+    <loc>https://ybarmaz.github.io/blog/posts/2022-02-23-bayesian-poisson-factorization.html</loc>
+    <lastmod>2024-03-10T21:10:13.140Z</lastmod>
   </url>
   <url>
     <loc>https://ybarmaz.github.io/blog/index.html</loc>
-    <lastmod>2023-11-20T09:05:58.850Z</lastmod>
-  </url>
-  <url>
-    <loc>https://ybarmaz.github.io/blog/about.html</loc>
-    <lastmod>2023-11-20T09:05:59.355Z</lastmod>
+    <lastmod>2024-03-10T21:10:13.128Z</lastmod>
   </url>
 </urlset>

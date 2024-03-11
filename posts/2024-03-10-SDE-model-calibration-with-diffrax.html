@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.4.551">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Yves Barmaz">
+<meta name="dcterms.date" content="2024-03-10">
+<meta name="description" content="A discussion of numerical integration and flexible gradient-based calibration of SDE models in the JAX ecosystem, with an example from finance.">
+
+<title>Yves Barmaz’s blog - SDE model calibration with Diffrax</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<script src="../site_libs/quarto-html/quarto.js"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../styles.css">
+</head>
+
+<body class="nav-fixed fullcontent">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">Yves Barmaz’s blog</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../about.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/ybarmaz"> <i class="bi bi-github" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://twitter.com/YvesBarmaz"> <i class="bi bi-twitter" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+          <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">SDE model calibration with Diffrax</h1>
+                  <div>
+        <div class="description">
+          A discussion of numerical integration and flexible gradient-based calibration of SDE models in the JAX ecosystem, with an example from finance.
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">jax</div>
+                <div class="quarto-category">diffrax</div>
+                <div class="quarto-category">sde</div>
+                <div class="quarto-category">quantitative finance</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p>Yves Barmaz </p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">March 10, 2024</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="stochastic-differential-equations-and-numerical-methods" class="level2">
+<h2 class="anchored" data-anchor-id="stochastic-differential-equations-and-numerical-methods">Stochastic differential equations and numerical methods</h2>
+<p>In my previous <a href="https://ybarmaz.github.io/blog/posts/2023-11-12-Masked-autoregressive-flows-for-stochastic-differential-equations.html">post</a>, I discussed stochastic differential equations (SDE) and presented a method to estimate the time-dependent probability density function <span class="math inline">\(p_t(x)\)</span> of their solution <span class="math inline">\(X_t\)</span>. It relied on masked autoregressive neural networks trained on samples of <span class="math inline">\(X_t\)</span> generated by a numerical integrator. I briefly mentioned that in a lot of applications, these samples can be used directly to compute Monte Carlo estimates of quantities of interest. For instance, the risk-adjusted net present value of a clinical development program was calculated with this method in the <a href="https://ybarmaz.github.io/blog/posts/2023-11-11-Differentiable-programming-for-risk-management-and-investment-decisions.html">post on risk management and investment decisions</a>, where I argued that implementing it in a differentiable programming library such as JAX facilitates the computation of sensitivities.</p>
+<p>This approach is also used in the finance industry to compute the value of derivative instruments, when the time-evolution of the underlying asset price is modelled with a stochastic differential equation. This SDE can be calibrated by matching statistics of historical data (for instance the mean and variance of log-returns in the case of a geometric Brownian motion), through direct statistical inference with a discretized model (see the <a href="https://ybarmaz.github.io/blog/posts/2021-06-05-gaussian-random-walks-with-tfp.html">post on Gaussian random walks</a>), or by reproducing the market prices of liquid derivatives, typically vanilla options.</p>
+<p>As a side note, mathematical finance considers two types of probability measures, namely real world measures for risk management, and <a href="https://en.wikipedia.org/wiki/Risk-neutral_measure">risk-neutral measures</a> for arbitrage-free asset pricing. Calibrating an SDE to historical data produces a real world model that can be used to compute the risk exposure of an investment portfolio, with metrics such as the <a href="https://en.wikipedia.org/wiki/Value_at_risk">value at risk</a>. Calibrating it to market prices of liquid derivatives on the other hand produces a risk-neutral model that can be used for the valuation of less liquid instruments such as exotic over-the-counter derivatives.</p>
+<p>In practice, the model calibration to market prices is often implemented by converting the SDE into an equivalent partial differential equation formulation, and deriving from there an integral formula of the derivative prices. Its parameters are then varied to match the observed market prices. The SDE is finally used with these calibrated parameters to generate samples for Monte Carlo pricing methods.</p>
+<p>The reason for using an integral formula for the parameter calibration rather than Monte Carlo estimates directly is that efficient calibration relies on gradient-based methods, and computing the gradients of Monte Carlo estimates with respect to the model parameters can be difficult. The pain point is the backpropagation of gradients through the numerical integration of the SDE. On the other hand, deriving an integral formula works only for special cases of SDE such as the <a href="https://en.wikipedia.org/wiki/Black%E2%80%93Scholes_model">Back-Scholes model</a> or the <a href="https://en.wikipedia.org/wiki/Heston_model">Heston model</a>, but is in general cases a very hard problem.</p>
+<p>This is where recent numerical integration libraries such as <a href="https://github.com/google-research/torchsde">torchsde</a> or <a href="https://docs.kidger.site/diffrax/">Diffrax</a> come in handy as they implement backpropagation through integration with <a href="https://docs.kidger.site/diffrax/api/adjoints/">adjoint methods</a> and make the calibration of arbitrary SDE models possible.</p>
+</section>
+<section id="heston-model" class="level2">
+<h2 class="anchored" data-anchor-id="heston-model">Heston model</h2>
+<p>As an example, we can consider the Heston model</p>
+<p><span class="math display">\[
+\begin{align*}
+dS_t &amp;= r\, S_t \, dt + \sqrt{V_t} S_t \, dW_t^S, \\
+dV_t &amp;= k (\theta - V_t) \, dt + \sigma \sqrt{V_t} \, dW_t^V, \\
+dW_t^S\, dW_t^V &amp;= \rho \, dt.
+\end{align*}
+\]</span></p>
+<p>Specifying its SDE only takes a few lines of code in Diffrax. Note how the correlation <span class="math inline">\(\rho\)</span> is introduced as a mixing matrix of two independent Wiener processes.</p>
+<div id="8689bc7c-8d2d-48bb-a9db-157bb0472487" class="cell" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> diffrax <span class="im">import</span> (diffeqsolve, ControlTerm, Euler, MultiTerm,</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>ODETerm, SaveAt, VirtualBrownianTree)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>t0, t1 <span class="op">=</span> <span class="fl">0.</span>, <span class="fl">1.</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> drift(t, y, args):</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    S, V <span class="op">=</span> y</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    r, V0, k, theta, sigma, rho <span class="op">=</span> args</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    d_y <span class="op">=</span> jnp.array([r <span class="op">*</span> S, k <span class="op">*</span> (theta <span class="op">-</span> V)])</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> d_y</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> diffusion(t, y, args):</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    S, V <span class="op">=</span> y</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    V <span class="op">=</span> jnp.maximum(V, <span class="fl">0.001</span>)</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    r, V0, k, theta, sigma, rho <span class="op">=</span> args</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    mixing <span class="op">=</span> jnp.array([[<span class="fl">1.</span>, <span class="fl">0.</span>],</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>                        [rho, jnp.sqrt(<span class="dv">1</span><span class="op">-</span>rho<span class="op">**</span><span class="dv">2</span>)]])</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    scale <span class="op">=</span> jnp.diag(jnp.array([jnp.sqrt(V)<span class="op">*</span>S,</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>                                jnp.sqrt(V)<span class="op">*</span>sigma]))</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> scale <span class="op">@</span> mixing</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>brownian_motion <span class="op">=</span> VirtualBrownianTree(t0, t1, tol<span class="op">=</span><span class="fl">1e-3</span>,</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>                            shape<span class="op">=</span>(<span class="dv">2</span>,), key<span class="op">=</span>jr.PRNGKey(<span class="dv">0</span>))</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>terms <span class="op">=</span> MultiTerm(ODETerm(drift),</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>                  ControlTerm(diffusion, brownian_motion))</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>solver <span class="op">=</span> Euler()</span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>saveat <span class="op">=</span> SaveAt(dense<span class="op">=</span><span class="va">True</span>, ts<span class="op">=</span>jnp.linspace(<span class="fl">0.</span>, <span class="fl">1.</span>, <span class="dv">2000</span>))</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>args <span class="op">=</span> (<span class="fl">0.05</span>, <span class="fl">0.04</span>, <span class="fl">5.</span>, <span class="fl">0.16</span>, <span class="fl">0.9</span>, <span class="fl">0.1</span>)</span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>sol <span class="op">=</span> diffeqsolve(terms, solver, t0, t1,</span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>                  dt0<span class="op">=</span><span class="fl">0.001</span>, y0<span class="op">=</span>jnp.array([<span class="fl">1.0</span>, <span class="fl">0.04</span>]),</span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>                  args<span class="op">=</span>args, saveat<span class="op">=</span>saveat, max_steps<span class="op">=</span><span class="dv">20000</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The <code>drift</code> and <code>diffusion</code> functions take <code>t</code> and <code>y</code> as inputs, which are the time and two-dimensional state of the SDE, and <code>args</code>, which packs the parameters of the model. For calibration, the goal is to build a scalar loss function that depends on these parameters and minimize it through gradient descent.</p>
+<div id="52be1654-d94a-4058-b1de-9d6c8113bb80" class="cell" data-execution_count="3">
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="2024-03-10-SDE-model-calibration-with-diffrax_files/figure-html/cell-4-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Functions that involve <a href="https://jax.readthedocs.io/en/latest/jax-101/05-random-numbers.html">pseudo random number generation in JAX</a> always require their own key, so to simulate several realizations of a stochastic process, it is best to build a function that depends on a <code>key</code> argument, and map it to as many keys as required with <code>jax.vmap</code>. Here it is wrapped in a <code>simulate</code> function to keep track of the dependence on the parameters in <code>args</code> and specify with a <code>SaveAt</code> object at which time points we want to record the stochastic process. To plot trajectories, we want it to be dense, but to price European options, we want to record only the states at the relevant maturities of the contracts.</p>
+<div id="52154c28-7d48-4851-832a-31ee8c07fb68" class="cell" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>t0, t1 <span class="op">=</span> <span class="fl">0.</span>, <span class="fl">1.6</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>t_size <span class="op">=</span> <span class="dv">200</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>ts <span class="op">=</span> jnp.linspace(t0, t1, t_size)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>saveat <span class="op">=</span> SaveAt(ts<span class="op">=</span>ts)</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> simulate(args, saveat, dataset_size<span class="op">=</span><span class="dv">100</span>):    </span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">@jax.jit</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">@jax.vmap</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> get_data(key):</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>        bm_key, vol_key <span class="op">=</span> jr.split(key, <span class="dv">2</span>)</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>        bm <span class="op">=</span> VirtualBrownianTree(t0, t1, tol<span class="op">=</span><span class="fl">1e-3</span>, shape<span class="op">=</span>(<span class="dv">2</span>,), key<span class="op">=</span>bm_key)</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>        drift_term <span class="op">=</span> ODETerm(drift)</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>        diffusion_term <span class="op">=</span> ControlTerm(diffusion, bm)</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>        terms <span class="op">=</span> MultiTerm(drift_term, diffusion_term)</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>        solver <span class="op">=</span> Euler()</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>        dt0 <span class="op">=</span> <span class="fl">0.005</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>        r, V0, k, theta, sigma, rho <span class="op">=</span> args</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>        y0 <span class="op">=</span> jnp.array([<span class="fl">1.0</span>, V0])</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>        sol <span class="op">=</span> diffeqsolve(</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>            terms, solver, t0, t1, dt0, y0, saveat<span class="op">=</span>saveat, args<span class="op">=</span>args</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> sol.ts, sol.ys</span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>    seed <span class="op">=</span> <span class="dv">123</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>    key <span class="op">=</span> jr.PRNGKey(seed)</span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>    data_key <span class="op">=</span> jr.split(key, dataset_size)</span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>    ts, ys <span class="op">=</span> get_data(data_key)</span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> ts, ys</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="e22a1594-4552-440a-8e5d-d319f936050a" class="cell" data-execution_count="5">
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="2024-03-10-SDE-model-calibration-with-diffrax_files/figure-html/cell-6-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="option-pricing" class="level2">
+<h2 class="anchored" data-anchor-id="option-pricing">Option pricing</h2>
+<p>As an illustration (inspired by the <a href="https://www.mathworks.com/help/fininst/calibrate-option-pricing-model-using-heston-model.html">MATLAB documentation</a>), we can calibrate this model to a European call option chain.</p>
+<div id="1eef873a-019c-49d0-ad2a-5b9ca48cbeeb" class="cell" data-execution_count="6">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>spot_price <span class="op">=</span> <span class="fl">123.28</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>strikes <span class="op">=</span> jnp.array([<span class="fl">115.</span>, <span class="fl">120.</span>, <span class="fl">125.</span>, <span class="fl">130.</span>, <span class="fl">135.</span>, <span class="fl">140.</span>, <span class="dv">145</span>])</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>maturity_dates <span class="op">=</span> [datetime.strptime(s, <span class="st">'%Y;%m;</span><span class="sc">%d</span><span class="st">'</span>) <span class="cf">for</span> s <span class="kw">in</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>                  [<span class="st">'2015;8;21'</span>, <span class="st">'2015;9;18'</span>, <span class="st">'2015;12;18'</span>,</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>                   <span class="st">'2016;4;15'</span>, <span class="st">'2016;6;17'</span>, <span class="st">'2017;1;20'</span>]]</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>settle_date <span class="op">=</span>datetime.strptime(<span class="st">'2015;7;10'</span>, <span class="st">'%Y;%m;</span><span class="sc">%d</span><span class="st">'</span>)</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>maturities <span class="op">=</span> jnp.array([(md.date() <span class="op">-</span> settle_date.date()).days<span class="op">/</span><span class="dv">365</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>                        <span class="cf">for</span> md <span class="kw">in</span> maturity_dates]) <span class="co">#time to maturity in years</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>market_calls <span class="op">=</span> jnp.array([</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a> [<span class="fl">9.95</span>, <span class="fl">10.63</span>, <span class="fl">12.84</span>, <span class="fl">15.1</span>, <span class="fl">15.95</span>, <span class="fl">20.0</span>],</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a> [<span class="fl">6.3</span>, <span class="fl">7.2</span>, <span class="fl">9.9</span>, <span class="fl">12.3</span>, <span class="fl">13.57</span>, <span class="fl">17.5</span>],</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a> [<span class="fl">3.6</span>, <span class="fl">4.55</span>, <span class="fl">7.3</span>, <span class="fl">9.7</span>, <span class="fl">11.15</span>, <span class="fl">15.2</span>],</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a> [<span class="fl">1.82</span>, <span class="fl">2.68</span>, <span class="fl">5.3</span>, <span class="fl">7.7</span>, <span class="fl">9.0</span>, <span class="fl">13.2</span>],</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a> [<span class="fl">0.82</span>, <span class="fl">1.45</span>, <span class="fl">3.7</span>, <span class="fl">5.85</span>, <span class="fl">7.2</span>, <span class="fl">11.27</span>],</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a> [<span class="fl">0.36</span>, <span class="fl">0.77</span>, <span class="fl">2.5</span>, <span class="fl">4.48</span>, <span class="fl">5.76</span>, <span class="fl">9.65</span>],</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a> [<span class="fl">0.15</span>, <span class="fl">0.38</span>, <span class="fl">1.7</span>, <span class="fl">3.44</span>, <span class="fl">4.54</span>, <span class="fl">8.1</span>]])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The first step is to compute the price of these options under the Heston model. So we simulate the value of the spot price at the different maturities, we compute the option payoff for every strike price, and we return the discounted Monte Carlo mean as the option prices. Here, instead of specifying the risk-free rate, we will compute its implied value. The initial value of the variance <code>V0</code> is unknown, so we will also learn it from the option market prices. This is why these two parameters are included in the <code>args</code> parameters. On the other hand, the initial <code>spot_price</code> is an input, but we had <span class="math inline">\(S_0 = 1\)</span>, so we need to multiply the simulated <span class="math inline">\(S_t\)</span> by <code>spot_price</code> to get the proper price evolution.</p>
+<div id="5cb3306a-a1ca-439c-a40f-7016ae04933f" class="cell" data-execution_count="7">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="at">@jax.jit</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> compute_call_price(spot_price, args, strikes,</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>                       maturities, sample_size<span class="op">=</span><span class="dv">512</span>):</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    ts, ys <span class="op">=</span> simulate(args,</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>                      SaveAt(ts<span class="op">=</span>maturities),</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>                      dataset_size<span class="op">=</span>sample_size)</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    spot_price_at_maturity <span class="op">=</span> spot_price<span class="op">*</span>ys[...,<span class="dv">0</span>]</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    r, V0, k, theta, sigma, rho <span class="op">=</span> args</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    discount <span class="op">=</span> jnp.exp(<span class="op">-</span>r<span class="op">*</span>maturities)</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    simulated_payoffs <span class="op">=</span> jnp.maximum(</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>        spot_price_at_maturity[:,<span class="va">None</span>] <span class="op">-</span> strikes[...,<span class="va">None</span>], <span class="dv">0</span>)</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>    simulated_calls <span class="op">=</span> discount <span class="op">*</span> jnp.mean(simulated_payoffs,</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>                                          axis<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> simulated_calls</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="calibration" class="level2">
+<h2 class="anchored" data-anchor-id="calibration">Calibration</h2>
+<p>For calibration, we need to penalize discrepancies between the simulated option prices and their market values. Here we choose the (unweighted) mean squared relative error. Taking the relative rather than absolute error is motivated by the fact that these option prices cover three orders of magnitude, and we want to avoid too big an influence from the options that are deep in the money. In practice, we might also introduce weights that depend on the bid-ask spreads to reflect different uncertainties in market prices. The result is a loss function that depends as required only on the <code>args</code> parameters.</p>
+<div id="32d531ef-3cf2-4ccd-8b4b-3c4c98fde625" class="cell" data-execution_count="8">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="at">@jax.jit</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> compute_loss(args):</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    simulated_calls <span class="op">=</span> compute_call_price(spot_price,</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>                                         args,</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>                                         strikes,</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>                                         maturities)</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    errors <span class="op">=</span> simulated_calls <span class="op">-</span> market_calls</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    msre <span class="op">=</span> jnp.mean((errors<span class="op">/</span>market_calls)<span class="op">**</span><span class="dv">2</span>)</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> msre</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>To find the parameters that minimize this mean squared relative error and provide the best fit to the market prices, we use the <a href="https://optax.readthedocs.io/en/latest/">Optax</a> library. This works because the gradients nicely backpropagate through the entire implementation of <code>compute_loss</code>, including the <code>diffrax.diffeqsolve</code> numerical integrator.</p>
+<div id="e5d6ff0b-8765-4dd4-a585-900b066a4fd3" class="cell" data-execution_count="9">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>params <span class="op">=</span> jnp.array([<span class="op">-</span><span class="fl">0.001</span>, <span class="fl">0.05</span>, <span class="fl">.5</span>, <span class="fl">0.2</span>, <span class="fl">0.2</span>, <span class="fl">0.</span>])</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>start_learning_rate <span class="op">=</span> <span class="fl">0.02</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>optimizer <span class="op">=</span> optax.adam(start_learning_rate)</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Initialize parameters of the model + optimizer.</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>opt_state <span class="op">=</span> optimizer.init(params)</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>history <span class="op">=</span> []</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>msres <span class="op">=</span> []</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">300</span>):</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    value, grads <span class="op">=</span> jax.value_and_grad(compute_loss)(params)</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    updates, opt_state <span class="op">=</span> optimizer.update(grads, opt_state)</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    params <span class="op">=</span> optax.apply_updates(params, updates)</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    history.append(params)</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    msres.append(value)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="ff2f4843-c65f-4587-a6da-2dcbd6213837" class="cell" data-execution_count="10">
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="2024-03-10-SDE-model-calibration-with-diffrax_files/figure-html/cell-11-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The initial “half-piping” of the calibration curve could be avoided with a learning rate scheduler, and it could speed up convergence, but the key takeaway is that this method converges and produces a well-calibrated interpretable stochastic model.</p>
+<div id="648ea607-8c85-402f-8fb3-39510d6b099a" class="cell" data-execution_count="11">
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="2024-03-10-SDE-model-calibration-with-diffrax_files/figure-html/cell-12-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>As a final sanity check, one can compare the calibrated call prices with the market values.</p>
+<div id="9ed5d421-f3a5-41f4-91df-9aeab51c6479" class="cell" data-execution_count="12">
+<div class="cell-output cell-output-stdout">
+<pre><code>Calibrated call prices:
+[[ 9.99 11.4  13.5  14.9  16.23 19.97]
+ [ 6.5   7.91 10.3  11.89 13.34 17.28]
+ [ 3.68  4.9   7.62  9.32 10.79 14.9 ]
+ [ 1.77  2.78  5.5   7.22  8.63 12.84]
+ [ 0.76  1.57  3.9   5.5   6.87 11.05]
+ [ 0.3   0.85  2.73  4.27  5.53  9.5 ]
+ [ 0.12  0.45  1.95  3.32  4.51  8.22]]
+
+Market call prices:
+[[ 9.95 10.63 12.84 15.1  15.95 20.  ]
+ [ 6.3   7.2   9.9  12.3  13.57 17.5 ]
+ [ 3.6   4.55  7.3   9.7  11.15 15.2 ]
+ [ 1.82  2.68  5.3   7.7   9.   13.2 ]
+ [ 0.82  1.45  3.7   5.85  7.2  11.27]
+ [ 0.36  0.77  2.5   4.48  5.76  9.65]
+ [ 0.15  0.38  1.7   3.44  4.54  8.1 ]]</code></pre>
+</div>
+</div>
+</section>
+<section id="conclusion" class="level2">
+<h2 class="anchored" data-anchor-id="conclusion">Conclusion</h2>
+<p>This example demonstrated how easy it is to automatically calibrate an SDE to expected values such as derivative prices in differentiable programming frameworks like JAX or PyTorch. Moreoever, these frameworks natively support hardware acceleration and parallelization, so these workflows can be scaled up with minimal effort. Practioners no longer need to stick to simple models like Black-Scholes, but can quickly experiment with more realistic models that better capture features of the processes they work with.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/ybarmaz\.github\.io\/blog\/");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://utteranc.es/client.js" repo="ybarmaz/blog" issue-term="pathname" theme="github-light" crossorigin="anonymous" async="">
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
