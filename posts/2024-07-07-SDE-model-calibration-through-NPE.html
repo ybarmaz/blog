@@ -229,7 +229,6 @@ window.Quarto = {
 
 
 
-<p><a href="https://colab.research.google.com/github/ybarmaz/blog/blob/master/posts/2024-07-07-SDE-model-calibration-through-NPE.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"></a></p>
 <section id="introduction" class="level2">
 <h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
 <p>Last time, I discussed how <a href="https://ybarmaz.github.io/blog/posts/2024-03-10-SDE-model-calibration-with-diffrax.html">the differentiability of JAX programs facilitates model calibration</a> when calculating derivatives by hand would be extremely tedious, for instance when the model involves the numerical integration of a stochastic differential equation. While this method provides point estimates of the parameters that minimize a given loss function, it does not quantify the uncertainty of those estimates. Getting such error bars is important to assess the quality of the calibration, and to decide whether the model actually explains the observed data. In the example of option pricing, this concretely means that we can detect mispricing for statistical arbitrage purposes.</p>
@@ -261,7 +260,7 @@ P(\theta \vert X) = \frac{P(\theta, X)}{P(X)} = \frac{P(\theta)P(X \vert \theta)
 <section id="implementation" class="level2">
 <h2 class="anchored" data-anchor-id="implementation">Implementation</h2>
 <p>For the Heston model, we can reuse the code from the previous post to generate synthetic observations, but any implementation of a sampler of <span class="math inline">\(x_i \sim X_i = F(\theta_i)\)</span> would work.</p>
-<div id="cell-5" class="cell" data-execution_count="3">
+<div id="cell-4" class="cell" data-execution_count="3">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> diffrax <span class="im">import</span> (diffeqsolve, ControlTerm, Euler, MultiTerm,</span>
@@ -334,7 +333,7 @@ P(\theta \vert X) = \frac{P(\theta, X)}{P(X)} = \frac{P(\theta)P(X \vert \theta)
 </details>
 </div>
 <p>We will reuse the example of the previous post. For more flexibility, this market data could be introduced as further conditional parameters in the autoregressive network, but we will keep it simple for the sake of the example.</p>
-<div id="cell-7" class="cell" data-outputid="800ee79c-7bff-441f-c23d-d92890ddfe93" data-execution_count="4">
+<div id="cell-6" class="cell" data-outputid="800ee79c-7bff-441f-c23d-d92890ddfe93" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>spot_price <span class="op">=</span> <span class="fl">123.28</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>strikes <span class="op">=</span> jnp.array([<span class="fl">115.</span>, <span class="fl">120.</span>, <span class="fl">125.</span>, <span class="fl">130.</span>, <span class="fl">135.</span>, <span class="fl">140.</span>, <span class="dv">145</span>])</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -356,7 +355,7 @@ P(\theta \vert X) = \frac{P(\theta, X)}{P(X)} = \frac{P(\theta)P(X \vert \theta)
 </div>
 <p>The workflow discussed here does not leverage the differentiability of the JAX implementation (some more involved variations do in order to guide a more efficient sampling of synthetic data), but the <code>jax.vmap</code> function makes it very easy to parallelize the generation of samples.</p>
 <p>Specifying the prior distribution of the parameters can be done with the JAX backend of TensorFlow-Probability.</p>
-<div id="cell-9" class="cell" data-execution_count="5">
+<div id="cell-8" class="cell" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>prior_dist <span class="op">=</span> tfd_jax.JointDistributionSequential([</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="co"># rate r</span></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    tfd_jax.Normal(<span class="fl">0.0</span>, <span class="fl">0.05</span>, name<span class="op">=</span><span class="st">'prior_rate'</span>),</span>
@@ -373,7 +372,7 @@ P(\theta \vert X) = \frac{P(\theta, X)}{P(X)} = \frac{P(\theta)P(X \vert \theta)
 <span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>The generation of parameters and observations is wrapped in a single function along with a filter to remove the failed simulations. Sometimes the <code>diffrax</code> integration fails to converge.</p>
-<div id="cell-11" class="cell" data-outputid="54bd33ef-52bc-40ee-bc1b-00e653c48239" data-execution_count="6">
+<div id="cell-10" class="cell" data-outputid="54bd33ef-52bc-40ee-bc1b-00e653c48239" data-execution_count="6">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> simulate_training_data(target_training_size, key):</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="co"># target_training_size is the number of parameters drawn, and the number</span></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="co"># of corresponding observations generated. Some of the simulations will</span></span>
@@ -415,7 +414,7 @@ P(\theta \vert X) = \frac{P(\theta, X)}{P(X)} = \frac{P(\theta)P(X \vert \theta)
 </div>
 <p>Masked autoencoders are also implemented in TensorFlow-Probability, but only in the original version with a TensorFlow backend. This will require to convert the JAX arrays to TensorFlow tensors, and back if we want to reuse JAX on the output of the learned surrogate model.</p>
 <p>An autoregressive autoencoder is not constrained by default, so the transformed distribution would have the six-dimensional space <span class="math inline">\(\mathbb{R}^6\)</span> as a support. Some of the parameters are strictly positive though, therefore chaining the autoregressive flow with constraining bijectors is necessary to obtain the proper support. Note that passing conditional inputs to nested bijectors requires naming them and specifying it in the <code>bijector_kwargs</code> arguments of the distribution methods (such as <code>sample</code> and <code>log_prob</code>).</p>
-<div id="cell-13" class="cell" data-execution_count="7">
+<div id="cell-12" class="cell" data-execution_count="7">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Conditional density estimation with MADE.</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>made <span class="op">=</span> tfb.AutoregressiveNetwork(</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  params<span class="op">=</span><span class="dv">2</span>,</span>
@@ -448,7 +447,7 @@ P(\theta \vert X) = \frac{P(\theta, X)}{P(X)} = \frac{P(\theta)P(X \vert \theta)
 <span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>  bijector<span class="op">=</span>tfb.Chain([unconstraining_bij, maf]))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>The training of the autoregressive flow can be implemented with <code>keras</code>, with a loss function defined as the negative log-likelihood of the conditional distribution.</p>
-<div id="cell-15" class="cell" data-outputid="788561e8-9acb-469c-d578-463664684283" data-execution_count="8">
+<div id="cell-14" class="cell" data-outputid="788561e8-9acb-469c-d578-463664684283" data-execution_count="8">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Construct and fit a model.</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Placeholder for the observations X.</span></span>
@@ -481,14 +480,14 @@ P(\theta \vert X) = \frac{P(\theta, X)}{P(X)} = \frac{P(\theta)P(X \vert \theta)
 <span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>                    verbose<span class="op">=</span><span class="va">True</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Once the surrogate distribution is trained to emulate posteriors with the synthetic data, it can be conditioned on the observed data to generate a sample of the approximate posterior of interest.</p>
-<div id="cell-18" class="cell" data-execution_count="10">
+<div id="cell-17" class="cell" data-execution_count="10">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>posterior_params <span class="op">=</span> parameterized_distribution.sample(</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="dv">5000</span>,</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    bijector_kwargs<span class="op">=</span>{<span class="st">'maf'</span>: {<span class="st">'conditional_input'</span>: market_calls.reshape(<span class="op">-</span><span class="dv">1</span>)}}</span>
 <span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Exploring marginal density plots reveals how well the model fits the data. Tighter marginals mean better fit.</p>
-<div id="cell-22" class="cell" data-outputid="1536ac55-7e32-4bbb-9713-486f323529d1" data-execution_count="13">
+<div id="cell-21" class="cell" data-outputid="1536ac55-7e32-4bbb-9713-486f323529d1" data-execution_count="13">
 <div class="cell-output cell-output-stderr">
 <pre><code>/usr/local/lib/python3.10/dist-packages/arviz/utils.py:184: NumbaDeprecationWarning: The 'nopython' keyword argument was not supplied to the 'numba.jit' decorator. The implicit default value for this argument is currently False, but it will be changed to True in Numba 0.59.0. See https://numba.readthedocs.io/en/stable/reference/deprecation.html#deprecation-of-object-mode-fall-back-behaviour-when-using-jit for details.
   numba_fn = numba.jit(**self.kwargs)(self.function)</code></pre>
@@ -502,7 +501,7 @@ P(\theta \vert X) = \frac{P(\theta, X)}{P(X)} = \frac{P(\theta)P(X \vert \theta)
 </div>
 </div>
 <p>Finally, these parameters drawn from the approximate posterior are passed to the simulator model to generate a sample of the posterior predictive distribution of call option prices.</p>
-<div id="cell-24" class="cell" data-execution_count="14">
+<div id="cell-23" class="cell" data-execution_count="14">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> generate_posterior_predictive_prices(posterior_params, key):</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    posterior_prices <span class="op">=</span> vmap(compute_call_price,</span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>                            in_axes<span class="op">=</span>(<span class="va">None</span>, <span class="dv">0</span>, <span class="va">None</span>, <span class="va">None</span>, <span class="va">None</span>))(</span>
@@ -516,7 +515,7 @@ P(\theta \vert X) = \frac{P(\theta, X)}{P(X)} = \frac{P(\theta)P(X \vert \theta)
 <span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> posterior_prices</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>This sample can be used to compute a Monte Carlo estimate of the corresponding cumulative distribution function, with which we can assess how well the individual prices are explained by the calibrated model.</p>
-<div id="cell-27" class="cell" data-outputid="bb5b4b04-25a3-4bf5-e4eb-da6d8af30b7e" data-execution_count="16">
+<div id="cell-26" class="cell" data-outputid="bb5b4b04-25a3-4bf5-e4eb-da6d8af30b7e" data-execution_count="16">
 <div class="cell-output cell-output-stdout">
 <pre><code>Posterior predictive quantiles of the observed prices:
 [[0.998 0.827 0.629 0.639 0.719 0.844]
