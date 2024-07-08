@@ -14,31 +14,35 @@
   </url>
   <url>
     <loc>https://ybarmaz.github.io/blog/posts/2024-03-10-SDE-model-calibration-with-diffrax.html</loc>
-    <lastmod>2024-03-11T11:30:02.620Z</lastmod>
+    <lastmod>2024-07-08T10:23:17.039Z</lastmod>
   </url>
   <url>
     <loc>https://ybarmaz.github.io/blog/posts/2021-01-13-anomaly-detection-in-protocol-deviations.html</loc>
     <lastmod>2024-03-10T21:46:37.709Z</lastmod>
   </url>
   <url>
-    <loc>https://ybarmaz.github.io/blog/posts/2023-11-11-Differentiable-programming-for-risk-management-and-investment-decisions.html</loc>
-    <lastmod>2024-03-10T21:10:13.210Z</lastmod>
+    <loc>https://ybarmaz.github.io/blog/posts/2024-07-07-SDE-model-calibration-through-NPE.html</loc>
+    <lastmod>2024-07-08T13:32:25.795Z</lastmod>
   </url>
   <url>
-    <loc>https://ybarmaz.github.io/blog/posts/2023-06-24-Rabbits-and-velociraptors.html</loc>
-    <lastmod>2024-03-10T21:10:13.164Z</lastmod>
-  </url>
-  <url>
-    <loc>https://ybarmaz.github.io/blog/posts/2023-07-14-Neural-likelihood-estimation.html</loc>
-    <lastmod>2024-03-10T21:10:13.206Z</lastmod>
+    <loc>https://ybarmaz.github.io/blog/posts/2023-11-12-Masked-autoregressive-flows-for-stochastic-differential-equations.html</loc>
+    <lastmod>2024-03-10T21:21:58.367Z</lastmod>
   </url>
   <url>
     <loc>https://ybarmaz.github.io/blog/posts/2021-02-09-contextual_bandits.html</loc>
     <lastmod>2024-03-10T21:10:13.138Z</lastmod>
   </url>
   <url>
-    <loc>https://ybarmaz.github.io/blog/posts/2023-11-12-Masked-autoregressive-flows-for-stochastic-differential-equations.html</loc>
-    <lastmod>2024-03-10T21:21:58.367Z</lastmod>
+    <loc>https://ybarmaz.github.io/blog/posts/2023-07-14-Neural-likelihood-estimation.html</loc>
+    <lastmod>2024-03-10T21:10:13.206Z</lastmod>
+  </url>
+  <url>
+    <loc>https://ybarmaz.github.io/blog/posts/2023-06-24-Rabbits-and-velociraptors.html</loc>
+    <lastmod>2024-03-10T21:10:13.164Z</lastmod>
+  </url>
+  <url>
+    <loc>https://ybarmaz.github.io/blog/posts/2023-11-11-Differentiable-programming-for-risk-management-and-investment-decisions.html</loc>
+    <lastmod>2024-03-10T21:10:13.210Z</lastmod>
   </url>
   <url>
     <loc>https://ybarmaz.github.io/blog/posts/2021-12-04-hamiltonian-mechanics-with-jax.html</loc>
