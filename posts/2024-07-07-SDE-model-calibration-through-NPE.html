@@ -432,8 +432,8 @@ P(\theta \vert X) = \frac{P(\theta, X)}{P(X)} = \frac{P(\theta)P(X \vert \theta)
 <span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>        tfb.Exp(),</span>
 <span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>        tfb.Identity()]</span>
 <span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>unconstraining_bij <span class="op">=</span> tfb.Blockwise(bijs, block_sizes<span class="op">=</span><span class="dv">6</span><span class="op">*</span>[<span class="dv">1</span>],</span>
-<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>                                   name<span class="op">=</span><span class="st">'unconstraining_bij'</span>)</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>constraining_bij <span class="op">=</span> tfb.Blockwise(bijs, block_sizes<span class="op">=</span><span class="dv">6</span><span class="op">*</span>[<span class="dv">1</span>],</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>                                   name<span class="op">=</span><span class="st">'constraining_bij'</span>)</span>
 <span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Name the autoregressive flow to properly pass the</span></span>
 <span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a><span class="co"># conditional arguments:</span></span>
@@ -444,7 +444,7 @@ P(\theta \vert X) = \frac{P(\theta, X)}{P(X)} = \frac{P(\theta)P(X \vert \theta)
 <span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>parameterized_distribution <span class="op">=</span> tfd.TransformedDistribution(</span>
 <span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>  distribution<span class="op">=</span>tfd.Sample(tfd.Normal(loc<span class="op">=</span><span class="fl">0.</span>, scale<span class="op">=</span><span class="fl">1.</span>),</span>
 <span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>                          sample_shape<span class="op">=</span>[<span class="dv">6</span>]),</span>
-<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>  bijector<span class="op">=</span>tfb.Chain([unconstraining_bij, maf]))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>  bijector<span class="op">=</span>tfb.Chain([constraining_bij, maf]))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>The training of the autoregressive flow can be implemented with <code>keras</code>, with a loss function defined as the negative log-likelihood of the conditional distribution.</p>
 <div id="cell-14" class="cell" data-outputid="788561e8-9acb-469c-d578-463664684283" data-execution_count="8">
