@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.5.53">
+<meta name="generator" content="quarto-1.8.25">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -32,15 +32,17 @@ ul.task-list li input[type="checkbox"] {
 <meta name="quarto:offset" content="./">
 <script src="site_libs/quarto-listing/list.min.js"></script>
 <script src="site_libs/quarto-listing/quarto-listing.js"></script>
-<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
 <script src="site_libs/quarto-html/popper.min.js"></script>
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="site_libs/quarto-html/anchor.min.js"></script>
 <link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-7b89279ff1a6dce999919e0e67d4d9ec.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-003c7ce323138a8a6468cb23c965a473.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -112,7 +114,7 @@ const typesetMath = (el) => {
     var macros = [];
     for (var i = 0; i < mathElements.length; i++) {
       var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN") {
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
         window.katex.render(texText.data, mathElements[i], {
           displayMode: mathElements[i].classList.contains('display'),
           throwOnError: false,
@@ -131,13 +133,15 @@ window.Quarto = {
 <link rel="stylesheet" href="styles.css">
 </head>
 
-<body class="nav-fixed">
+<body class="nav-fixed quarto-light">
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top quarto-banner">
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
+    <a href="./index.html" class="navbar-brand navbar-brand-logo">
+    </a>
     <a class="navbar-brand" href="./index.html">
     <span class="navbar-title">Yves Barmaz’s blog</span>
     </a>
@@ -191,7 +195,7 @@ window.Quarto = {
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
         
-    <h5 class="quarto-listing-category-title">Categories</h5><div class="quarto-listing-category category-default"><div class="category" data-category="">All <span class="quarto-category-count">(14)</span></div><div class="category" data-category="autograd">autograd <span class="quarto-category-count">(1)</span></div><div class="category" data-category="bayesian modeling">bayesian modeling <span class="quarto-category-count">(6)</span></div><div class="category" data-category="classical mechanics">classical mechanics <span class="quarto-category-count">(1)</span></div><div class="category" data-category="clinical quality">clinical quality <span class="quarto-category-count">(2)</span></div><div class="category" data-category="contextual bandits">contextual bandits <span class="quarto-category-count">(1)</span></div><div class="category" data-category="differentiable programming">differentiable programming <span class="quarto-category-count">(1)</span></div><div class="category" data-category="differential geometry">differential geometry <span class="quarto-category-count">(1)</span></div><div class="category" data-category="diffrax">diffrax <span class="quarto-category-count">(2)</span></div><div class="category" data-category="drug development">drug development <span class="quarto-category-count">(1)</span></div><div class="category" data-category="jax">jax <span class="quarto-category-count">(4)</span></div><div class="category" data-category="machine learning">machine learning <span class="quarto-category-count">(4)</span></div><div class="category" data-category="mountain biking">mountain biking <span class="quarto-category-count">(1)</span></div><div class="category" data-category="probabilistic machine learning">probabilistic machine learning <span class="quarto-category-count">(1)</span></div><div class="category" data-category="probabilistic programming">probabilistic programming <span class="quarto-category-count">(3)</span></div><div class="category" data-category="quantitative finance">quantitative finance <span class="quarto-category-count">(3)</span></div><div class="category" data-category="random walks">random walks <span class="quarto-category-count">(1)</span></div><div class="category" data-category="reinforcement learning">reinforcement learning <span class="quarto-category-count">(1)</span></div><div class="category" data-category="risk management">risk management <span class="quarto-category-count">(1)</span></div><div class="category" data-category="satellite navigation">satellite navigation <span class="quarto-category-count">(1)</span></div><div class="category" data-category="scientific computing">scientific computing <span class="quarto-category-count">(1)</span></div><div class="category" data-category="sde">sde <span class="quarto-category-count">(2)</span></div><div class="category" data-category="signal processing">signal processing <span class="quarto-category-count">(1)</span></div><div class="category" data-category="simulation-based inference">simulation-based inference <span class="quarto-category-count">(3)</span></div><div class="category" data-category="tensorflow-probability">tensorflow-probability <span class="quarto-category-count">(9)</span></div><div class="category" data-category="time series">time series <span class="quarto-category-count">(1)</span></div><div class="category" data-category="variational inference">variational inference <span class="quarto-category-count">(3)</span></div></div></div>
+    <h5 class="quarto-listing-category-title">Categories</h5><div class="quarto-listing-category category-default"><div class="category" data-category="">All <span class="quarto-category-count">(14)</span></div><div class="category" data-category="YXV0b2dyYWQ=">autograd <span class="quarto-category-count">(1)</span></div><div class="category" data-category="YmF5ZXNpYW4lMjBtb2RlbGluZw==">bayesian modeling <span class="quarto-category-count">(6)</span></div><div class="category" data-category="Y2xhc3NpY2FsJTIwbWVjaGFuaWNz">classical mechanics <span class="quarto-category-count">(1)</span></div><div class="category" data-category="Y2xpbmljYWwlMjBxdWFsaXR5">clinical quality <span class="quarto-category-count">(2)</span></div><div class="category" data-category="Y29udGV4dHVhbCUyMGJhbmRpdHM=">contextual bandits <span class="quarto-category-count">(1)</span></div><div class="category" data-category="ZGlmZmVyZW50aWFibGUlMjBwcm9ncmFtbWluZw==">differentiable programming <span class="quarto-category-count">(1)</span></div><div class="category" data-category="ZGlmZmVyZW50aWFsJTIwZ2VvbWV0cnk=">differential geometry <span class="quarto-category-count">(1)</span></div><div class="category" data-category="ZGlmZnJheA==">diffrax <span class="quarto-category-count">(2)</span></div><div class="category" data-category="ZHJ1ZyUyMGRldmVsb3BtZW50">drug development <span class="quarto-category-count">(1)</span></div><div class="category" data-category="amF4">jax <span class="quarto-category-count">(4)</span></div><div class="category" data-category="bWFjaGluZSUyMGxlYXJuaW5n">machine learning <span class="quarto-category-count">(4)</span></div><div class="category" data-category="bW91bnRhaW4lMjBiaWtpbmc=">mountain biking <span class="quarto-category-count">(1)</span></div><div class="category" data-category="cHJvYmFiaWxpc3RpYyUyMG1hY2hpbmUlMjBsZWFybmluZw==">probabilistic machine learning <span class="quarto-category-count">(1)</span></div><div class="category" data-category="cHJvYmFiaWxpc3RpYyUyMHByb2dyYW1taW5n">probabilistic programming <span class="quarto-category-count">(3)</span></div><div class="category" data-category="cXVhbnRpdGF0aXZlJTIwZmluYW5jZQ==">quantitative finance <span class="quarto-category-count">(3)</span></div><div class="category" data-category="cmFuZG9tJTIwd2Fsa3M=">random walks <span class="quarto-category-count">(1)</span></div><div class="category" data-category="cmVpbmZvcmNlbWVudCUyMGxlYXJuaW5n">reinforcement learning <span class="quarto-category-count">(1)</span></div><div class="category" data-category="cmlzayUyMG1hbmFnZW1lbnQ=">risk management <span class="quarto-category-count">(1)</span></div><div class="category" data-category="c2F0ZWxsaXRlJTIwbmF2aWdhdGlvbg==">satellite navigation <span class="quarto-category-count">(1)</span></div><div class="category" data-category="c2NpZW50aWZpYyUyMGNvbXB1dGluZw==">scientific computing <span class="quarto-category-count">(1)</span></div><div class="category" data-category="c2Rl">sde <span class="quarto-category-count">(2)</span></div><div class="category" data-category="c2lnbmFsJTIwcHJvY2Vzc2luZw==">signal processing <span class="quarto-category-count">(1)</span></div><div class="category" data-category="c2ltdWxhdGlvbi1iYXNlZCUyMGluZmVyZW5jZQ==">simulation-based inference <span class="quarto-category-count">(3)</span></div><div class="category" data-category="dGVuc29yZmxvdy1wcm9iYWJpbGl0eQ==">tensorflow-probability <span class="quarto-category-count">(9)</span></div><div class="category" data-category="dGltZSUyMHNlcmllcw==">time series <span class="quarto-category-count">(1)</span></div><div class="category" data-category="dmFyaWF0aW9uYWwlMjBpbmZlcmVuY2U=">variational inference <span class="quarto-category-count">(3)</span></div></div></div>
 <!-- main -->
 <main class="content quarto-banner-title-block column-page-left" id="quarto-document-content">
 
@@ -205,45 +209,36 @@ window.Quarto = {
 
 <div class="quarto-listing quarto-listing-container-default" id="listing-listing">
 <div class="list quarto-listing-default">
-<div class="quarto-post image-right" data-index="0" data-categories="jax,diffrax,sde,probabilistic programming,simulation-based inference,machine learning,quantitative finance" data-listing-date-sort="1720303200000" data-listing-file-modified-sort="1720458718236" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="7" data-listing-word-count-sort="1290">
-<div class="thumbnail">
-<p><a href="./posts/2024-07-07-SDE-model-calibration-through-NPE.html" class="no-external"></a></p><a href="./posts/2024-07-07-SDE-model-calibration-through-NPE.html" class="no-external">
+<div class="quarto-post image-right" data-index="0" data-categories="amF4JTJDZGlmZnJheCUyQ3NkZSUyQ3Byb2JhYmlsaXN0aWMlMjBwcm9ncmFtbWluZyUyQ3NpbXVsYXRpb24tYmFzZWQlMjBpbmZlcmVuY2UlMkNtYWNoaW5lJTIwbGVhcm5pbmclMkNxdWFudGl0YXRpdmUlMjBmaW5hbmNl" data-listing-date-sort="1720303200000" data-listing-file-modified-sort="1759594893880" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="7" data-listing-word-count-sort="1290">
+<div class="thumbnail"><a href="./posts/2024-07-07-SDE-model-calibration-through-NPE.html" class="no-external">
+
 <p class="card-img-top"><img src="posts/2024-07-07-SDE-model-calibration-through-NPE_files/figure-html/cell-14-output-2.png"  class="thumbnail-image card-img"/></p>
-</a><p><a href="./posts/2024-07-07-SDE-model-calibration-through-NPE.html" class="no-external"></a></p>
-</div>
+
+</a></div>
 <div class="body">
 <h3 class="no-anchor listing-title">
 <a href="./posts/2024-07-07-SDE-model-calibration-through-NPE.html" class="no-external">SDE model calibration through neural posterior estimation</a>
 </h3>
-<div class="listing-subtitle">
-<a href="./posts/2024-07-07-SDE-model-calibration-through-NPE.html" class="no-external"></a>
-</div>
 <div class="listing-categories">
-<div class="listing-category" onclick="window.quartoListingCategory('jax'); return false;">
-jax
+
+<div class="listing-category" onclick="window.quartoListingCategory('amF4'); return false;">jax</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('ZGlmZnJheA=='); return false;">diffrax</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('c2Rl'); return false;">sde</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('cHJvYmFiaWxpc3RpYyUyMHByb2dyYW1taW5n'); return false;">probabilistic programming</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('c2ltdWxhdGlvbi1iYXNlZCUyMGluZmVyZW5jZQ=='); return false;">simulation-based inference</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('bWFjaGluZSUyMGxlYXJuaW5n'); return false;">machine learning</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('cXVhbnRpdGF0aXZlJTIwZmluYW5jZQ=='); return false;">quantitative finance</div>
+
 </div>
-<div class="listing-category" onclick="window.quartoListingCategory('diffrax'); return false;">
-diffrax
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('sde'); return false;">
-sde
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('probabilistic programming'); return false;">
-probabilistic programming
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('simulation-based inference'); return false;">
-simulation-based inference
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('machine learning'); return false;">
-machine learning
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('quantitative finance'); return false;">
-quantitative finance
-</div>
-</div>
-<div class="listing-description">
-<a href="./posts/2024-07-07-SDE-model-calibration-through-NPE.html" class="no-external">Quantifying uncertainty in inverse problems normally requires a statistical model that can be hard to derive. Simulation-based inference offers an alternative approach where this model is learned from synthetic data. Probabilistic programming libraries facilitate that process.</a>
-</div>
+<div class="delink listing-description"><a href="./posts/2024-07-07-SDE-model-calibration-through-NPE.html" class="no-external">
+<p>Quantifying uncertainty in inverse problems normally requires a statistical model that can be hard to derive. Simulation-based inference offers an alternative approach where this model is learned from synthetic data. Probabilistic programming libraries facilitate that process.</p>
+</a></div>
 </div>
 <div class="metadata">
 <a href="./posts/2024-07-07-SDE-model-calibration-through-NPE.html" class="no-external">
@@ -256,36 +251,30 @@ Yves Barmaz
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="1" data-categories="jax,diffrax,sde,quantitative finance" data-listing-date-sort="1710025200000" data-listing-file-modified-sort="1720434197039" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="6" data-listing-word-count-sort="1105">
-<div class="thumbnail">
-<p><a href="./posts/2024-03-10-SDE-model-calibration-with-diffrax.html" class="no-external"></a></p><a href="./posts/2024-03-10-SDE-model-calibration-with-diffrax.html" class="no-external">
+<div class="quarto-post image-right" data-index="1" data-categories="amF4JTJDZGlmZnJheCUyQ3NkZSUyQ3F1YW50aXRhdGl2ZSUyMGZpbmFuY2U=" data-listing-date-sort="1710025200000" data-listing-file-modified-sort="1759594893875" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="6" data-listing-word-count-sort="1105">
+<div class="thumbnail"><a href="./posts/2024-03-10-SDE-model-calibration-with-diffrax.html" class="no-external">
+
 <p class="card-img-top"><img src="posts/2024-03-10-SDE-model-calibration-with-Diffrax_files/figure-html/cell-4-output-1.png"  class="thumbnail-image card-img"/></p>
-</a><p><a href="./posts/2024-03-10-SDE-model-calibration-with-diffrax.html" class="no-external"></a></p>
-</div>
+
+</a></div>
 <div class="body">
 <h3 class="no-anchor listing-title">
 <a href="./posts/2024-03-10-SDE-model-calibration-with-diffrax.html" class="no-external">SDE model calibration with Diffrax</a>
 </h3>
-<div class="listing-subtitle">
-<a href="./posts/2024-03-10-SDE-model-calibration-with-diffrax.html" class="no-external"></a>
-</div>
 <div class="listing-categories">
-<div class="listing-category" onclick="window.quartoListingCategory('jax'); return false;">
-jax
+
+<div class="listing-category" onclick="window.quartoListingCategory('amF4'); return false;">jax</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('ZGlmZnJheA=='); return false;">diffrax</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('c2Rl'); return false;">sde</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('cXVhbnRpdGF0aXZlJTIwZmluYW5jZQ=='); return false;">quantitative finance</div>
+
 </div>
-<div class="listing-category" onclick="window.quartoListingCategory('diffrax'); return false;">
-diffrax
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('sde'); return false;">
-sde
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('quantitative finance'); return false;">
-quantitative finance
-</div>
-</div>
-<div class="listing-description">
-<a href="./posts/2024-03-10-SDE-model-calibration-with-diffrax.html" class="no-external">A discussion of numerical integration and flexible gradient-based calibration of SDE models in the JAX ecosystem, with an example from finance.</a>
-</div>
+<div class="delink listing-description"><a href="./posts/2024-03-10-SDE-model-calibration-with-diffrax.html" class="no-external">
+<p>A discussion of numerical integration and flexible gradient-based calibration of SDE models in the JAX ecosystem, with an example from finance.</p>
+</a></div>
 </div>
 <div class="metadata">
 <a href="./posts/2024-03-10-SDE-model-calibration-with-diffrax.html" class="no-external">
@@ -298,33 +287,28 @@ Yves Barmaz
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="2" data-categories="probabilistic programming,tensorflow-probability,machine learning" data-listing-date-sort="1699743600000" data-listing-file-modified-sort="1710105718367" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="6" data-listing-word-count-sort="1093">
-<div class="thumbnail">
-<p><a href="./posts/2023-11-12-Masked-autoregressive-flows-for-stochastic-differential-equations.html" class="no-external"></a></p><a href="./posts/2023-11-12-Masked-autoregressive-flows-for-stochastic-differential-equations.html" class="no-external">
+<div class="quarto-post image-right" data-index="2" data-categories="cHJvYmFiaWxpc3RpYyUyMHByb2dyYW1taW5nJTJDdGVuc29yZmxvdy1wcm9iYWJpbGl0eSUyQ21hY2hpbmUlMjBsZWFybmluZw==" data-listing-date-sort="1699743600000" data-listing-file-modified-sort="1759594893873" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="6" data-listing-word-count-sort="1093">
+<div class="thumbnail"><a href="./posts/2023-11-12-Masked-autoregressive-flows-for-stochastic-differential-equations.html" class="no-external">
+
 <p class="card-img-top"><img src="posts/2023-11-12-Masked-autoregressive-flows-for-stochastic-differential-equations_files/figure-html/cell-4-output-1.png"  class="thumbnail-image card-img"/></p>
-</a><p><a href="./posts/2023-11-12-Masked-autoregressive-flows-for-stochastic-differential-equations.html" class="no-external"></a></p>
-</div>
+
+</a></div>
 <div class="body">
 <h3 class="no-anchor listing-title">
 <a href="./posts/2023-11-12-Masked-autoregressive-flows-for-stochastic-differential-equations.html" class="no-external">Masked autoregressive flows for stochastic differential equations</a>
 </h3>
-<div class="listing-subtitle">
-<a href="./posts/2023-11-12-Masked-autoregressive-flows-for-stochastic-differential-equations.html" class="no-external"></a>
-</div>
 <div class="listing-categories">
-<div class="listing-category" onclick="window.quartoListingCategory('probabilistic programming'); return false;">
-probabilistic programming
+
+<div class="listing-category" onclick="window.quartoListingCategory('cHJvYmFiaWxpc3RpYyUyMHByb2dyYW1taW5n'); return false;">probabilistic programming</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('dGVuc29yZmxvdy1wcm9iYWJpbGl0eQ=='); return false;">tensorflow-probability</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('bWFjaGluZSUyMGxlYXJuaW5n'); return false;">machine learning</div>
+
 </div>
-<div class="listing-category" onclick="window.quartoListingCategory('tensorflow-probability'); return false;">
-tensorflow-probability
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('machine learning'); return false;">
-machine learning
-</div>
-</div>
-<div class="listing-description">
-<a href="./posts/2023-11-12-Masked-autoregressive-flows-for-stochastic-differential-equations.html" class="no-external">Common methods for solving SDEs are discussed, along with their limitations when it comes to statistical inference. Conditional masked autoregressive flows are presented as a flexible alternative.</a>
-</div>
+<div class="delink listing-description"><a href="./posts/2023-11-12-Masked-autoregressive-flows-for-stochastic-differential-equations.html" class="no-external">
+<p>Common methods for solving SDEs are discussed, along with their limitations when it comes to statistical inference. Conditional masked autoregressive flows are presented as a flexible alternative.</p>
+</a></div>
 </div>
 <div class="metadata">
 <a href="./posts/2023-11-12-Masked-autoregressive-flows-for-stochastic-differential-equations.html" class="no-external">
@@ -337,42 +321,34 @@ Yves Barmaz
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="3" data-categories="differentiable programming,probabilistic programming,tensorflow-probability,quantitative finance,drug development,risk management" data-listing-date-sort="1699657200000" data-listing-file-modified-sort="1710105013210" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="8" data-listing-word-count-sort="1535">
-<div class="thumbnail">
-<p><a href="./posts/2023-11-11-Differentiable-programming-for-risk-management-and-investment-decisions.html" class="no-external"></a></p><a href="./posts/2023-11-11-Differentiable-programming-for-risk-management-and-investment-decisions.html" class="no-external">
+<div class="quarto-post image-right" data-index="3" data-categories="ZGlmZmVyZW50aWFibGUlMjBwcm9ncmFtbWluZyUyQ3Byb2JhYmlsaXN0aWMlMjBwcm9ncmFtbWluZyUyQ3RlbnNvcmZsb3ctcHJvYmFiaWxpdHklMkNxdWFudGl0YXRpdmUlMjBmaW5hbmNlJTJDZHJ1ZyUyMGRldmVsb3BtZW50JTJDcmlzayUyMG1hbmFnZW1lbnQ=" data-listing-date-sort="1699657200000" data-listing-file-modified-sort="1759594893871" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="8" data-listing-word-count-sort="1535">
+<div class="thumbnail"><a href="./posts/2023-11-11-Differentiable-programming-for-risk-management-and-investment-decisions.html" class="no-external">
+
 <p class="card-img-top"><img src="posts/2023-11-11-Differentiable-programming-for-risk-management-and-decisions_files/figure-html/cell-7-output-1.png"  class="thumbnail-image card-img"/></p>
-</a><p><a href="./posts/2023-11-11-Differentiable-programming-for-risk-management-and-investment-decisions.html" class="no-external"></a></p>
-</div>
+
+</a></div>
 <div class="body">
 <h3 class="no-anchor listing-title">
 <a href="./posts/2023-11-11-Differentiable-programming-for-risk-management-and-investment-decisions.html" class="no-external">Differentiable and probabilistic programming for risk management and investment decisions</a>
 </h3>
-<div class="listing-subtitle">
-<a href="./posts/2023-11-11-Differentiable-programming-for-risk-management-and-investment-decisions.html" class="no-external"></a>
-</div>
 <div class="listing-categories">
-<div class="listing-category" onclick="window.quartoListingCategory('differentiable programming'); return false;">
-differentiable programming
+
+<div class="listing-category" onclick="window.quartoListingCategory('ZGlmZmVyZW50aWFibGUlMjBwcm9ncmFtbWluZw=='); return false;">differentiable programming</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('cHJvYmFiaWxpc3RpYyUyMHByb2dyYW1taW5n'); return false;">probabilistic programming</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('dGVuc29yZmxvdy1wcm9iYWJpbGl0eQ=='); return false;">tensorflow-probability</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('cXVhbnRpdGF0aXZlJTIwZmluYW5jZQ=='); return false;">quantitative finance</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('ZHJ1ZyUyMGRldmVsb3BtZW50'); return false;">drug development</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('cmlzayUyMG1hbmFnZW1lbnQ='); return false;">risk management</div>
+
 </div>
-<div class="listing-category" onclick="window.quartoListingCategory('probabilistic programming'); return false;">
-probabilistic programming
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('tensorflow-probability'); return false;">
-tensorflow-probability
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('quantitative finance'); return false;">
-quantitative finance
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('drug development'); return false;">
-drug development
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('risk management'); return false;">
-risk management
-</div>
-</div>
-<div class="listing-description">
-<a href="./posts/2023-11-11-Differentiable-programming-for-risk-management-and-investment-decisions.html" class="no-external">Some applications of differentiable programming in data science beyond the usual machine learning algorithms, with an example in drug development valuation.</a>
-</div>
+<div class="delink listing-description"><a href="./posts/2023-11-11-Differentiable-programming-for-risk-management-and-investment-decisions.html" class="no-external">
+<p>Some applications of differentiable programming in data science beyond the usual machine learning algorithms, with an example in drug development valuation.</p>
+</a></div>
 </div>
 <div class="metadata">
 <a href="./posts/2023-11-11-Differentiable-programming-for-risk-management-and-investment-decisions.html" class="no-external">
@@ -385,33 +361,28 @@ Yves Barmaz
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="4" data-categories="simulation-based inference,machine learning,tensorflow-probability" data-listing-date-sort="1689285600000" data-listing-file-modified-sort="1710105013206" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="6" data-listing-word-count-sort="1023">
-<div class="thumbnail">
-<p><a href="./posts/2023-07-14-Neural-likelihood-estimation.html" class="no-external"></a></p><a href="./posts/2023-07-14-Neural-likelihood-estimation.html" class="no-external">
+<div class="quarto-post image-right" data-index="4" data-categories="c2ltdWxhdGlvbi1iYXNlZCUyMGluZmVyZW5jZSUyQ21hY2hpbmUlMjBsZWFybmluZyUyQ3RlbnNvcmZsb3ctcHJvYmFiaWxpdHk=" data-listing-date-sort="1689285600000" data-listing-file-modified-sort="1759594893867" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="6" data-listing-word-count-sort="1023">
+<div class="thumbnail"><a href="./posts/2023-07-14-Neural-likelihood-estimation.html" class="no-external">
+
 <p class="card-img-top"><img src="posts/2023-07-14-Neural-likelihood-estimation_files/figure-html/cell-19-output-1.png"  class="thumbnail-image card-img"/></p>
-</a><p><a href="./posts/2023-07-14-Neural-likelihood-estimation.html" class="no-external"></a></p>
-</div>
+
+</a></div>
 <div class="body">
 <h3 class="no-anchor listing-title">
 <a href="./posts/2023-07-14-Neural-likelihood-estimation.html" class="no-external">Neural likelihood estimation and simulation-based inference</a>
 </h3>
-<div class="listing-subtitle">
-<a href="./posts/2023-07-14-Neural-likelihood-estimation.html" class="no-external"></a>
-</div>
 <div class="listing-categories">
-<div class="listing-category" onclick="window.quartoListingCategory('simulation-based inference'); return false;">
-simulation-based inference
+
+<div class="listing-category" onclick="window.quartoListingCategory('c2ltdWxhdGlvbi1iYXNlZCUyMGluZmVyZW5jZQ=='); return false;">simulation-based inference</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('bWFjaGluZSUyMGxlYXJuaW5n'); return false;">machine learning</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('dGVuc29yZmxvdy1wcm9iYWJpbGl0eQ=='); return false;">tensorflow-probability</div>
+
 </div>
-<div class="listing-category" onclick="window.quartoListingCategory('machine learning'); return false;">
-machine learning
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('tensorflow-probability'); return false;">
-tensorflow-probability
-</div>
-</div>
-<div class="listing-description">
-<a href="./posts/2023-07-14-Neural-likelihood-estimation.html" class="no-external">A discussion of simulation-based inference fueled by machine learning algorithms, with an example of neural likelihood estimation in TensorFlow Probability.</a>
-</div>
+<div class="delink listing-description"><a href="./posts/2023-07-14-Neural-likelihood-estimation.html" class="no-external">
+<p>A discussion of simulation-based inference fueled by machine learning algorithms, with an example of neural likelihood estimation in TensorFlow Probability.</p>
+</a></div>
 </div>
 <div class="metadata">
 <a href="./posts/2023-07-14-Neural-likelihood-estimation.html" class="no-external">
@@ -424,36 +395,30 @@ Yves Barmaz
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="5" data-categories="scientific computing,simulation-based inference,jax,tensorflow-probability" data-listing-date-sort="1687557600000" data-listing-file-modified-sort="1710105013164" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="6" data-listing-word-count-sort="1047">
-<div class="thumbnail">
-<p><a href="./posts/2023-06-24-Rabbits-and-velociraptors.html" class="no-external"></a></p><a href="./posts/2023-06-24-Rabbits-and-velociraptors.html" class="no-external">
+<div class="quarto-post image-right" data-index="5" data-categories="c2NpZW50aWZpYyUyMGNvbXB1dGluZyUyQ3NpbXVsYXRpb24tYmFzZWQlMjBpbmZlcmVuY2UlMkNqYXglMkN0ZW5zb3JmbG93LXByb2JhYmlsaXR5" data-listing-date-sort="1687557600000" data-listing-file-modified-sort="1759594893836" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="6" data-listing-word-count-sort="1047">
+<div class="thumbnail"><a href="./posts/2023-06-24-Rabbits-and-velociraptors.html" class="no-external">
+
 <p class="card-img-top"><img src="posts/2023-06-26-Rabbits-and-velociraptors_files/figure-html/cell-6-output-1.png"  class="thumbnail-image card-img"/></p>
-</a><p><a href="./posts/2023-06-24-Rabbits-and-velociraptors.html" class="no-external"></a></p>
-</div>
+
+</a></div>
 <div class="body">
 <h3 class="no-anchor listing-title">
 <a href="./posts/2023-06-24-Rabbits-and-velociraptors.html" class="no-external">Rabbits and velociraptors: scientific modeling on steroids</a>
 </h3>
-<div class="listing-subtitle">
-<a href="./posts/2023-06-24-Rabbits-and-velociraptors.html" class="no-external"></a>
-</div>
 <div class="listing-categories">
-<div class="listing-category" onclick="window.quartoListingCategory('scientific computing'); return false;">
-scientific computing
+
+<div class="listing-category" onclick="window.quartoListingCategory('c2NpZW50aWZpYyUyMGNvbXB1dGluZw=='); return false;">scientific computing</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('c2ltdWxhdGlvbi1iYXNlZCUyMGluZmVyZW5jZQ=='); return false;">simulation-based inference</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('amF4'); return false;">jax</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('dGVuc29yZmxvdy1wcm9iYWJpbGl0eQ=='); return false;">tensorflow-probability</div>
+
 </div>
-<div class="listing-category" onclick="window.quartoListingCategory('simulation-based inference'); return false;">
-simulation-based inference
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('jax'); return false;">
-jax
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('tensorflow-probability'); return false;">
-tensorflow-probability
-</div>
-</div>
-<div class="listing-description">
-<a href="./posts/2023-06-24-Rabbits-and-velociraptors.html" class="no-external">A discussion of differentiable programming and scientific computing in the JAX ecosystem, with an example of simulation-based inference.</a>
-</div>
+<div class="delink listing-description"><a href="./posts/2023-06-24-Rabbits-and-velociraptors.html" class="no-external">
+<p>A discussion of differentiable programming and scientific computing in the JAX ecosystem, with an example of simulation-based inference.</p>
+</a></div>
 </div>
 <div class="metadata">
 <a href="./posts/2023-06-24-Rabbits-and-velociraptors.html" class="no-external">
@@ -466,36 +431,30 @@ Yves Barmaz
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="6" data-categories="mountain biking,signal processing,tensorflow-probability,satellite navigation" data-listing-date-sort="1667602800000" data-listing-file-modified-sort="1710105013144" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="7" data-listing-word-count-sort="1304">
-<div class="thumbnail">
-<p><a href="./posts/2022-11-05-Cleaning-Strava-data-with-Kalman-smoothers.html" class="no-external"></a></p><a href="./posts/2022-11-05-Cleaning-Strava-data-with-Kalman-smoothers.html" class="no-external">
+<div class="quarto-post image-right" data-index="6" data-categories="bW91bnRhaW4lMjBiaWtpbmclMkNzaWduYWwlMjBwcm9jZXNzaW5nJTJDdGVuc29yZmxvdy1wcm9iYWJpbGl0eSUyQ3NhdGVsbGl0ZSUyMG5hdmlnYXRpb24=" data-listing-date-sort="1667602800000" data-listing-file-modified-sort="1759594893816" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="7" data-listing-word-count-sort="1304">
+<div class="thumbnail"><a href="./posts/2022-11-05-Cleaning-Strava-data-with-Kalman-smoothers.html" class="no-external">
+
 <p class="card-img-top"><img src="posts/2022-11-05-Cleaning-Strava-data-with-Kalman-smoothers_files/figure-html/cell-2-output-1.jpeg"  class="thumbnail-image card-img"/></p>
-</a><p><a href="./posts/2022-11-05-Cleaning-Strava-data-with-Kalman-smoothers.html" class="no-external"></a></p>
-</div>
+
+</a></div>
 <div class="body">
 <h3 class="no-anchor listing-title">
 <a href="./posts/2022-11-05-Cleaning-Strava-data-with-Kalman-smoothers.html" class="no-external">Cleaning Strava data with Kalman smoothers</a>
 </h3>
-<div class="listing-subtitle">
-<a href="./posts/2022-11-05-Cleaning-Strava-data-with-Kalman-smoothers.html" class="no-external"></a>
-</div>
 <div class="listing-categories">
-<div class="listing-category" onclick="window.quartoListingCategory('mountain biking'); return false;">
-mountain biking
+
+<div class="listing-category" onclick="window.quartoListingCategory('bW91bnRhaW4lMjBiaWtpbmc='); return false;">mountain biking</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('c2lnbmFsJTIwcHJvY2Vzc2luZw=='); return false;">signal processing</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('dGVuc29yZmxvdy1wcm9iYWJpbGl0eQ=='); return false;">tensorflow-probability</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('c2F0ZWxsaXRlJTIwbmF2aWdhdGlvbg=='); return false;">satellite navigation</div>
+
 </div>
-<div class="listing-category" onclick="window.quartoListingCategory('signal processing'); return false;">
-signal processing
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('tensorflow-probability'); return false;">
-tensorflow-probability
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('satellite navigation'); return false;">
-satellite navigation
-</div>
-</div>
-<div class="listing-description">
-<a href="./posts/2022-11-05-Cleaning-Strava-data-with-Kalman-smoothers.html" class="no-external">A tale of mountain biking, paranormal activity and signal processing.</a>
-</div>
+<div class="delink listing-description"><a href="./posts/2022-11-05-Cleaning-Strava-data-with-Kalman-smoothers.html" class="no-external">
+<p>A tale of mountain biking, paranormal activity and signal processing.</p>
+</a></div>
 </div>
 <div class="metadata">
 <a href="./posts/2022-11-05-Cleaning-Strava-data-with-Kalman-smoothers.html" class="no-external">
@@ -508,36 +467,30 @@ Yves Barmaz
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="7" data-categories="bayesian modeling,variational inference,tensorflow-probability,machine learning" data-listing-date-sort="1645570800000" data-listing-file-modified-sort="1710105013140" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="9" data-listing-word-count-sort="1791">
-<div class="thumbnail">
-<p><a href="./posts/2022-02-23-bayesian-poisson-factorization.html" class="no-external"></a></p><a href="./posts/2022-02-23-bayesian-poisson-factorization.html" class="no-external">
+<div class="quarto-post image-right" data-index="7" data-categories="YmF5ZXNpYW4lMjBtb2RlbGluZyUyQ3ZhcmlhdGlvbmFsJTIwaW5mZXJlbmNlJTJDdGVuc29yZmxvdy1wcm9iYWJpbGl0eSUyQ21hY2hpbmUlMjBsZWFybmluZw==" data-listing-date-sort="1645570800000" data-listing-file-modified-sort="1759594893812" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="9" data-listing-word-count-sort="1791">
+<div class="thumbnail"><a href="./posts/2022-02-23-bayesian-poisson-factorization.html" class="no-external">
+
 <div class="listing-item-img-placeholder card-img-top" >&nbsp;</div>
-</a><p><a href="./posts/2022-02-23-bayesian-poisson-factorization.html" class="no-external"></a></p>
-</div>
+
+</a></div>
 <div class="body">
 <h3 class="no-anchor listing-title">
 <a href="./posts/2022-02-23-bayesian-poisson-factorization.html" class="no-external">Bayesian Poisson factorization</a>
 </h3>
-<div class="listing-subtitle">
-<a href="./posts/2022-02-23-bayesian-poisson-factorization.html" class="no-external"></a>
-</div>
 <div class="listing-categories">
-<div class="listing-category" onclick="window.quartoListingCategory('bayesian modeling'); return false;">
-bayesian modeling
+
+<div class="listing-category" onclick="window.quartoListingCategory('YmF5ZXNpYW4lMjBtb2RlbGluZw=='); return false;">bayesian modeling</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('dmFyaWF0aW9uYWwlMjBpbmZlcmVuY2U='); return false;">variational inference</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('dGVuc29yZmxvdy1wcm9iYWJpbGl0eQ=='); return false;">tensorflow-probability</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('bWFjaGluZSUyMGxlYXJuaW5n'); return false;">machine learning</div>
+
 </div>
-<div class="listing-category" onclick="window.quartoListingCategory('variational inference'); return false;">
-variational inference
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('tensorflow-probability'); return false;">
-tensorflow-probability
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('machine learning'); return false;">
-machine learning
-</div>
-</div>
-<div class="listing-description">
-<a href="./posts/2022-02-23-bayesian-poisson-factorization.html" class="no-external">A probabilistic recommender system implemented with TensorFlow Probability layers.</a>
-</div>
+<div class="delink listing-description"><a href="./posts/2022-02-23-bayesian-poisson-factorization.html" class="no-external">
+<p>A probabilistic recommender system implemented with TensorFlow Probability layers.</p>
+</a></div>
 </div>
 <div class="metadata">
 <a href="./posts/2022-02-23-bayesian-poisson-factorization.html" class="no-external">
@@ -550,36 +503,30 @@ Yves Barmaz
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="8" data-categories="jax,autograd,differential geometry,classical mechanics" data-listing-date-sort="1638572400000" data-listing-file-modified-sort="1710109382454" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="6" data-listing-word-count-sort="1013">
-<div class="thumbnail">
-<p><a href="./posts/2021-12-04-hamiltonian-mechanics-with-jax.html" class="no-external"></a></p><a href="./posts/2021-12-04-hamiltonian-mechanics-with-jax.html" class="no-external">
+<div class="quarto-post image-right" data-index="8" data-categories="amF4JTJDYXV0b2dyYWQlMkNkaWZmZXJlbnRpYWwlMjBnZW9tZXRyeSUyQ2NsYXNzaWNhbCUyMG1lY2hhbmljcw==" data-listing-date-sort="1638572400000" data-listing-file-modified-sort="1759594893812" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="6" data-listing-word-count-sort="1013">
+<div class="thumbnail"><a href="./posts/2021-12-04-hamiltonian-mechanics-with-jax.html" class="no-external">
+
 <p class="card-img-top"><img src="posts/2021-12-04-Hamiltonian-mechanics-with-JAX_files/figure-html/cell-7-output-1.png"  class="thumbnail-image card-img"/></p>
-</a><p><a href="./posts/2021-12-04-hamiltonian-mechanics-with-jax.html" class="no-external"></a></p>
-</div>
+
+</a></div>
 <div class="body">
 <h3 class="no-anchor listing-title">
 <a href="./posts/2021-12-04-hamiltonian-mechanics-with-jax.html" class="no-external">Hamiltonian mechanics with JAX</a>
 </h3>
-<div class="listing-subtitle">
-<a href="./posts/2021-12-04-hamiltonian-mechanics-with-jax.html" class="no-external"></a>
-</div>
 <div class="listing-categories">
-<div class="listing-category" onclick="window.quartoListingCategory('jax'); return false;">
-jax
+
+<div class="listing-category" onclick="window.quartoListingCategory('amF4'); return false;">jax</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('YXV0b2dyYWQ='); return false;">autograd</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('ZGlmZmVyZW50aWFsJTIwZ2VvbWV0cnk='); return false;">differential geometry</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('Y2xhc3NpY2FsJTIwbWVjaGFuaWNz'); return false;">classical mechanics</div>
+
 </div>
-<div class="listing-category" onclick="window.quartoListingCategory('autograd'); return false;">
-autograd
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('differential geometry'); return false;">
-differential geometry
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('classical mechanics'); return false;">
-classical mechanics
-</div>
-</div>
-<div class="listing-description">
-<a href="./posts/2021-12-04-hamiltonian-mechanics-with-jax.html" class="no-external">An application of automatic differentiation with JAX in classical mechanics.</a>
-</div>
+<div class="delink listing-description"><a href="./posts/2021-12-04-hamiltonian-mechanics-with-jax.html" class="no-external">
+<p>An application of automatic differentiation with JAX in classical mechanics.</p>
+</a></div>
 </div>
 <div class="metadata">
 <a href="./posts/2021-12-04-hamiltonian-mechanics-with-jax.html" class="no-external">
@@ -592,36 +539,30 @@ Yves Barmaz
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="9" data-categories="random walks,bayesian modeling,time series,tensorflow-probability" data-listing-date-sort="1622844000000" data-listing-file-modified-sort="1710105013140" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="267">
-<div class="thumbnail">
-<p><a href="./posts/2021-06-05-gaussian-random-walks-with-tfp.html" class="no-external"></a></p><a href="./posts/2021-06-05-gaussian-random-walks-with-tfp.html" class="no-external">
+<div class="quarto-post image-right" data-index="9" data-categories="cmFuZG9tJTIwd2Fsa3MlMkNiYXllc2lhbiUyMG1vZGVsaW5nJTJDdGltZSUyMHNlcmllcyUyQ3RlbnNvcmZsb3ctcHJvYmFiaWxpdHk=" data-listing-date-sort="1622844000000" data-listing-file-modified-sort="1759594893811" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="267">
+<div class="thumbnail"><a href="./posts/2021-06-05-gaussian-random-walks-with-tfp.html" class="no-external">
+
 <p class="card-img-top"><img src="posts/2021-06-05-Gaussian-random-walks-with-tfp_files/figure-html/cell-4-output-1.png"  class="thumbnail-image card-img"/></p>
-</a><p><a href="./posts/2021-06-05-gaussian-random-walks-with-tfp.html" class="no-external"></a></p>
-</div>
+
+</a></div>
 <div class="body">
 <h3 class="no-anchor listing-title">
 <a href="./posts/2021-06-05-gaussian-random-walks-with-tfp.html" class="no-external">Gaussian random walks</a>
 </h3>
-<div class="listing-subtitle">
-<a href="./posts/2021-06-05-gaussian-random-walks-with-tfp.html" class="no-external"></a>
-</div>
 <div class="listing-categories">
-<div class="listing-category" onclick="window.quartoListingCategory('random walks'); return false;">
-random walks
+
+<div class="listing-category" onclick="window.quartoListingCategory('cmFuZG9tJTIwd2Fsa3M='); return false;">random walks</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('YmF5ZXNpYW4lMjBtb2RlbGluZw=='); return false;">bayesian modeling</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('dGltZSUyMHNlcmllcw=='); return false;">time series</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('dGVuc29yZmxvdy1wcm9iYWJpbGl0eQ=='); return false;">tensorflow-probability</div>
+
 </div>
-<div class="listing-category" onclick="window.quartoListingCategory('bayesian modeling'); return false;">
-bayesian modeling
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('time series'); return false;">
-time series
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('tensorflow-probability'); return false;">
-tensorflow-probability
-</div>
-</div>
-<div class="listing-description">
-<a href="./posts/2021-06-05-gaussian-random-walks-with-tfp.html" class="no-external">A construction of a TensorFlow-Probability distribution implementing Gaussian random walks, with an application to stochastic volatility modeling.</a>
-</div>
+<div class="delink listing-description"><a href="./posts/2021-06-05-gaussian-random-walks-with-tfp.html" class="no-external">
+<p>A construction of a TensorFlow-Probability distribution implementing Gaussian random walks, with an application to stochastic volatility modeling.</p>
+</a></div>
 </div>
 <div class="metadata">
 <a href="./posts/2021-06-05-gaussian-random-walks-with-tfp.html" class="no-external">
@@ -634,42 +575,34 @@ Yves Barmaz
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="10" data-categories="contextual bandits,reinforcement learning,bayesian modeling,variational inference,probabilistic machine learning,tensorflow-probability" data-listing-date-sort="1612825200000" data-listing-file-modified-sort="1710105013138" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="8" data-listing-word-count-sort="1403">
-<div class="thumbnail">
-<p><a href="./posts/2021-02-09-contextual_bandits.html" class="no-external"></a></p><a href="./posts/2021-02-09-contextual_bandits.html" class="no-external">
+<div class="quarto-post image-right" data-index="10" data-categories="Y29udGV4dHVhbCUyMGJhbmRpdHMlMkNyZWluZm9yY2VtZW50JTIwbGVhcm5pbmclMkNiYXllc2lhbiUyMG1vZGVsaW5nJTJDdmFyaWF0aW9uYWwlMjBpbmZlcmVuY2UlMkNwcm9iYWJpbGlzdGljJTIwbWFjaGluZSUyMGxlYXJuaW5nJTJDdGVuc29yZmxvdy1wcm9iYWJpbGl0eQ==" data-listing-date-sort="1612825200000" data-listing-file-modified-sort="1759594893810" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="8" data-listing-word-count-sort="1403">
+<div class="thumbnail"><a href="./posts/2021-02-09-contextual_bandits.html" class="no-external">
+
 <p class="card-img-top"><img src="posts/2021-02-09-Contextual_bandits_files/figure-html/cell-5-output-1.png"  class="thumbnail-image card-img"/></p>
-</a><p><a href="./posts/2021-02-09-contextual_bandits.html" class="no-external"></a></p>
-</div>
+
+</a></div>
 <div class="body">
 <h3 class="no-anchor listing-title">
 <a href="./posts/2021-02-09-contextual_bandits.html" class="no-external">Thompson sampling for contextual bandits</a>
 </h3>
-<div class="listing-subtitle">
-<a href="./posts/2021-02-09-contextual_bandits.html" class="no-external"></a>
-</div>
 <div class="listing-categories">
-<div class="listing-category" onclick="window.quartoListingCategory('contextual bandits'); return false;">
-contextual bandits
+
+<div class="listing-category" onclick="window.quartoListingCategory('Y29udGV4dHVhbCUyMGJhbmRpdHM='); return false;">contextual bandits</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('cmVpbmZvcmNlbWVudCUyMGxlYXJuaW5n'); return false;">reinforcement learning</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('YmF5ZXNpYW4lMjBtb2RlbGluZw=='); return false;">bayesian modeling</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('dmFyaWF0aW9uYWwlMjBpbmZlcmVuY2U='); return false;">variational inference</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('cHJvYmFiaWxpc3RpYyUyMG1hY2hpbmUlMjBsZWFybmluZw=='); return false;">probabilistic machine learning</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('dGVuc29yZmxvdy1wcm9iYWJpbGl0eQ=='); return false;">tensorflow-probability</div>
+
 </div>
-<div class="listing-category" onclick="window.quartoListingCategory('reinforcement learning'); return false;">
-reinforcement learning
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('bayesian modeling'); return false;">
-bayesian modeling
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('variational inference'); return false;">
-variational inference
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('probabilistic machine learning'); return false;">
-probabilistic machine learning
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('tensorflow-probability'); return false;">
-tensorflow-probability
-</div>
-</div>
-<div class="listing-description">
-<a href="./posts/2021-02-09-contextual_bandits.html" class="no-external">An introduction to Thompson sampling and how to implement it with probabilistic machine learning to tackle contextual bandits.</a>
-</div>
+<div class="delink listing-description"><a href="./posts/2021-02-09-contextual_bandits.html" class="no-external">
+<p>An introduction to Thompson sampling and how to implement it with probabilistic machine learning to tackle contextual bandits.</p>
+</a></div>
 </div>
 <div class="metadata">
 <a href="./posts/2021-02-09-contextual_bandits.html" class="no-external">
@@ -682,33 +615,28 @@ Yves Barmaz
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="11" data-categories="bayesian modeling,variational inference,tensorflow-probability" data-listing-date-sort="1612134000000" data-listing-file-modified-sort="1710105013136" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="6" data-listing-word-count-sort="1160">
-<div class="thumbnail">
-<p><a href="./posts/2021-02-01-variational-inference-with-tfp.html" class="no-external"></a></p><a href="./posts/2021-02-01-variational-inference-with-tfp.html" class="no-external">
+<div class="quarto-post image-right" data-index="11" data-categories="YmF5ZXNpYW4lMjBtb2RlbGluZyUyQ3ZhcmlhdGlvbmFsJTIwaW5mZXJlbmNlJTJDdGVuc29yZmxvdy1wcm9iYWJpbGl0eQ==" data-listing-date-sort="1612134000000" data-listing-file-modified-sort="1759594893808" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="6" data-listing-word-count-sort="1160">
+<div class="thumbnail"><a href="./posts/2021-02-01-variational-inference-with-tfp.html" class="no-external">
+
 <p class="card-img-top"><img src="posts/2021-02-01-Variational-inference-with-tfp_files/figure-html/cell-6-output-1.png"  class="thumbnail-image card-img"/></p>
-</a><p><a href="./posts/2021-02-01-variational-inference-with-tfp.html" class="no-external"></a></p>
-</div>
+
+</a></div>
 <div class="body">
 <h3 class="no-anchor listing-title">
 <a href="./posts/2021-02-01-variational-inference-with-tfp.html" class="no-external">Variational inference with TensorFlow-Probability</a>
 </h3>
-<div class="listing-subtitle">
-<a href="./posts/2021-02-01-variational-inference-with-tfp.html" class="no-external"></a>
-</div>
 <div class="listing-categories">
-<div class="listing-category" onclick="window.quartoListingCategory('bayesian modeling'); return false;">
-bayesian modeling
+
+<div class="listing-category" onclick="window.quartoListingCategory('YmF5ZXNpYW4lMjBtb2RlbGluZw=='); return false;">bayesian modeling</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('dmFyaWF0aW9uYWwlMjBpbmZlcmVuY2U='); return false;">variational inference</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('dGVuc29yZmxvdy1wcm9iYWJpbGl0eQ=='); return false;">tensorflow-probability</div>
+
 </div>
-<div class="listing-category" onclick="window.quartoListingCategory('variational inference'); return false;">
-variational inference
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('tensorflow-probability'); return false;">
-tensorflow-probability
-</div>
-</div>
-<div class="listing-description">
-<a href="./posts/2021-02-01-variational-inference-with-tfp.html" class="no-external">An overview of the variational inference APIs available in TensorFlow-Probability.</a>
-</div>
+<div class="delink listing-description"><a href="./posts/2021-02-01-variational-inference-with-tfp.html" class="no-external">
+<p>An overview of the variational inference APIs available in TensorFlow-Probability.</p>
+</a></div>
 </div>
 <div class="metadata">
 <a href="./posts/2021-02-01-variational-inference-with-tfp.html" class="no-external">
@@ -721,30 +649,26 @@ Yves Barmaz
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="12" data-categories="bayesian modeling,clinical quality" data-listing-date-sort="1610492400000" data-listing-file-modified-sort="1710107197709" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="5" data-listing-word-count-sort="801">
-<div class="thumbnail">
-<p><a href="./posts/2021-01-13-anomaly-detection-in-protocol-deviations.html" class="no-external"></a></p><a href="./posts/2021-01-13-anomaly-detection-in-protocol-deviations.html" class="no-external">
+<div class="quarto-post image-right" data-index="12" data-categories="YmF5ZXNpYW4lMjBtb2RlbGluZyUyQ2NsaW5pY2FsJTIwcXVhbGl0eQ==" data-listing-date-sort="1610492400000" data-listing-file-modified-sort="1759594893805" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="5" data-listing-word-count-sort="801">
+<div class="thumbnail"><a href="./posts/2021-01-13-anomaly-detection-in-protocol-deviations.html" class="no-external">
+
 <p class="card-img-top"><img src="posts/2021-01-13-Anomaly-detection-in-protocol-deviations_files/figure-html/cell-5-output-1.png"  class="thumbnail-image card-img"/></p>
-</a><p><a href="./posts/2021-01-13-anomaly-detection-in-protocol-deviations.html" class="no-external"></a></p>
-</div>
+
+</a></div>
 <div class="body">
 <h3 class="no-anchor listing-title">
 <a href="./posts/2021-01-13-anomaly-detection-in-protocol-deviations.html" class="no-external">Anomaly detection in protocol deviations</a>
 </h3>
-<div class="listing-subtitle">
-<a href="./posts/2021-01-13-anomaly-detection-in-protocol-deviations.html" class="no-external"></a>
-</div>
 <div class="listing-categories">
-<div class="listing-category" onclick="window.quartoListingCategory('bayesian modeling'); return false;">
-bayesian modeling
+
+<div class="listing-category" onclick="window.quartoListingCategory('YmF5ZXNpYW4lMjBtb2RlbGluZw=='); return false;">bayesian modeling</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('Y2xpbmljYWwlMjBxdWFsaXR5'); return false;">clinical quality</div>
+
 </div>
-<div class="listing-category" onclick="window.quartoListingCategory('clinical quality'); return false;">
-clinical quality
-</div>
-</div>
-<div class="listing-description">
-<a href="./posts/2021-01-13-anomaly-detection-in-protocol-deviations.html" class="no-external">When math helps you define <em>too many</em> and <em>too few</em> protocol deviations.</a>
-</div>
+<div class="delink listing-description"><a href="./posts/2021-01-13-anomaly-detection-in-protocol-deviations.html" class="no-external">
+<p>When math helps you define <em>too many</em> and <em>too few</em> protocol deviations.</p>
+</a></div>
 </div>
 <div class="metadata">
 <a href="./posts/2021-01-13-anomaly-detection-in-protocol-deviations.html" class="no-external">
@@ -757,30 +681,26 @@ Yves Barmaz
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="13" data-categories="bayesian modeling,clinical quality" data-listing-date-sort="1610060400000" data-listing-file-modified-sort="1710107201563" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="4" data-listing-word-count-sort="759">
-<div class="thumbnail">
-<p><a href="./posts/2021-01-08-probabilistic assessment-of-safety-underreporting.html" class="no-external"></a></p><a href="./posts/2021-01-08-probabilistic assessment-of-safety-underreporting.html" class="no-external">
+<div class="quarto-post image-right" data-index="13" data-categories="YmF5ZXNpYW4lMjBtb2RlbGluZyUyQ2NsaW5pY2FsJTIwcXVhbGl0eQ==" data-listing-date-sort="1610060400000" data-listing-file-modified-sort="1759594893803" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="4" data-listing-word-count-sort="759">
+<div class="thumbnail"><a href="./posts/2021-01-08-probabilistic assessment-of-safety-underreporting.html" class="no-external">
+
 <p class="card-img-top"><img src="posts/my_images/graph_ae_reporting.png"  class="thumbnail-image card-img"/></p>
-</a><p><a href="./posts/2021-01-08-probabilistic assessment-of-safety-underreporting.html" class="no-external"></a></p>
-</div>
+
+</a></div>
 <div class="body">
 <h3 class="no-anchor listing-title">
 <a href="./posts/2021-01-08-probabilistic assessment-of-safety-underreporting.html" class="no-external">Probabilistic assessment of safety underreporting</a>
 </h3>
-<div class="listing-subtitle">
-<a href="./posts/2021-01-08-probabilistic assessment-of-safety-underreporting.html" class="no-external"></a>
-</div>
 <div class="listing-categories">
-<div class="listing-category" onclick="window.quartoListingCategory('bayesian modeling'); return false;">
-bayesian modeling
+
+<div class="listing-category" onclick="window.quartoListingCategory('YmF5ZXNpYW4lMjBtb2RlbGluZw=='); return false;">bayesian modeling</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('Y2xpbmljYWwlMjBxdWFsaXR5'); return false;">clinical quality</div>
+
 </div>
-<div class="listing-category" onclick="window.quartoListingCategory('clinical quality'); return false;">
-clinical quality
-</div>
-</div>
-<div class="listing-description">
-<a href="./posts/2021-01-08-probabilistic assessment-of-safety-underreporting.html" class="no-external">Adverse event underreporting is a problem that sometimes affects clinical trials. Probabilistic programming is the modern way to address this issue.</a>
-</div>
+<div class="delink listing-description"><a href="./posts/2021-01-08-probabilistic assessment-of-safety-underreporting.html" class="no-external">
+<p>Adverse event underreporting is a problem that sometimes affects clinical trials. Probabilistic programming is the modern way to address this issue.</p>
+</a></div>
 </div>
 <div class="metadata">
 <a href="./posts/2021-01-08-probabilistic assessment-of-safety-underreporting.html" class="no-external">
@@ -794,244 +714,246 @@ Yves Barmaz
 </div>
 </div>
 </div>
-<div class="listing-no-matching d-none">
-No matching items
-</div>
+<div class="listing-no-matching d-none">No matching items</div>
 </div></main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
-window.document.addEventListener("DOMContentLoaded", function (event) {
-  const toggleBodyColorMode = (bsSheetEl) => {
-    const mode = bsSheetEl.getAttribute("data-mode");
-    const bodyEl = window.document.querySelector("body");
-    if (mode === "dark") {
-      bodyEl.classList.add("quarto-dark");
-      bodyEl.classList.remove("quarto-light");
-    } else {
-      bodyEl.classList.add("quarto-light");
-      bodyEl.classList.remove("quarto-dark");
-    }
-  }
-  const toggleBodyColorPrimary = () => {
-    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
-    if (bsSheetEl) {
-      toggleBodyColorMode(bsSheetEl);
-    }
-  }
-  toggleBodyColorPrimary();  
-  const icon = "";
-  const anchorJS = new window.AnchorJS();
-  anchorJS.options = {
-    placement: 'right',
-    icon: icon
-  };
-  anchorJS.add('.anchored');
-  const isCodeAnnotation = (el) => {
-    for (const clz of el.classList) {
-      if (clz.startsWith('code-annotation-')) {                     
-        return true;
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
       }
+      return false;
     }
-    return false;
-  }
-  const onCopySuccess = function(e) {
-    // button target
-    const button = e.trigger;
-    // don't keep focus
-    button.blur();
-    // flash "checked"
-    button.classList.add('code-copy-button-checked');
-    var currentTitle = button.getAttribute("title");
-    button.setAttribute("title", "Copied!");
-    let tooltip;
-    if (window.bootstrap) {
-      button.setAttribute("data-bs-toggle", "tooltip");
-      button.setAttribute("data-bs-placement", "left");
-      button.setAttribute("data-bs-title", "Copied!");
-      tooltip = new bootstrap.Tooltip(button, 
-        { trigger: "manual", 
-          customClass: "code-copy-button-tooltip",
-          offset: [0, -8]});
-      tooltip.show();    
-    }
-    setTimeout(function() {
-      if (tooltip) {
-        tooltip.hide();
-        button.removeAttribute("data-bs-title");
-        button.removeAttribute("data-bs-toggle");
-        button.removeAttribute("data-bs-placement");
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
       }
-      button.setAttribute("title", currentTitle);
-      button.classList.remove('code-copy-button-checked');
-    }, 1000);
-    // clear code selection
-    e.clearSelection();
-  }
-  const getTextToCopy = function(trigger) {
-      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
       for (const childEl of codeEl.children) {
         if (isCodeAnnotation(childEl)) {
           childEl.remove();
         }
       }
       return codeEl.innerText;
-  }
-  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
-    text: getTextToCopy
-  });
-  clipboard.on('success', onCopySuccess);
-  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
-    // For code content inside modals, clipBoardJS needs to be initialized with a container option
-    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
-    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
-      text: getTextToCopy,
-      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
     });
-    clipboardModal.on('success', onCopySuccess);
-  }
-    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
-    var mailtoRegex = new RegExp(/^mailto:/);
-      var filterRegex = new RegExp("https:\/\/ybarmaz\.github\.io\/blog\/");
-    var isInternal = (href) => {
-        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
     }
-    // Inspect non-navigation links and adorn them if external
- 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
-    for (var i=0; i<links.length; i++) {
-      const link = links[i];
-      if (!isInternal(link.href)) {
-        // undo the damage that might have been done by quarto-nav.js in the case of
-        // links that we want to consider external
-        if (link.dataset.originalHref !== undefined) {
-          link.href = link.dataset.originalHref;
-        }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/ybarmaz\.github\.io\/blog\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }
-    }
-  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
-    const config = {
-      allowHTML: true,
-      maxWidth: 500,
-      delay: 100,
-      arrow: false,
-      appendTo: function(el) {
-          return el.parentElement;
-      },
-      interactive: true,
-      interactiveBorder: 10,
-      theme: 'quarto',
-      placement: 'bottom-start',
-    };
-    if (contentFn) {
-      config.content = contentFn;
-    }
-    if (onTriggerFn) {
-      config.onTrigger = onTriggerFn;
-    }
-    if (onUntriggerFn) {
-      config.onUntrigger = onUntriggerFn;
-    }
-    window.tippy(el, config); 
-  }
-  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
-  for (var i=0; i<noterefs.length; i++) {
-    const ref = noterefs[i];
-    tippyHover(ref, function() {
-      // use id or data attribute instead here
-      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
-      try { href = new URL(href).hash; } catch {}
-      const id = href.replace(/^#\/?/, "");
-      const note = window.document.getElementById(id);
-      if (note) {
-        return note.innerHTML;
-      } else {
-        return "";
-      }
-    });
-  }
-  const xrefs = window.document.querySelectorAll('a.quarto-xref');
-  const processXRef = (id, note) => {
-    // Strip column container classes
-    const stripColumnClz = (el) => {
-      el.classList.remove("page-full", "page-columns");
-      if (el.children) {
-        for (const child of el.children) {
-          stripColumnClz(child);
-        }
-      }
-    }
-    stripColumnClz(note)
-    if (id === null || id.startsWith('sec-')) {
-      // Special case sections, only their first couple elements
-      const container = document.createElement("div");
-      if (note.children && note.children.length > 2) {
-        container.appendChild(note.children[0].cloneNode(true));
-        for (let i = 1; i < note.children.length; i++) {
-          const child = note.children[i];
-          if (child.tagName === "P" && child.innerText === "") {
-            continue;
-          } else {
-            container.appendChild(child.cloneNode(true));
-            break;
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
           }
         }
-        if (window.Quarto?.typesetMath) {
-          window.Quarto.typesetMath(container);
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
         }
-        return container.innerHTML
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
       } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
         if (window.Quarto?.typesetMath) {
           window.Quarto.typesetMath(note);
         }
-        return note.innerHTML;
-      }
-    } else {
-      // Remove any anchor links if they are present
-      const anchorLink = note.querySelector('a.anchorjs-link');
-      if (anchorLink) {
-        anchorLink.remove();
-      }
-      if (window.Quarto?.typesetMath) {
-        window.Quarto.typesetMath(note);
-      }
-      // TODO in 1.5, we should make sure this works without a callout special case
-      if (note.classList.contains("callout")) {
-        return note.outerHTML;
-      } else {
-        return note.innerHTML;
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
       }
     }
-  }
-  for (var i=0; i<xrefs.length; i++) {
-    const xref = xrefs[i];
-    tippyHover(xref, undefined, function(instance) {
-      instance.disable();
-      let url = xref.getAttribute('href');
-      let hash = undefined; 
-      if (url.startsWith('#')) {
-        hash = url;
-      } else {
-        try { hash = new URL(url).hash; } catch {}
-      }
-      if (hash) {
-        const id = hash.replace(/^#\/?/, "");
-        const note = window.document.getElementById(id);
-        if (note !== null) {
-          try {
-            const html = processXRef(id, note.cloneNode(true));
-            instance.setContent(html);
-          } finally {
-            instance.enable();
-            instance.show();
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
           }
         } else {
-          // See if we can fetch this
-          fetch(url.split('#')[0])
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
           .then(res => res.text())
           .then(html => {
             const parser = new DOMParser();
             const htmlDoc = parser.parseFromString(html, "text/html");
-            const note = htmlDoc.getElementById(id);
+            const note = htmlDoc.querySelector('main.content');
             if (note !== null) {
-              const html = processXRef(id, note);
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
               instance.setContent(html);
             } 
           }).finally(() => {
@@ -1039,185 +961,161 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
             instance.show();
           });
         }
-      } else {
-        // See if we can fetch a full url (with no hash to target)
-        // This is a special case and we should probably do some content thinning / targeting
-        fetch(url)
-        .then(res => res.text())
-        .then(html => {
-          const parser = new DOMParser();
-          const htmlDoc = parser.parseFromString(html, "text/html");
-          const note = htmlDoc.querySelector('main.content');
-          if (note !== null) {
-            // This should only happen for chapter cross references
-            // (since there is no id in the URL)
-            // remove the first header
-            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
-              note.children[0].remove();
-            }
-            const html = processXRef(null, note);
-            instance.setContent(html);
-          } 
-        }).finally(() => {
-          instance.enable();
-          instance.show();
-        });
-      }
-    }, function(instance) {
-    });
-  }
-      let selectedAnnoteEl;
-      const selectorForAnnotation = ( cell, annotation) => {
-        let cellAttr = 'data-code-cell="' + cell + '"';
-        let lineAttr = 'data-code-annotation="' +  annotation + '"';
-        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
-        return selector;
-      }
-      const selectCodeLines = (annoteEl) => {
-        const doc = window.document;
-        const targetCell = annoteEl.getAttribute("data-target-cell");
-        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
-        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
-        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
-        const lineIds = lines.map((line) => {
-          return targetCell + "-" + line;
-        })
-        let top = null;
-        let height = null;
-        let parent = null;
-        if (lineIds.length > 0) {
-            //compute the position of the single el (top and bottom and make a div)
-            const el = window.document.getElementById(lineIds[0]);
-            top = el.offsetTop;
-            height = el.offsetHeight;
-            parent = el.parentElement.parentElement;
-          if (lineIds.length > 1) {
-            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
-            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
-            height = bottom - top;
-          }
-          if (top !== null && height !== null && parent !== null) {
-            // cook up a div (if necessary) and position it 
-            let div = window.document.getElementById("code-annotation-line-highlight");
-            if (div === null) {
-              div = window.document.createElement("div");
-              div.setAttribute("id", "code-annotation-line-highlight");
-              div.style.position = 'absolute';
-              parent.appendChild(div);
-            }
-            div.style.top = top - 2 + "px";
-            div.style.height = height + 4 + "px";
-            div.style.left = 0;
-            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
-            if (gutterDiv === null) {
-              gutterDiv = window.document.createElement("div");
-              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
-              gutterDiv.style.position = 'absolute';
-              const codeCell = window.document.getElementById(targetCell);
-              const gutter = codeCell.querySelector('.code-annotation-gutter');
-              gutter.appendChild(gutterDiv);
-            }
-            gutterDiv.style.top = top - 2 + "px";
-            gutterDiv.style.height = height + 4 + "px";
-          }
-          selectedAnnoteEl = annoteEl;
-        }
-      };
-      const unselectCodeLines = () => {
-        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
-        elementsIds.forEach((elId) => {
-          const div = window.document.getElementById(elId);
-          if (div) {
-            div.remove();
-          }
-        });
-        selectedAnnoteEl = undefined;
-      };
-        // Handle positioning of the toggle
-    window.addEventListener(
-      "resize",
-      throttle(() => {
-        elRect = undefined;
-        if (selectedAnnoteEl) {
-          selectCodeLines(selectedAnnoteEl);
-        }
-      }, 10)
-    );
-    function throttle(fn, ms) {
-    let throttle = false;
-    let timer;
-      return (...args) => {
-        if(!throttle) { // first call gets through
-            fn.apply(this, args);
-            throttle = true;
-        } else { // all the others get throttled
-            if(timer) clearTimeout(timer); // cancel #2
-            timer = setTimeout(() => {
-              fn.apply(this, args);
-              timer = throttle = false;
-            }, ms);
-        }
-      };
-    }
-      // Attach click handler to the DT
-      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
-      for (const annoteDlNode of annoteDls) {
-        annoteDlNode.addEventListener('click', (event) => {
-          const clickedEl = event.target;
-          if (clickedEl !== selectedAnnoteEl) {
-            unselectCodeLines();
-            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
-            if (activeEl) {
-              activeEl.classList.remove('code-annotation-active');
-            }
-            selectCodeLines(clickedEl);
-            clickedEl.classList.add('code-annotation-active');
-          } else {
-            // Unselect the line
-            unselectCodeLines();
-            clickedEl.classList.remove('code-annotation-active');
-          }
-        });
-      }
-  const findCites = (el) => {
-    const parentEl = el.parentElement;
-    if (parentEl) {
-      const cites = parentEl.dataset.cites;
-      if (cites) {
-        return {
-          el,
-          cites: cites.split(' ')
-        };
-      } else {
-        return findCites(el.parentElement)
-      }
-    } else {
-      return undefined;
-    }
-  };
-  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
-  for (var i=0; i<bibliorefs.length; i++) {
-    const ref = bibliorefs[i];
-    const citeInfo = findCites(ref);
-    if (citeInfo) {
-      tippyHover(citeInfo.el, function() {
-        var popup = window.document.createElement('div');
-        citeInfo.cites.forEach(function(cite) {
-          var citeDiv = window.document.createElement('div');
-          citeDiv.classList.add('hanging-indent');
-          citeDiv.classList.add('csl-entry');
-          var biblioDiv = window.document.getElementById('ref-' + cite);
-          if (biblioDiv) {
-            citeDiv.innerHTML = biblioDiv.innerHTML;
-          }
-          popup.appendChild(citeDiv);
-        });
-        return popup.innerHTML;
+      }, function(instance) {
       });
     }
-  }
-});
-</script>
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
 </div> <!-- /content -->
 
 
