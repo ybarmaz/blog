@@ -2,6 +2,7 @@
   {
     "listing": "/index.html",
     "items": [
+      "/posts/2026-01-03-Modern-Bayesian-inference-for-SDE.html",
       "/posts/2024-07-07-SDE-model-calibration-through-NPE.html",
       "/posts/2024-03-10-SDE-model-calibration-with-diffrax.html",
       "/posts/2023-11-12-Masked-autoregressive-flows-for-stochastic-differential-equations.html",

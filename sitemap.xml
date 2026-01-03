@@ -2,11 +2,15 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://ybarmaz.github.io/blog/about.html</loc>
-    <lastmod>2025-10-04T16:21:33.798Z</lastmod>
+    <lastmod>2026-01-03T21:27:57.882Z</lastmod>
   </url>
   <url>
-    <loc>https://ybarmaz.github.io/blog/posts/2022-11-05-Cleaning-Strava-data-with-Kalman-smoothers.html</loc>
-    <lastmod>2025-10-04T16:21:33.816Z</lastmod>
+    <loc>https://ybarmaz.github.io/blog/Untitled.html</loc>
+    <lastmod>2026-01-03T19:38:46.908Z</lastmod>
+  </url>
+  <url>
+    <loc>https://ybarmaz.github.io/blog/posts/2026-01-03-Modern-Bayesian-inference-for-SDE.html</loc>
+    <lastmod>2026-01-03T21:16:18.775Z</lastmod>
   </url>
   <url>
     <loc>https://ybarmaz.github.io/blog/posts/2021-01-08-probabilistic assessment-of-safety-underreporting.html</loc>
@@ -22,7 +26,7 @@
   </url>
   <url>
     <loc>https://ybarmaz.github.io/blog/posts/2024-07-07-SDE-model-calibration-through-NPE.html</loc>
-    <lastmod>2025-10-04T16:21:33.880Z</lastmod>
+    <lastmod>2026-01-03T19:40:26.069Z</lastmod>
   </url>
   <url>
     <loc>https://ybarmaz.github.io/blog/posts/2023-11-12-Masked-autoregressive-flows-for-stochastic-differential-equations.html</loc>
@@ -59,6 +63,10 @@
   <url>
     <loc>https://ybarmaz.github.io/blog/posts/2022-02-23-bayesian-poisson-factorization.html</loc>
     <lastmod>2025-10-04T16:21:33.812Z</lastmod>
+  </url>
+  <url>
+    <loc>https://ybarmaz.github.io/blog/posts/2022-11-05-Cleaning-Strava-data-with-Kalman-smoothers.html</loc>
+    <lastmod>2025-10-04T16:21:33.816Z</lastmod>
   </url>
   <url>
     <loc>https://ybarmaz.github.io/blog/index.html</loc>

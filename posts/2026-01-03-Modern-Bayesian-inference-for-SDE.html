@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.25">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Yves Barmaz">
+<meta name="dcterms.date" content="2026-01-03">
+<meta name="description" content="An exploration of Bayesian inference for stochastic differential equations, comparing MCLMC, a modern gradient-based sampler, with a hybrid neural posterior estimation and particle filtering approach, and showing how different methods handle uncertainty, bias, and latent volatility dynamics.">
+
+<title>Modern Bayesian inference algorithms for stochastic differential equations – Yves Barmaz’s blog</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js" integrity="sha384-ZvpUoO/+PpLXR1lu4jmpXWu80pZlYUAfxl5NsBMWOEPSjUn/6Z/hRTt8+pR6L4N2" crossorigin="anonymous"></script><script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-7b89279ff1a6dce999919e0e67d4d9ec.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-003c7ce323138a8a6468cb23c965a473.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script src="https://cdn.jsdelivr.net/npm/requirejs@2.3.6/require.min.js" integrity="sha384-c9c+LnTbwQ3aujuU7ULEPVvgLs+Fn6fJUvIGTsuu1ZcCf11fiEubah0ttpca4ntM sha384-6V1/AdqZRWk1KAlWbKBlGhN7VG4iE/yAZcO6NZPMF8od0vukrvr0tg4qY6NSrItx" crossorigin="anonymous"></script>
+
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../styles.css">
+</head>
+
+<body class="nav-fixed fullcontent quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../index.html" class="navbar-brand navbar-brand-logo">
+    </a>
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">Yves Barmaz’s blog</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../about.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/ybarmaz"> <i class="bi bi-github" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://twitter.com/YvesBarmaz"> <i class="bi bi-twitter" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">Modern Bayesian inference algorithms for stochastic differential equations</h1>
+                  <div>
+        <div class="description">
+          An exploration of Bayesian inference for stochastic differential equations, comparing MCLMC, a modern gradient-based sampler, with a hybrid neural posterior estimation and particle filtering approach, and showing how different methods handle uncertainty, bias, and latent volatility dynamics.
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">jax</div>
+                <div class="quarto-category">sde</div>
+                <div class="quarto-category">probabilistic programming</div>
+                <div class="quarto-category">simulation-based inference</div>
+                <div class="quarto-category">machine learning</div>
+                <div class="quarto-category">quantitative finance</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p>Yves Barmaz </p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">January 3, 2026</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="introduction" class="level2">
+<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
+<p>In the few years since I first got interested in probabilistic machine learning, there have been some significant algorithmic improvements, especially in the JAX ecosystem, and I thought that it would be a good time to revisit an <a href="https://ybarmaz.github.io/blog/posts/2021-06-05-gaussian-random-walks-with-tfp.html">old blog post</a> about modeling stochastic processes, and show a couple of more modern algorithms that tackle this type of problem.</p>
+<p>At the time, NUTS was the standard MCMC algorithm for a wide range of problems, and was especially shining when the inference involved a fairly high-dimensional latent space. The initial motivation of that old blog post was to reimplement the S&amp;P500 example in TensorFlow-Probability.</p>
+<p>Four years later, the new go-to method for high dimensional latent spaces like the ones that arise in stochastic processes is <a href="https://microcanonical-monte-carlo.netlify.app/">Microcanonical Langevin Monte Carlo</a> (MCLMC), and it <a href="https://blackjax-devs.github.io/sampling-book/algorithms/mclmc.html">is implemented Blackjax</a>, a collection of state-of-the-art samplers (one of the examples there is precisely the stochastic volatility model of the S&amp;P500 returns). This is the first example discussed below.</p>
+<p>In parallel, there have some efforts to implement distributions and bijectors in JAX that were not yet supported by the JAX substrate of TensorFlow-Probability. The result is the <a href="https://github.com/google-deepmind/distrax">Distrax</a> library, which includes <a href="https://github.com/google-deepmind/distrax/blob/main/examples/flow.py">flow models</a>. This greatly facilitates the execution of simulation-based inference algorithms in JAX, such as neural posterior estimation (NPE). This method can be used to quickly estimate posterior distributions over stochastic differential equation (SDE) parameters given observations of one or more realisations of the process. The computational cost is paid upfront when the estimator is trained on simulations of the process for a wide range of SDE parameters drawn from their prior distribution. There happens to be another JAX library that accelerates this type of simulation, namely <a href="https://docs.kidger.site/diffrax/">Diffrax</a>. The second example combines NPE with a particle filter to estimate the latent states of the SDE model.</p>
+</section>
+<section id="toy-problem" class="level2">
+<h2 class="anchored" data-anchor-id="toy-problem">Toy problem</h2>
+<p>To illustrate these two methods, synthetic data generated by a known SDE system offers the benefit of knowing the ground truth. We will consider the <a href="https://en.wikipedia.org/wiki/Heston_model">Heston model</a></p>
+<p><span class="math display">\[
+\begin{aligned}
+dS_t &amp;= \mu\, S_t\, dt + \sqrt{v_t}\, S_t\, dW_t^{(1)}, \\
+dv_t &amp;= \kappa\bigl(\theta - v_t\bigr)\, dt + \xi \sqrt{v_t}\, dW_t^{(2)}, \\
+d\langle W^{(1)}, W^{(2)}\rangle_t &amp;= \rho\, dt,
+\end{aligned}
+\]</span></p>
+<p>which is a generalization of the geometric Brownian motion with a stochastic volatility process. It is straightforward to simulate a realisation of this process for a given set of parameter values with diffrax.</p>
+<div id="cell-6" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;colab&quot;,&quot;value&quot;:{&quot;base_uri&quot;:&quot;https://localhost:8080/&quot;,&quot;height&quot;:444}}" data-outputid="41d78778-bdd4-421a-8386-d4ed2e9e4a94" data-execution_count="5">
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="2026-01-03-Modern-Bayesian-inference-for-SDE_files/figure-html/cell-6-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The assumption here is that we can only observe <span class="math inline">\(S(t)\)</span> (with this model, it is usually the price of an asset evolving over time) for <span class="math inline">\(t \in \left[0, T\right]\)</span>, with a drift driven by an unobserved volatility <span class="math inline">\(v(t)\)</span>. The goal is to infer the parameters of the model from the observed trajectory <span class="math inline">\(S(t)\)</span>, and either estimate the whole hidden trajectory <span class="math inline">\(v(t)\)</span>, or just its final value <span class="math inline">\(v(T)\)</span>. In practice, the whole trajectory would be interesting to economists who might want to find out what factors drive the volatility of a given asset, and the final value <span class="math inline">\(v(T)\)</span> would be useful to risk managers who want to simulate the future evolution of <span class="math inline">\(S(t)\)</span> for <span class="math inline">\(t&gt;T\)</span>, and especially the range of possible scenarios (which is essential to quantify the uncertainty in these predictions). Concretely, the parameters would let them know how to draw the future curves, and <span class="math inline">\(v(T)\)</span> would inform them on the initial conditions <span class="math inline">\((S(T), v(T))\)</span> of these future curves.</p>
+</section>
+<section id="microcanonical-langevin-monte-carlo" class="level2">
+<h2 class="anchored" data-anchor-id="microcanonical-langevin-monte-carlo">Microcanonical Langevin Monte Carlo</h2>
+<p>The SDE model assumes a continuous <span class="math inline">\(t\)</span>, but in practice numerical integrators discretize it into a number of timesteps <span class="math inline">\(t_i\)</span>, and <span class="math inline">\(v_i = v(t_i)\)</span> has to be estimated for each of them if we want to reconstruct this hidden part of the process. This is what makes the inference problem high-dimensional and more difficult for Monte Carlo samplers of the posterior distribution. Algorithms based on Hamiltonian dynamics such as HMC or NUTS made some progress in that area, but they can still suffer from slow mixing and poor exploration of the posterior distribution when the energy landscape is complex, for instance when when some variables are highly correlated (like <span class="math inline">\(v_i\)</span> and <span class="math inline">\(v_{i+1}\)</span>). <a href="https://proceedings.mlr.press/v253/robnik24a.html">Microcanonical Langevin Monte Carlo</a> (MCLMC) combines ideas from Hamiltonian dynamics, Langevin diffusion, and microcanonical (i.e.&nbsp;constant-energy in <a href="https://en.wikipedia.org/wiki/Microcanonical_ensemble">statistical mechanics parlance</a>) sampling, which makes it effective with these problems. In practice, Langevin methods add noise, which improves slow mixing, but this often degrades long-range exploration. MCLMC corrects this degradation by preserving energy over short time.</p>
+<p>As a result, MCLMC is especially useful when: - the posterior is high-dimensional, - gradients are available, - the geometry is highly anisotropic, - long-range exploration matters more than exact reversibility per step.</p>
+<p>This makes it attractive for latent time-series models, SDE parameter inference, or Bayesian inverse problems with stiff dynamics.</p>
+<p>The Langevin part of MCLMC is itself implemented as a discretized SDE constrained to the energy shell. So if the timestep is too large, if the projection is approximate, or if noise is not exactly tangent, then the discretization can introduce a small stationary bias or an energy drift that invalidates the microcanonical assumption, both of which would impact the exactness of the posterior estimate. A <a href="https://blackjax-devs.github.io/sampling-book/algorithms/mclmc.html#how-to-analyze-the-results-of-your-mclmc-run">sanity check suggested in the Blackjax documentation</a> is to decrease the step size of the Langevin SDE and see if results remain consistent, or to apply an <a href="https://neurips.cc/virtual/2025/loc/san-diego/poster/117452">adjusted version of MCLMC</a>, also implemented in Blackjax.</p>
+<div id="cell-12" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;colab&quot;,&quot;value&quot;:{&quot;base_uri&quot;:&quot;https://localhost:8080/&quot;,&quot;height&quot;:1000}}" data-outputid="8a52466e-1f6c-4634-de32-2e43ae79a524" data-execution_count="10">
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="2026-01-03-Modern-Bayesian-inference-for-SDE_files/figure-html/cell-11-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="2026-01-03-Modern-Bayesian-inference-for-SDE_files/figure-html/cell-11-output-2.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="2026-01-03-Modern-Bayesian-inference-for-SDE_files/figure-html/cell-11-output-3.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="2026-01-03-Modern-Bayesian-inference-for-SDE_files/figure-html/cell-11-output-4.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="2026-01-03-Modern-Bayesian-inference-for-SDE_files/figure-html/cell-11-output-5.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>These MCLMC marginals reveal a clear separation between well- and weakly-behaved parameters. Drift and leverage parameters (<span class="math inline">\(\mu\)</span> and <span class="math inline">\(\rho\)</span>) are accurately recovered and exhibit good mixing, while mean-reversion parameters (<span class="math inline">\(\kappa\)</span> and <span class="math inline">\(\theta_v\)</span>) remain weakly identified but consistent with the true values. In contrast, the volatility-of-volatility parameter <span class="math inline">\(\xi\)</span> is systematically underestimated, with the true value lying in the tail of the posterior. This bias is not due to poor mixing, but is consistent with Euler discretization effects in SDE parameter inference, where diffusion parameters absorb model error when the discretized dynamics are treated as exact.</p>
+<div id="cell-15" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;colab&quot;,&quot;value&quot;:{&quot;base_uri&quot;:&quot;https://localhost:8080/&quot;,&quot;height&quot;:598}}" data-outputid="c138dd24-aed1-4070-e3cf-18af4145d6fc" data-execution_count="12">
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="2026-01-03-Modern-Bayesian-inference-for-SDE_files/figure-html/cell-13-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The MCLMC-smoothed volatility path correctly captures the temporal structure of volatility regimes, but exhibits systematic amplitude damping, with peaks consistently lower than the true latent path. This behavior mirrors the downward bias observed in the inferred volatility-of-volatility parameter and reflects the tendency of Euler-discretized gradient-based inference to favor smoother latent trajectories when discretization error is treated as exact. Also note that the 80% credible interval tightens in low-vol regimes and widens during spikes, with no pathological overconfidence.</p>
+</section>
+<section id="hybrid-inference" class="level2">
+<h2 class="anchored" data-anchor-id="hybrid-inference">Hybrid inference</h2>
+<p>The MCLMC results highlight a key limitation of gradient-based inference for discretized stochastic volatility models: while the temporal structure of the latent volatility is recovered, diffusion parameters are biased and volatility amplitudes are systematically damped. This motivates a different strategy that avoids differentiating through discretized latent paths altogether. In this section, we adopt a hybrid approach that combines neural posterior estimation (NPE) for fast, amortized parameter inference with particle filtering for latent state inference. This decouples parameter learning from latent path discretization, while retaining principled uncertainty quantification.</p>
+<section id="neural-posterior-estimation-of-the-sde-parameters" class="level3">
+<h3 class="anchored" data-anchor-id="neural-posterior-estimation-of-the-sde-parameters">Neural posterior estimation of the SDE parameters</h3>
+<p>The general idea of neural network methods in simulation-based inference is to sample model parameters from a prior distribution,</p>
+<p><span class="math display">\[
+\theta \sim \pi(\theta),
+\]</span></p>
+<p>and use a pure simulator model to generate synthetic observations</p>
+<p><span class="math display">\[
+x = f_{sim}(\theta).
+\]</span></p>
+<p>The difference with a standard statistical model is that the simulator model does not need to come with a likelihood function. Instead, we assume that the pairs <span class="math inline">\((\theta, x)\)</span> are drawn from an unknown joint distribution,</p>
+<p><span class="math display">\[
+(\theta, x) \sim P(\theta, x) = \pi(\theta)\, P(x \vert \theta),
+\]</span></p>
+<p>and we use conditional neural density estimation on this synthetic data to estimate quantities of interest, like the intractable likelihood when conditioning on <span class="math inline">\(\theta\)</span>, or a posterior density estimator when conditioning on <span class="math inline">\(x\)</span>. See this <a href="https://arxiv.org/abs/2508.12939">practical guide</a> for more details.</p>
+<p>In the case of SDE, it means that we only need to use the integrator to simulate realizations of the process.</p>
+<p>The main benefits of NPE in SDE problems are that it avoids taking gradients through noisy simulators, and amortized inference is cheap at test time.</p>
+<p>Nevertheless, NPE is not a silver bullet as neural density estimation is most effective in relatively low dimensions. We can use it to infer the parameters <span class="math inline">\(\theta\)</span>, but the hidden volatility trajectory <span class="math inline">\(v_t\)</span> would probably be too much, which is why we defer its esimation to a second stage based on <a href="https://en.wikipedia.org/wiki/Particle_filter">particle filtering</a>. Likewise, on the input side, the dimensionality of the full trajectory of <span class="math inline">\(S_t\)</span> is too high, but we can condense it into carefully crafted summary statistics.</p>
+<p>These include realized variance and higher moments to capture volatility scale, autocorrelations of squared returns to capture persistence, explicit leverage statistics linking returns to future volatility, and a coarse term structure of realized variance to encode longer-horizon dynamics. This choice balances expressiveness and robustness: the summaries are informative about the Heston parameters while avoiding the curse of dimensionality and excessive sensitivity to discretization noise.</p>
+<p>The heaviest coding in this pipeline is the implementation of the neural density estimation model. As mentioned in the introduction, the Distrax library contains all the required building blocks, but putting them together can be tedious, especially if the parameters require unconstraining bijectors to map them to <span class="math inline">\(\mathbb{R}\)</span>. The relevant <a href="https://github.com/google-deepmind/distrax/blob/main/examples/flow.py">flow model example</a> in the library documentation is a good starting point.</p>
+<p>The model is trained by minimizing the negative log-likelihood of the synthetic data.</p>
+<p>Once this is done, we get a flow-based distribution <span class="math inline">\(q_{nn}(\theta \vert x)\)</span> that is an approximation of the true posterior <span class="math inline">\(p(\theta \vert x)\)</span>. The vector of summary statistics <span class="math inline">\(x_{obs}\)</span> of the observed trajectory <span class="math inline">\(S_{1:T}\)</span> is passed to the conditional flow model as the conditioning variable, and we can draw Monte Carlo samples</p>
+<p><span class="math display">\[
+\theta^{(i)} \sim q_{nn}(\theta \vert x_{obs}) \approx p(\theta \vert x_{obs}), \quad i=1,\dots ,\, M
+\]</span></p>
+<p>The downstream task of particle filtering requires the values of the parameters transformed by the unconstraining bijectors, and the posterior log-densities of these sampled parameter values if we find we need to improve the approximation <span class="math inline">\(q_{nn}(\theta \vert x_{obs}) \approx p(\theta \vert x_{obs})\)</span> with corrective weights, so the best is to wrap the neural sampler into a function that returns the parameters, their unconstrained versions, along with their posterior log-densities.</p>
+<div id="cell-35" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;colab&quot;,&quot;value&quot;:{&quot;base_uri&quot;:&quot;https://localhost:8080/&quot;,&quot;height&quot;:264}}" data-outputid="cc825826-65eb-49d2-a8be-bdbc91c18c61" data-execution_count="26">
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="2026-01-03-Modern-Bayesian-inference-for-SDE_files/figure-html/cell-27-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The neural posterior exhibits the expected skewness and uncertainty structure of the Heston model, with weak identifiability for diffusion parameters and good recovery of drift and leverage effects, indicating a well-calibrated amortized approximation.</p>
+<p>Compared to MCLMC, NPE produces less concentrated but better-calibrated posteriors, avoiding discretization-induced bias at the cost of explicitly acknowledging weak identifiability.</p>
+</section>
+<section id="particle-filtering" class="level3">
+<h3 class="anchored" data-anchor-id="particle-filtering">Particle filtering</h3>
+<p>In certain applications, estimating the SDE parameters is enough, but if we want to forecast the future evolution of the process, we need to know the distribution of <span class="math inline">\(v_T\)</span> as well. For a given estimate <span class="math inline">\(\hat\theta\)</span> of the SDE parameters <span class="math inline">\(\theta\)</span>, which can be for instance the Monte Carlo estimate <span class="math inline">\(\sum_{i=1}^M \theta^{(i)}\)</span> of the posterior mean or just a single <span class="math inline">\(\theta^{(i)}\)</span>, we can run a particle filter to infer the hidden states.</p>
+<p>In the Bayesian philosophy, we would prefer to marginalize out the SDE parameters,</p>
+<p><span class="math display">\[
+p(v_T \vert S_{1:T})
+\;=\;
+\int p(v_T \vert S_{1:T}, \theta)\, p(\theta \vert S_{1:T}) \, d\theta.
+\]</span></p>
+<p>The best approximation we have of this integral is a Monte Carlo estimate,</p>
+<p><span class="math display">\[
+p(v_T \vert S_{1:T})
+\;\approx\;
+\frac{1}{M}
+\sum_{m=1}^M
+p\!\left(v_T \vert S_{1:T}, \theta^{(m)}\right),
+\qquad
+\theta^{(i)} \sim q_{nn}(\theta \vert x_{obs}) \approx p(\theta \vert x_{obs})
+\]</span></p>
+<p>where the terms can be in turn approximated by the particle filter we discussed,</p>
+<p><span class="math display">\[
+p\!\left(v_T \vert S_{1:T}, \theta^{(m)}\right)
+\;\approx\;
+\sum_{i=1}^N
+w_T^{(m,i)}\,
+\delta\!\left(v_T - v_T^{(m,i)}\right),
+\]</span></p>
+<p>and overall we get the double sum of weighted particles</p>
+<p><span class="math display">\[
+p(v_T \vert S_{1:T})
+\;\approx\;
+\frac{1}{M}
+\sum_{m=1}^M
+\sum_{i=1}^N
+w_T^{(m,i)}\,
+\delta\!\left(v_T - v_T^{(m,i)}\right).
+\]</span></p>
+<p>The relative weights of the particles of two parameter vectors <span class="math inline">\(\theta^{(k)}\)</span> <span class="math inline">\(\theta^{(l)}\)</span> are the same, but since they are drawn from an approximation <span class="math inline">\(q_{nn}(\theta \vert x_{obs}) \approx p(\theta \vert x_{obs})\)</span> of the true posterior, we might find while running the particle filter that <span class="math inline">\(\theta^{(k)}\)</span> explains the whole sequence of observatons <span class="math inline">\(S_{1:T}\)</span> better than <span class="math inline">\(\theta^{(l)}\)</span> and thus deserves a higher weight.</p>
+<p>Concretely, for every <span class="math inline">\(\theta^{(m)}\)</span>, the particle filter estimates the actual marginal likelihood of the observation <span class="math inline">\(p_{pf}(x_{obs}|\theta^{(m)})\)</span>. We can then calculate importance weights that correct the mismatch with the neural estimation of the posterior,</p>
+<p><span class="math display">\[
+w_m \propto \frac{p_{pf}(x_{obs}|\theta^{(m)})\, \pi(\theta^{(m)})}{q_{nn}(\theta^{(m)}|x)}.
+\]</span></p>
+<p>The calculation of these importance weights is the reason why we recorded the log-densities when sampling from the flow model.</p>
+<p>In practice,<span class="math inline">\(p_{pf}(x_{obs}|\theta^{(m)})\)</span> is also an inexact approximation, so a tempering exponent <span class="math inline">\(\alpha\)</span> should be applied to these importance weights.</p>
+<p><span class="math display">\[
+\tilde w_m(\alpha) \propto
+\left(
+\frac{p_{pf}(x_{obs}|\theta^{(m)})\, \pi(\theta^{(m)})}{q_{nn}(\theta^{(m)}|x)}
+\right)^\alpha,
+\qquad \alpha \in [0,1].
+\]</span></p>
+<p>The tempering parameter <span class="math inline">\(\alpha\)</span> interpolates between the neural posterior ( <span class="math inline">\(\alpha = 0\)</span>) and a fully particle filter likelihood-corrected posterior (<span class="math inline">\(\alpha = 1\)</span>), mitigating importance weight degeneracy caused by noisy particle filter likelihood estimates.</p>
+<p>To tune the value of <span class="math inline">\(\alpha\)</span>, comparing the effective sample size with the number of particles is a good rule of thumbs.</p>
+<p>The result is a large pool of weighted particles approximating the full marginal posterior of the final volatility <span class="math inline">\(p(v_{T} | S_{1:T})\)</span>, accounting for parameter uncertainty.</p>
+<div id="cell-42" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;colab&quot;,&quot;value&quot;:{&quot;base_uri&quot;:&quot;https://localhost:8080/&quot;,&quot;height&quot;:829}}" data-outputid="85f270b4-a08e-4bf0-e544-91439838a1f9" data-execution_count="32">
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="2026-01-03-Modern-Bayesian-inference-for-SDE_files/figure-html/cell-33-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Despite this asymmetry, the posterior is well centered: the true value lies comfortably within the 80% credible interval, and the posterior median slightly overestimates <span class="math inline">\(v_T\)</span>, reflecting residual uncertainty in the volatility-of-volatility parameter. The long right tail highlights the fact that high terminal volatility scenarios remain plausible given the data, a feature that would be difficult to capture with moment-based or Gaussian approximations. Overall, this marginal illustrates how the hybrid NPE + PF approach preserves uncertainty in both parameters and states without collapsing onto a single volatility trajectory.</p>
+</section>
+<section id="smoothing" class="level3">
+<h3 class="anchored" data-anchor-id="smoothing">Smoothing</h3>
+<p>If we are interested in the complete hidden volatility trajectory <span class="math inline">\(v_{0:T}\)</span> and not just the terminal state, we have to infer the posterior distribution <span class="math inline">\(p(v_{0:T} \vert S_{0:T})\)</span> of the full history. A particle filter only uses past observations to estimate volatility at a certain time point <span class="math inline">\(t\)</span>, meaning it infers <span class="math inline">\(p(v_t | S_{0:t})\)</span>, which is wasteful for lower values of <span class="math inline">\(t\)</span> in the early trajectory. A common way around this problem is to apply a forward filtering backward simulation (FFBSi) algorithm (see this <a href="https://people.isy.liu.se/rt/schon/Publications/LindstenS2013.pdf">survey</a> for more details) to include the information of the whole observed trajectory.</p>
+<p>In practice, the function that implements the forward particle filter needs to get updated to store the particle trajectories, that can be fed into the backward simulator function.</p>
+<p>The same tempered reweighting as in the filtering task can be applied to marginalize out the SDE parameters.</p>
+<div id="cell-52" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;colab&quot;,&quot;value&quot;:{&quot;base_uri&quot;:&quot;https://localhost:8080/&quot;,&quot;height&quot;:598}}" data-outputid="b5750501-1036-4a17-fcba-e071f7797d7a" data-execution_count="40">
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="2026-01-03-Modern-Bayesian-inference-for-SDE_files/figure-html/cell-41-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The median FFBSi trajectory follows the level, timing, and regime changes of the true latent variance meaningfully. The 80% credible interval behaves sensibly, widening when volatility is high and tightening in calm regimes. The true path stays inside the band most of the time, without the band being trivially over-wide. The variance increases sharply toward the end, but this is a realistic behavior at the end-of-horizon where information progressively disappears.</p>
+<p>The two-stages method clearly shines here by guiding the FFBSi smoothing with better parameter estimates from the NPE stage than what is achieved with MCLMC.</p>
+</section>
+</section>
+<section id="conclusion" class="level2">
+<h2 class="anchored" data-anchor-id="conclusion">Conclusion</h2>
+<p>We considered two different ways of performing Bayesian inference in the Heston stochastic volatility model, and how those choices affect both parameter estimates and inferred volatility paths. Gradient-based methods like MCLMC can work remarkably well in practice: they recover the timing of volatility regimes and produce clean-looking posteriors. However, when the latent dynamics is discretized and treated as exact, these methods tend to absorb model error into weakly identifiable parameters, leading to overly confident and systematically biased inference, especially for diffusion-related quantities.</p>
+<p>To get around this, we explored a hybrid strategy that separates the problem into two pieces. Neural posterior estimation is used to infer SDE parameters from informative summary statistics of the observed trajectory, without ever differentiating through latent volatility paths. Particle filtering and smoothing are then applied conditionally on sampled parameters to recover latent volatility trajectories and marginal state uncertainty. This decoupling turns out to be crucial: uncertainty that would otherwise collapse into biased point estimates is instead preserved and propagated downstream.</p>
+<p>In practice, the NPE + PF approach produces broader but better-calibrated parameter posteriors and more realistic volatility reconstructions. Sharp volatility spikes are no longer systematically damped, credible intervals behave sensibly, and marginal state distributions remain skewed where they should be. While the method is more computationally involved than a single end-to-end sampler, it provides a clearer picture of what the data actually support, and what they do not.</p>
+<p>More generally, this case study highlights a common pitfall in latent SDE inference: when models are approximate, apparent precision can be misleading. In such settings, inference pipelines that modularize uncertainty and avoid over-committing to discretized dynamics can offer a more robust and interpretable alternative.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/ybarmaz\.github\.io\/blog\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<script src="https://utteranc.es/client.js" repo="ybarmaz/blog" issue-term="pathname" theme="github-light" crossorigin="anonymous" async="">
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
