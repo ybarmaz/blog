@@ -205,8 +205,8 @@ window.Quarto = {
 <h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
 <p>In the few years since I first got interested in probabilistic machine learning, there have been some significant algorithmic improvements, especially in the JAX ecosystem, and I thought that it would be a good time to revisit an <a href="https://ybarmaz.github.io/blog/posts/2021-06-05-gaussian-random-walks-with-tfp.html">old blog post</a> about modeling stochastic processes, and show a couple of more modern algorithms that tackle this type of problem.</p>
 <p>At the time, NUTS was the standard MCMC algorithm for a wide range of problems, and was especially shining when the inference involved a fairly high-dimensional latent space. The initial motivation of that old blog post was to reimplement the S&amp;P500 example in TensorFlow-Probability.</p>
-<p>Four years later, the new go-to method for high dimensional latent spaces like the ones that arise in stochastic processes is <a href="https://microcanonical-monte-carlo.netlify.app/">Microcanonical Langevin Monte Carlo</a> (MCLMC), and it <a href="https://blackjax-devs.github.io/sampling-book/algorithms/mclmc.html">is implemented Blackjax</a>, a collection of state-of-the-art samplers (one of the examples there is precisely the stochastic volatility model of the S&amp;P500 returns). This is the first example discussed below.</p>
-<p>In parallel, there have some efforts to implement distributions and bijectors in JAX that were not yet supported by the JAX substrate of TensorFlow-Probability. The result is the <a href="https://github.com/google-deepmind/distrax">Distrax</a> library, which includes <a href="https://github.com/google-deepmind/distrax/blob/main/examples/flow.py">flow models</a>. This greatly facilitates the execution of simulation-based inference algorithms in JAX, such as neural posterior estimation (NPE). This method can be used to quickly estimate posterior distributions over stochastic differential equation (SDE) parameters given observations of one or more realisations of the process. The computational cost is paid upfront when the estimator is trained on simulations of the process for a wide range of SDE parameters drawn from their prior distribution. There happens to be another JAX library that accelerates this type of simulation, namely <a href="https://docs.kidger.site/diffrax/">Diffrax</a>. The second example combines NPE with a particle filter to estimate the latent states of the SDE model.</p>
+<p>Four years later, a popular modern option for high dimensional latent spaces like the ones that arise in stochastic processes is <a href="https://microcanonical-monte-carlo.netlify.app/">Microcanonical Langevin Monte Carlo</a> (MCLMC), and it <a href="https://blackjax-devs.github.io/sampling-book/algorithms/mclmc.html">is implemented in Blackjax</a>, a collection of state-of-the-art samplers (one of the examples there is precisely the stochastic volatility model of the S&amp;P500 returns). This is the first example discussed below.</p>
+<p>In parallel, there have been some efforts to implement distributions and bijectors in JAX that were not yet supported by the JAX substrate of TensorFlow-Probability. The result is the <a href="https://github.com/google-deepmind/distrax">Distrax</a> library, which includes <a href="https://github.com/google-deepmind/distrax/blob/main/examples/flow.py">flow models</a>. This greatly facilitates the execution of simulation-based inference algorithms in JAX, such as neural posterior estimation (NPE). This method can be used to quickly estimate posterior distributions over stochastic differential equation (SDE) parameters given observations of one or more realisations of the process. The computational cost is paid upfront when the estimator is trained on simulations of the process for a wide range of SDE parameters drawn from their prior distribution. There happens to be another JAX library that accelerates this type of simulation, namely <a href="https://docs.kidger.site/diffrax/">Diffrax</a>. The second example combines NPE with particle filtering/smoothing to estimate the latent states of the SDE model.</p>
 </section>
 <section id="toy-problem" class="level2">
 <h2 class="anchored" data-anchor-id="toy-problem">Toy problem</h2>
@@ -232,7 +232,7 @@ d\langle W^{(1)}, W^{(2)}\rangle_t &amp;= \rho\, dt,
 </section>
 <section id="microcanonical-langevin-monte-carlo" class="level2">
 <h2 class="anchored" data-anchor-id="microcanonical-langevin-monte-carlo">Microcanonical Langevin Monte Carlo</h2>
-<p>The SDE model assumes a continuous <span class="math inline">\(t\)</span>, but in practice numerical integrators discretize it into a number of timesteps <span class="math inline">\(t_i\)</span>, and <span class="math inline">\(v_i = v(t_i)\)</span> has to be estimated for each of them if we want to reconstruct this hidden part of the process. This is what makes the inference problem high-dimensional and more difficult for Monte Carlo samplers of the posterior distribution. Algorithms based on Hamiltonian dynamics such as HMC or NUTS made some progress in that area, but they can still suffer from slow mixing and poor exploration of the posterior distribution when the energy landscape is complex, for instance when when some variables are highly correlated (like <span class="math inline">\(v_i\)</span> and <span class="math inline">\(v_{i+1}\)</span>). <a href="https://proceedings.mlr.press/v253/robnik24a.html">Microcanonical Langevin Monte Carlo</a> (MCLMC) combines ideas from Hamiltonian dynamics, Langevin diffusion, and microcanonical (i.e.&nbsp;constant-energy in <a href="https://en.wikipedia.org/wiki/Microcanonical_ensemble">statistical mechanics parlance</a>) sampling, which makes it effective with these problems. In practice, Langevin methods add noise, which improves slow mixing, but this often degrades long-range exploration. MCLMC corrects this degradation by preserving energy over short time.</p>
+<p>The SDE model assumes a continuous <span class="math inline">\(t\)</span>, but in practice numerical integrators discretize it into a number of timesteps <span class="math inline">\(t_i\)</span>, and <span class="math inline">\(v_i = v(t_i)\)</span> has to be estimated for each of them if we want to reconstruct this hidden part of the process. This is what makes the inference problem high-dimensional and more difficult for Monte Carlo samplers of the posterior distribution. Algorithms based on Hamiltonian dynamics such as HMC or NUTS made some progress in that area, but they can still suffer from slow mixing and poor exploration of the posterior distribution when the energy landscape is complex, for instance when some variables are highly correlated (like <span class="math inline">\(v_i\)</span> and <span class="math inline">\(v_{i+1}\)</span>). <a href="https://proceedings.mlr.press/v253/robnik24a.html">Microcanonical Langevin Monte Carlo</a> (MCLMC) combines ideas from Hamiltonian dynamics, Langevin diffusion, and microcanonical (i.e.&nbsp;constant-energy in <a href="https://en.wikipedia.org/wiki/Microcanonical_ensemble">statistical mechanics parlance</a>) sampling, which makes it effective with these problems. In practice, Langevin methods add noise, which improves slow mixing, but this often degrades long-range exploration. MCLMC corrects this degradation by preserving energy over short time.</p>
 <p>As a result, MCLMC is especially useful when: - the posterior is high-dimensional, - gradients are available, - the geometry is highly anisotropic, - long-range exploration matters more than exact reversibility per step.</p>
 <p>This makes it attractive for latent time-series models, SDE parameter inference, or Bayesian inverse problems with stiff dynamics.</p>
 <p>The Langevin part of MCLMC is itself implemented as a discretized SDE constrained to the energy shell. So if the timestep is too large, if the projection is approximate, or if noise is not exactly tangent, then the discretization can introduce a small stationary bias or an energy drift that invalidates the microcanonical assumption, both of which would impact the exactness of the posterior estimate. A <a href="https://blackjax-devs.github.io/sampling-book/algorithms/mclmc.html#how-to-analyze-the-results-of-your-mclmc-run">sanity check suggested in the Blackjax documentation</a> is to decrease the step size of the Langevin SDE and see if results remain consistent, or to apply an <a href="https://neurips.cc/virtual/2025/loc/san-diego/poster/117452">adjusted version of MCLMC</a>, also implemented in Blackjax.</p>
@@ -305,11 +305,11 @@ x = f_{sim}(\theta).
 <p>and we use conditional neural density estimation on this synthetic data to estimate quantities of interest, like the intractable likelihood when conditioning on <span class="math inline">\(\theta\)</span>, or a posterior density estimator when conditioning on <span class="math inline">\(x\)</span>. See this <a href="https://arxiv.org/abs/2508.12939">practical guide</a> for more details.</p>
 <p>In the case of SDE, it means that we only need to use the integrator to simulate realizations of the process.</p>
 <p>The main benefits of NPE in SDE problems are that it avoids taking gradients through noisy simulators, and amortized inference is cheap at test time.</p>
-<p>Nevertheless, NPE is not a silver bullet as neural density estimation is most effective in relatively low dimensions. We can use it to infer the parameters <span class="math inline">\(\theta\)</span>, but the hidden volatility trajectory <span class="math inline">\(v_t\)</span> would probably be too much, which is why we defer its esimation to a second stage based on <a href="https://en.wikipedia.org/wiki/Particle_filter">particle filtering</a>. Likewise, on the input side, the dimensionality of the full trajectory of <span class="math inline">\(S_t\)</span> is too high, but we can condense it into carefully crafted summary statistics.</p>
+<p>Nevertheless, NPE is not a silver bullet as neural density estimation is most effective in relatively low dimensions. We can use it to infer the parameters <span class="math inline">\(\theta\)</span>, but the hidden volatility trajectory <span class="math inline">\(v_t\)</span> would probably be too much, which is why we defer its estimation to a second stage based on <a href="https://en.wikipedia.org/wiki/Particle_filter">particle filtering</a>. Likewise, on the input side, the dimensionality of the full trajectory of <span class="math inline">\(S_t\)</span> is too high, but we can condense it into carefully crafted summary statistics.</p>
 <p>These include realized variance and higher moments to capture volatility scale, autocorrelations of squared returns to capture persistence, explicit leverage statistics linking returns to future volatility, and a coarse term structure of realized variance to encode longer-horizon dynamics. This choice balances expressiveness and robustness: the summaries are informative about the Heston parameters while avoiding the curse of dimensionality and excessive sensitivity to discretization noise.</p>
 <p>The heaviest coding in this pipeline is the implementation of the neural density estimation model. As mentioned in the introduction, the Distrax library contains all the required building blocks, but putting them together can be tedious, especially if the parameters require unconstraining bijectors to map them to <span class="math inline">\(\mathbb{R}\)</span>. The relevant <a href="https://github.com/google-deepmind/distrax/blob/main/examples/flow.py">flow model example</a> in the library documentation is a good starting point.</p>
 <p>The model is trained by minimizing the negative log-likelihood of the synthetic data.</p>
-<p>Once this is done, we get a flow-based distribution <span class="math inline">\(q_{nn}(\theta \vert x)\)</span> that is an approximation of the true posterior <span class="math inline">\(p(\theta \vert x)\)</span>. The vector of summary statistics <span class="math inline">\(x_{obs}\)</span> of the observed trajectory <span class="math inline">\(S_{1:T}\)</span> is passed to the conditional flow model as the conditioning variable, and we can draw Monte Carlo samples</p>
+<p>Once this is done, we get a flow-based distribution <span class="math inline">\(q_{nn}(\theta \vert x)\)</span> that is an approximation of the true posterior <span class="math inline">\(p(\theta \vert x)\)</span>. The vector of summary statistics <span class="math inline">\(x_{obs}\)</span> of the observed trajectory <span class="math inline">\(S_{0:T}\)</span> is passed to the conditional flow model as the conditioning variable, and we can draw Monte Carlo samples</p>
 <p><span class="math display">\[
 \theta^{(i)} \sim q_{nn}(\theta \vert x_{obs}) \approx p(\theta \vert x_{obs}), \quad i=1,\dots ,\, M
 \]</span></p>
@@ -328,26 +328,26 @@ x = f_{sim}(\theta).
 </section>
 <section id="particle-filtering" class="level3">
 <h3 class="anchored" data-anchor-id="particle-filtering">Particle filtering</h3>
-<p>In certain applications, estimating the SDE parameters is enough, but if we want to forecast the future evolution of the process, we need to know the distribution of <span class="math inline">\(v_T\)</span> as well. For a given estimate <span class="math inline">\(\hat\theta\)</span> of the SDE parameters <span class="math inline">\(\theta\)</span>, which can be for instance the Monte Carlo estimate <span class="math inline">\(\sum_{i=1}^M \theta^{(i)}\)</span> of the posterior mean or just a single <span class="math inline">\(\theta^{(i)}\)</span>, we can run a particle filter to infer the hidden states.</p>
+<p>In certain applications, estimating the SDE parameters is enough, but if we want to forecast the future evolution of the process, we need to know the distribution of <span class="math inline">\(v_T\)</span> as well. For a given estimate <span class="math inline">\(\hat\theta\)</span> of the SDE parameters <span class="math inline">\(\theta\)</span>, which can be for instance the Monte Carlo estimate <span class="math inline">\(\frac{1}{M}\sum_{m=1}^M \theta^{(m)}\)</span> of the posterior mean or just a single <span class="math inline">\(\theta^{(m)}\)</span>, we can run a particle filter to infer the hidden states.</p>
 <p>In the Bayesian philosophy, we would prefer to marginalize out the SDE parameters,</p>
 <p><span class="math display">\[
-p(v_T \vert S_{1:T})
+p(v_T \vert S_{0:T})
 \;=\;
-\int p(v_T \vert S_{1:T}, \theta)\, p(\theta \vert S_{1:T}) \, d\theta.
+\int p(v_T \vert S_{0:T}, \theta)\, p(\theta \vert S_{0:T}) \, d\theta.
 \]</span></p>
 <p>The best approximation we have of this integral is a Monte Carlo estimate,</p>
 <p><span class="math display">\[
-p(v_T \vert S_{1:T})
+p(v_T \vert S_{0:T})
 \;\approx\;
 \frac{1}{M}
 \sum_{m=1}^M
-p\!\left(v_T \vert S_{1:T}, \theta^{(m)}\right),
+p\!\left(v_T \vert S_{0:T}, \theta^{(m)}\right),
 \qquad
 \theta^{(i)} \sim q_{nn}(\theta \vert x_{obs}) \approx p(\theta \vert x_{obs})
 \]</span></p>
 <p>where the terms can be in turn approximated by the particle filter we discussed,</p>
 <p><span class="math display">\[
-p\!\left(v_T \vert S_{1:T}, \theta^{(m)}\right)
+p\!\left(v_T \vert S_{0:T}, \theta^{(m)}\right)
 \;\approx\;
 \sum_{i=1}^N
 w_T^{(m,i)}\,
@@ -355,7 +355,7 @@ w_T^{(m,i)}\,
 \]</span></p>
 <p>and overall we get the double sum of weighted particles</p>
 <p><span class="math display">\[
-p(v_T \vert S_{1:T})
+p(v_T \vert S_{0:T})
 \;\approx\;
 \frac{1}{M}
 \sum_{m=1}^M
@@ -363,23 +363,23 @@ p(v_T \vert S_{1:T})
 w_T^{(m,i)}\,
 \delta\!\left(v_T - v_T^{(m,i)}\right).
 \]</span></p>
-<p>The relative weights of the particles of two parameter vectors <span class="math inline">\(\theta^{(k)}\)</span> <span class="math inline">\(\theta^{(l)}\)</span> are the same, but since they are drawn from an approximation <span class="math inline">\(q_{nn}(\theta \vert x_{obs}) \approx p(\theta \vert x_{obs})\)</span> of the true posterior, we might find while running the particle filter that <span class="math inline">\(\theta^{(k)}\)</span> explains the whole sequence of observatons <span class="math inline">\(S_{1:T}\)</span> better than <span class="math inline">\(\theta^{(l)}\)</span> and thus deserves a higher weight.</p>
+<p>The relative weights of the particles of two parameter vectors <span class="math inline">\(\theta^{(k)}\)</span> <span class="math inline">\(\theta^{(l)}\)</span> are the same, but since they are drawn from an approximation <span class="math inline">\(q_{nn}(\theta \vert x_{obs}) \approx p(\theta \vert x_{obs})\)</span> of the true posterior, we might find while running the particle filter that <span class="math inline">\(\theta^{(k)}\)</span> explains the whole sequence of observations <span class="math inline">\(S_{0:T}\)</span> better than <span class="math inline">\(\theta^{(l)}\)</span> and thus deserves a higher weight.</p>
 <p>Concretely, for every <span class="math inline">\(\theta^{(m)}\)</span>, the particle filter estimates the actual marginal likelihood of the observation <span class="math inline">\(p_{pf}(x_{obs}|\theta^{(m)})\)</span>. We can then calculate importance weights that correct the mismatch with the neural estimation of the posterior,</p>
 <p><span class="math display">\[
-w_m \propto \frac{p_{pf}(x_{obs}|\theta^{(m)})\, \pi(\theta^{(m)})}{q_{nn}(\theta^{(m)}|x)}.
+w_m \propto \frac{p_{pf}(S_{0:T}|\theta^{(m)})\, \pi(\theta^{(m)})}{q_{nn}(\theta^{(m)}|x)}.
 \]</span></p>
 <p>The calculation of these importance weights is the reason why we recorded the log-densities when sampling from the flow model.</p>
-<p>In practice,<span class="math inline">\(p_{pf}(x_{obs}|\theta^{(m)})\)</span> is also an inexact approximation, so a tempering exponent <span class="math inline">\(\alpha\)</span> should be applied to these importance weights.</p>
+<p>In practice, <span class="math inline">\(p_{pf}(S_{0:T}|\theta^{(m)})\)</span> is also an inexact approximation, so a tempering exponent <span class="math inline">\(\alpha\)</span> should be applied to these importance weights.</p>
 <p><span class="math display">\[
 \tilde w_m(\alpha) \propto
 \left(
-\frac{p_{pf}(x_{obs}|\theta^{(m)})\, \pi(\theta^{(m)})}{q_{nn}(\theta^{(m)}|x)}
+\frac{p_{pf}(S_{0:T}|\theta^{(m)})\, \pi(\theta^{(m)})}{q_{nn}(\theta^{(m)}|x)}
 \right)^\alpha,
 \qquad \alpha \in [0,1].
 \]</span></p>
 <p>The tempering parameter <span class="math inline">\(\alpha\)</span> interpolates between the neural posterior ( <span class="math inline">\(\alpha = 0\)</span>) and a fully particle filter likelihood-corrected posterior (<span class="math inline">\(\alpha = 1\)</span>), mitigating importance weight degeneracy caused by noisy particle filter likelihood estimates.</p>
-<p>To tune the value of <span class="math inline">\(\alpha\)</span>, comparing the effective sample size with the number of particles is a good rule of thumbs.</p>
-<p>The result is a large pool of weighted particles approximating the full marginal posterior of the final volatility <span class="math inline">\(p(v_{T} | S_{1:T})\)</span>, accounting for parameter uncertainty.</p>
+<p>To tune the value of <span class="math inline">\(\alpha\)</span>, comparing the effective sample size with the number of particles is a good rule of thumb.</p>
+<p>The result is a large pool of weighted particles approximating the full marginal posterior of the final volatility <span class="math inline">\(p(v_{T} | S_{0:T})\)</span>, accounting for parameter uncertainty.</p>
 <div id="cell-42" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;colab&quot;,&quot;value&quot;:{&quot;base_uri&quot;:&quot;https://localhost:8080/&quot;,&quot;height&quot;:829}}" data-outputid="85f270b4-a08e-4bf0-e544-91439838a1f9" data-execution_count="32">
 <div class="cell-output cell-output-display">
 <div>
