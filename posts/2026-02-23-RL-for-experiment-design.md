@@ -71,8 +71,8 @@ has a physical meaning where the noise amplitude is tied to temperature and fric
 We model the potential $U(x;\theta)$ as a quartic polynomial, but describe the landscape using physically interpretable quantities,
 
 $$
-\theta = (\Delta G, \Delta G^\ddagger, \Delta x)
-$$,
+\theta = (\Delta G, \Delta G^\ddagger, \Delta x),
+$$
 
 where $\Delta G$ is the free energy difference between wells, $\Delta G^\ddagger$ the barrier height, and $\Delta x$ the distance between wells.
 
