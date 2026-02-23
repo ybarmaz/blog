@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.25">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Yves Barmaz">
+<meta name="dcterms.date" content="2026-02-23">
+<meta name="description" content="A physics-grounded RL framework for sequential adaptive experiment design under stochastic dynamics.">
+
+<title>Learning to probe metastable systems: RL for adaptive experiment design – Yves Barmaz’s blog</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-7b89279ff1a6dce999919e0e67d4d9ec.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-003c7ce323138a8a6468cb23c965a473.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../styles.css">
+</head>
+
+<body class="nav-fixed fullcontent quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../index.html" class="navbar-brand navbar-brand-logo">
+    </a>
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">Yves Barmaz’s blog</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../about.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/ybarmaz"> <i class="bi bi-github" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://twitter.com/YvesBarmaz"> <i class="bi bi-twitter" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">Learning to probe metastable systems: RL for adaptive experiment design</h1>
+                  <div>
+        <div class="description">
+          A physics-grounded RL framework for sequential adaptive experiment design under stochastic dynamics.
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">Reinforcement Learning</div>
+                <div class="quarto-category">sde</div>
+                <div class="quarto-category">probabilistic programming</div>
+                <div class="quarto-category">Bayesian inference</div>
+                <div class="quarto-category">machine learning</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p>Yves Barmaz </p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">February 23, 2026</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="reinforcement-learning-for-adaptive-experiment-design" class="level2">
+<h2 class="anchored" data-anchor-id="reinforcement-learning-for-adaptive-experiment-design">Reinforcement learning for adaptive experiment design</h2>
+<p>Many physical and biological experiments share a common structure:</p>
+<ul>
+<li>There is a set of hidden parameters <span class="math inline">\(\theta\)</span> we care about (potential barrier height, free-energy difference, coherence time…).</li>
+<li>We can apply a time-dependent control <span class="math inline">\(u(t)\)</span> (driving voltage, external force…).</li>
+<li>We observe a noisy stochastic trajectory <span class="math inline">\(x(t)\)</span>.</li>
+<li>We want to learn <span class="math inline">\(\theta\)</span> as efficiently as possible under experimental constraints.</li>
+</ul>
+<p>Traditionally, experiments are designed manually. Experimentalists apply constant forces, linear ramps, or periodic drives, then measurements are collected, and inference happens afterwards.</p>
+<p>In optimal control problems, inference happens online and informs the choice of the control <span class="math inline">\(u(t)\)</span> in real time, given objectives or preferences expressed in a reward function.</p>
+<p>So what if we borrowed ideas from control theory and treated experiment design as a <strong>sequential decision problem</strong>?</p>
+<p>In this post, I describe a minimal but physically grounded setup where reinforcement learning (RL) algorithms learn to design driving force protocols that reduce parameter uncertainty faster than naive baselines. Along the way, we encounter sparse-event instability, exploration collapse, and the importance of belief-state control.</p>
+<hr>
+</section>
+<section id="a-concrete-physical-example-single-molecule-folding-under-force" class="level2">
+<h2 class="anchored" data-anchor-id="a-concrete-physical-example-single-molecule-folding-under-force">A concrete physical example: single-molecule folding under force</h2>
+<p>Consider a single protein molecule attached between a surface and a bead held in an optical trap (or magnetic tweezers).</p>
+<ul>
+<li>We can control the external force <span class="math inline">\(F_{\text{ext}}(t)\)</span>.</li>
+<li>We measure the molecular extension <span class="math inline">\(x(t)\)</span> at discrete times <span class="math inline">\(t_0, t_1, t_2, \dots, t_N\)</span>.</li>
+<li>The molecule stochastically switches between folded and unfolded states.</li>
+</ul>
+<p>We model this as overdamped Langevin dynamics,</p>
+<p><span class="math display">\[
+dx_t = -\partial_x U(x_t; \theta)\,dt + F_{\text{ext}}(t)\,dt + \sqrt{2D}\,dW_t,
+\]</span></p>
+<p>where <span class="math inline">\(U(x;\theta)\)</span> is a bistable free-energy landscape (double-well potential), <span class="math inline">\(\theta\)</span> parameterizes thermodynamic quantities, <span class="math inline">\(D\)</span> is the diffusion constant, and <span class="math inline">\(W_t\)</span> is a Wiener process.</p>
+<p>We use the standard Langevin convention <span class="math inline">\(\sqrt{2D}\)</span> rather than <span class="math inline">\(\sigma\)</span> because</p>
+<p><span class="math display">\[
+D = \frac{k_B T}{\gamma}
+\]</span></p>
+<p>has a physical meaning where the noise amplitude is tied to temperature and friction via the Einstein relation.</p>
+<hr>
+<section id="parameterization" class="level3">
+<h3 class="anchored" data-anchor-id="parameterization">Parameterization</h3>
+<p>We model the potential <span class="math inline">\(U(x;\theta)\)</span> as a quartic polynomial, but describe the landscape using physically interpretable quantities,</p>
+<p><span class="math display">\[
+\theta = (\Delta G, \Delta G^\ddagger, \Delta x)
+\]</span>,</p>
+<p>where <span class="math inline">\(\Delta G\)</span> is the free energy difference between wells, <span class="math inline">\(\Delta G^\ddagger\)</span> the barrier height, and <span class="math inline">\(\Delta x\)</span> the distance between wells.</p>
+<p>These are precisely the quantities experimentalists aim to estimate.</p>
+<hr>
+</section>
+</section>
+<section id="framing-the-experiment-as-a-pomdp" class="level2">
+<h2 class="anchored" data-anchor-id="framing-the-experiment-as-a-pomdp">Framing the experiment as a POMDP</h2>
+<p>With these assumptions, this experiment naturally falls under the category of <strong><a href="https://en.wikipedia.org/wiki/Partially_observable_Markov_decision_process">partially observed Markov decision processes (POMDP)</a></strong>, a natural abstraction for reinforcement learning. Concretely, an agent (representing the experimentalist) observes noisy measurements and selects the next control action applied to the system.</p>
+<section id="hidden-state" class="level3">
+<h3 class="anchored" data-anchor-id="hidden-state">Hidden state</h3>
+<ul>
+<li>True parameters <span class="math inline">\(\theta\)</span></li>
+<li>Instantaneous molecular position <span class="math inline">\(x_t\)</span></li>
+</ul>
+</section>
+<section id="observations" class="level3">
+<h3 class="anchored" data-anchor-id="observations">Observations</h3>
+<ul>
+<li>Noisy measurements of <span class="math inline">\(x_t\)</span> at discrete times <span class="math inline">\(t = t_0, t_1, \dots, t_N\)</span></li>
+</ul>
+</section>
+<section id="action" class="level3">
+<h3 class="anchored" data-anchor-id="action">Action</h3>
+<ul>
+<li>Applied force <span class="math inline">\(u_t = F_{\text{ext}}(t)\)</span></li>
+</ul>
+</section>
+<section id="dynamics" class="level3">
+<h3 class="anchored" data-anchor-id="dynamics">Dynamics</h3>
+<ul>
+<li>Controlled Langevin SDE</li>
+</ul>
+</section>
+<section id="belief" class="level3">
+<h3 class="anchored" data-anchor-id="belief">Belief</h3>
+<p>Because <span class="math inline">\(\theta\)</span> is unknown, the decision process should operate on a belief state. The agent can use an <a href="https://en.wikipedia.org/wiki/Extended_Kalman_filter">extended Kalman filter</a> to maintain a Gaussian posterior estimation</p>
+<p><span class="math display">\[
+P(\theta \vert x_{0:t}) \approx \mathcal{N}(\hat{\theta}_t, P_t)
+\]</span></p>
+<p>of the true parameter value conditioned on the past observations.</p>
+<p>The mean and variance parameters <span class="math inline">\((\hat{\theta}_t, P_t)\)</span>, which are updated after every measurement, become the belief state. This refines the POMDP into a <a href="https://en.wikipedia.org/wiki/Partially_observable_Markov_decision_process#Belief_MDP">belief MDP</a>.</p>
+<hr>
+</section>
+</section>
+<section id="action-space" class="level2">
+<h2 class="anchored" data-anchor-id="action-space">Action space</h2>
+<p>At first glance, the control term <span class="math inline">\(u(t) = F_{\text{ext}}(t)\)</span> seems infinite-dimensional. In practice however, its functional shape is heavily constrained by the experimental setup. It is reasonable to assume that the agent controls it through a real actuator, which has bandwidth limits and inertia, meaning that its amplitude is constrained and that it cannot jump instantaneously. This can be expressed as an inhomogeneous linear ODE</p>
+<p><span class="math display">\[
+\dot u(t) = \frac1\tau\left( u_{\text{target}}(t) - u(t) \right), \quad \vert u_{\text{target}} \vert &lt; u_{\text{max}}.
+\]</span></p>
+<p>For each time step, the agent decides a new target <span class="math inline">\(u_{\text{target}}(t)\)</span> based on its current belief state, it is clipped by <span class="math inline">\(u_{\text{max}}\)</span>, and the real applied force <span class="math inline">\(u(t)\)</span> is low-pass filtered.</p>
+<p>That way the policy cannot produce arbitrarily sharp spikes, control has memory, and the effective action space is constrained by dynamics. This makes the control problem realistically harder.</p>
+<p>Note that the method presented here is not constrained by these assumptions and can be easily adapted to other types of actuator dynamics.</p>
+<hr>
+</section>
+<section id="objective" class="level2">
+<h2 class="anchored" data-anchor-id="objective">Objective</h2>
+<p>Scientifically, we want to reduce the uncertainty about <span class="math inline">\(\theta\)</span>. A natural formulation is to maximize the information, or negative entropy <span class="math inline">\(-H(\theta_T)\)</span> of the posterior distribution of these parameters at the end of the experiment, under a finite control budget,</p>
+<p><span class="math display">\[
+\max \; \mathbb{E}\left[-H(\theta_T)\right]
+\quad \text{s.t.} \quad
+\int_0^T u(t)^2 dt \le B.
+\]</span></p>
+<p>Directly solving this constrained stochastic control problem is difficult, both because of the constraint and the sparsity of the reward. Instead, we approximate it with a shaped reward</p>
+<p><span class="math display">\[
+r_t = \text{entropy contraction}_t - \lambda_u u_t^2
+\]</span></p>
+<p>where the entropy contraction is computed from the reduction of the belief state covariance <span class="math inline">\(P_t\)</span>. This approach provides dense feedback while remaining aligned with the original objective.</p>
+<p>Importantly, the reward depends only on the belief state (via the posterior covariance <span class="math inline">\(P_t\)</span>), not on the true parameters <span class="math inline">\(\theta\)</span>. The agent never sees ground truth — only the same information available to an experimentalist.</p>
+<hr>
+</section>
+<section id="why-is-this-experiment-hard" class="level2">
+<h2 class="anchored" data-anchor-id="why-is-this-experiment-hard">Why is this experiment hard?</h2>
+<p>According to <a href="https://en.wikipedia.org/wiki/Transition_state_theory">Kramers’ theory</a>, barrier-crossing rates scale exponentially with the barrier height</p>
+<p><span class="math display">\[
+k \propto e^{-\Delta G^\ddagger / (k_B T)}.
+\]</span></p>
+<p>This exponential dependence makes transition events intrinsically rare in many physically realistic regimes.</p>
+<p>Learning in metastable systems is fragile because informative events — barrier crossings — are intrinsically rare. Early in training, policies may never experience such transitions, leading to sparse-reward instability. If exploration collapses too quickly, the agent converges to energetically cheap but informationally flat behavior — generating almost no posterior contraction. The key to overcoming this is belief-state control: conditioning actions not only on position, but on posterior uncertainty, allows the policy to deliberately induce transitions when they are most informative.</p>
+<hr>
+</section>
+<section id="why-reinforcement-learning" class="level2">
+<h2 class="anchored" data-anchor-id="why-reinforcement-learning">Why reinforcement learning?</h2>
+<p>In principle, this is a stochastic optimal control problem and one could attempt to derive and solve the corresponding Hamilton–Jacobi–Bellman (HJB) equation. The difficulty is that the natural state of the problem is the belief state <span class="math inline">\((\hat{\theta}_t, P_t)\)</span> produced by the filter. The control influences not only the physical trajectory <span class="math inline">\(x_t\)</span> but also the evolution of the posterior covariance. This yields a high-dimensional, nonlinear, controlled filtering problem. The resulting HJB equation would live in belief space and couple physical dynamics with inference dynamics — a setting where closed-form solutions are unavailable and numerical dynamic programming quickly becomes intractable.</p>
+<p>Reinforcement learning sidesteps the need to explicitly solve this belief-space HJB. Instead of computing a value function over a continuous, high-dimensional posterior manifold, we directly learn a policy that maps belief states to actuator commands. This effectively approximates the solution to the underlying stochastic control problem without requiring explicit discretization of belief space or analytical tractability. In this sense, RL is not replacing control theory — it is serving as a scalable numerical solver for a belief-space optimal control problem that is otherwise computationally prohibitive.</p>
+<hr>
+</section>
+<section id="rl-algorithms" class="level2">
+<h2 class="anchored" data-anchor-id="rl-algorithms">RL algorithms</h2>
+<p>To evaluate the feasibility and benefit of adaptive experiment design in this metastable setting, we compare three reinforcement learning algorithms:</p>
+<ul>
+<li>Proximal Policy Optimization (PPO)</li>
+<li>Stratified PPO (SPPO)</li>
+<li>Twin Delayed Deep Deterministic Policy Gradient (TD3)</li>
+</ul>
+<p>These were chosen to probe different aspects of the control problem: stochastic policy gradients, variance reduction under heterogeneity, and deterministic off-policy control.</p>
+<section id="ppo-on-policy-stochastic-policy-gradient" class="level3">
+<h3 class="anchored" data-anchor-id="ppo-on-policy-stochastic-policy-gradient">PPO: On-policy stochastic policy gradient</h3>
+<p>PPO is a widely used on-policy policy-gradient method. It optimizes a stochastic policy <span class="math inline">\(\pi_\theta(u \vert s)\)</span> using clipped surrogate objectives and generalized advantage estimation (GAE). We include this algorithm for two reasons. First, it is a strong, well-understood baseline for continuous control. Second, its stochastic policy explicitly maintains action entropy, which is important in sparse-event problems, to actually detect events. Because metastable transitions are rare, exploration is structurally necessary. PPO’s entropy regularization provides a direct mechanism for maintaining exploration during early learning.</p>
+<p>However, PPO is on-policy: experience is discarded after each update. In sparse-event environments, this can reduce sample efficiency when informative transitions are rare.</p>
+</section>
+<section id="stratified-ppo-sppo-ppo-with-stratified-advantage-normalization-under-heterogeneous-regimes" class="level3">
+<h3 class="anchored" data-anchor-id="stratified-ppo-sppo-ppo-with-stratified-advantage-normalization-under-heterogeneous-regimes">Stratified PPO (SPPO): PPO with stratified advantage normalization under heterogeneous regimes</h3>
+<p>During training, each episode samples different true landscape parameters (barrier heights, asymmetries, etc.). Some regimes are intrinsically easier as they lead to frequent transitions and stronger gradients. Others are harder and produce weaker signals.</p>
+<p>Standard PPO normalizes advantages across the entire batch. This can cause “easy” regimes to dominate updates. To address this problem, we can modify PPO by normalizing advantages within groups of similar regimes,</p>
+<p><span class="math display">\[
+\tilde A^{(g)} = \frac{A^{(g)} - \mu_g}{\sigma_g + \epsilon},
+\]</span></p>
+<p>where <span class="math inline">\(g\)</span> indexes the regime groups. This stratification is a variance-reduction technique, and hereafter we call the resulting algorithm stratified PPO, or SPPO.</p>
+<p>It is important to note that the regime label is used only for training-time normalization. It is not provided to the policy, and evaluation is performed without stratification, to avoid any unfair advantage.</p>
+<p>SPPO tests whether learning instability arises from gradient imbalance across heterogeneous system instances.</p>
+</section>
+<section id="td3-deterministic-off-policy-actorcritic" class="level3">
+<h3 class="anchored" data-anchor-id="td3-deterministic-off-policy-actorcritic">TD3: Deterministic off-policy actor–critic</h3>
+<p>TD3 is a deterministic actor–critic method designed for continuous control. It learns a deterministic policy <span class="math inline">\(\mu_\theta(s)\)</span> along with two Q-functions to reduce overestimation bias.</p>
+<p>TD3 differs from PPO in two critical ways. First, it is a deterministic policy, the learned control is a direct mapping from belief state to force. Second, a replay buffer reuses experience across updates, improving sample efficiency. In metastable systems, informative transitions are rare but highly valuable. Off-policy replay allows TD3 to reuse those rare events multiple times, potentially stabilizing learning.</p>
+<p>Because our action space is one-dimensional and actuator-constrained, deterministic control is sufficient to represent optimal strategies. TD3 therefore provides a natural alternative to stochastic policy-gradient methods.</p>
+<hr>
+</section>
+</section>
+<section id="training-procedure" class="level2">
+<h2 class="anchored" data-anchor-id="training-procedure">Training procedure</h2>
+<p>To train the policies, we use simulation-based domain randomization. At the beginning of each episode, we sample a fresh set of physical parameters <span class="math inline">\(\theta = (\Delta G, \Delta G^\ddagger, \Delta x)\)</span> from a predefined distribution representing heterogeneous molecules. These parameters remain fixed for the duration of the episode, defining a specific free-energy landscape. The agent then interacts with this environment over a fixed time horizon: at each timestep it observes the current belief state <span class="math inline">\((\hat{\theta}_t, P_t)\)</span> from the EKF and the current physical state, outputs a target force <span class="math inline">\(u_{\text{target}}\)</span>, the actuator dynamics produce the applied force <span class="math inline">\(u_t\)</span>, the stochastic Langevin system evolves, and the filter updates the posterior. The reward at each step is computed from posterior entropy contraction minus control cost.</p>
+<p>This process is repeated across many independently sampled episodes. On-policy methods (PPO/SPPO) update the policy using batches of complete trajectories, while TD3 stores transitions in a replay buffer and performs off-policy updates. Crucially, because each episode is generated from newly sampled parameters, the learned policy does not specialize to a single landscape but instead acquires an amortized strategy for probing a distribution of metastable systems.</p>
+<hr>
+</section>
+<section id="baseline-policies" class="level2">
+<h2 class="anchored" data-anchor-id="baseline-policies">Baseline policies</h2>
+<p>To contextualize the performance of the learned policies, we evaluate three simple baselines under the same physical and actuator constraints.</p>
+<section id="zero-control" class="level3">
+<h3 class="anchored" data-anchor-id="zero-control">Zero control</h3>
+<p>The simplest reference is passive observation:</p>
+<p><span class="math display">\[
+u_{\text{target}}(t) = 0 \quad \forall t.
+\]</span></p>
+<p>This policy applies no actuation and therefore incurs no control cost. It relies purely on spontaneous thermal fluctuations to generate barrier crossings. As such, it serves as a lower bound on achievable information gain in the absence of active probing.</p>
+</section>
+<section id="target-crossing-feedback" class="level3">
+<h3 class="anchored" data-anchor-id="target-crossing-feedback">Target-crossing feedback</h3>
+<p>This heuristic introduces a minimal form of closed-loop control.</p>
+<p>A scalar commanded control <span class="math inline">\(u_{\text{cmd}}\)</span> is maintained and updated at each control step based on the recent empirical crossing rate:</p>
+<p><span class="math display">\[
+u_{\text{cmd}} \leftarrow \mathrm{clip}\big(u_{\text{cmd}} + k (r^* - \hat{r}),\, [-u_{\max}, u_{\max}]\big),
+\]</span></p>
+<p>where <span class="math inline">\(\hat{r}\)</span> is the observed crossing rate over a sliding window and <span class="math inline">\(r^*\)</span> is a desired target rate.</p>
+<p>The intuition is simple: if transitions are too rare, increase forcing; if they are too frequent, back off. This policy explicitly tries to regulate crossing frequency, but does not reason about posterior uncertainty or which parameters remain poorly identified.</p>
+</section>
+<section id="periodic-triangle-waveform" class="level3">
+<h3 class="anchored" data-anchor-id="periodic-triangle-waveform">Periodic triangle waveform</h3>
+<p>The final baseline is a deterministic open-loop driver:</p>
+<p><span class="math display">\[
+u_{\text{target}}(t) = \mathrm{clip}\big(A \cdot \mathrm{triangle}(t; \text{period}, \text{phase}),\, [-u_{\max}, u_{\max}]\big).
+\]</span></p>
+<p>This policy applies a periodic forcing intended to sweep the system back and forth across the barrier, probing for resonance-like enhancement of transitions. It represents a classical experimental strategy: apply structured excitation and observe the response, without adapting to the evolving belief state.</p>
+<hr>
+</section>
+</section>
+<section id="results-and-lessons" class="level2">
+<h2 class="anchored" data-anchor-id="results-and-lessons">Results and lessons</h2>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="double_well_policy_panel.png" class="img-fluid figure-img"></p>
+<figcaption><strong>Figure:</strong> How different control strategies probe a metastable system. Learned policies (PPO, SPPO, TD3) extract more posterior information per unit energy than passive or fixed-waveform baselines (A), accelerate early uncertainty reduction (B), and achieve higher returns driven by genuine entropy contraction rather than auxiliary terms (C). Matched-seed comparisons (D) show that these gains are consistent across heterogeneous landscapes.</figcaption>
+</figure>
+</div>
+<p>The first thing to notice is that an external force is necessary. The zero-control baseline barely reduces uncertainty. Hand-designed waveforms — like pushing toward the barrier or applying a triangle drive — do better, but they are blunt instruments: they inject energy without really adapting to what the filter has learned so far.</p>
+<p>The RL policies behave differently. Instead of just “shaking the system,” they learn to guide it toward the barrier region in a way that produces informative transitions without wasting control effort. You can see this in the information-versus-energy plot: for roughly the same control budget as the better heuristics, the learned policies extract more posterior entropy reduction. TD3 and the stratified PPO variant sit slightly above vanilla PPO, suggesting that algorithmic stability and variance reduction matter in this sparse-event setting.</p>
+<p>The time-resolved curves tell an even clearer story. The learned policies quickly drive the system into regimes where barrier crossings become likely, accelerating early information gain. They do not just push harder — they push smarter. The matched-seed comparisons confirm that these improvements are consistent across sampled environments, not just lucky draws. And the reward breakdown shows that the performance gains are coming from genuine information extraction, not from gaming some auxiliary term.</p>
+<p>In short, reinforcement learning appears to discover probing strategies that are qualitatively different. It learns when to destabilize the system, when to hold it near the barrier, and how to balance energy expenditure against statistical payoff. What emerges is not a fixed waveform, but an adaptive experiment policy that generalizes across a family of metastable landscapes.</p>
+<hr>
+</section>
+<section id="outlook" class="level2">
+<h2 class="anchored" data-anchor-id="outlook">Outlook</h2>
+<p>Although we illustrated the framework on a double-well system, the idea is much broader. The same structure appears in spectroscopy, chemical reaction rate estimation, metastable material characterization, and many other physical experiments. In each case, experimenters do not merely observe a system — they perturb it in order to extract information. The central object is not the state alone, but the belief over physical parameters, and the goal is to steer the system so that this belief contracts efficiently.</p>
+<p>Viewed this way, scientific experimentation becomes a closed-loop stochastic control problem in belief space. Actions influence trajectories, trajectories influence measurements, measurements reshape posterior uncertainty, and that updated belief should determine the next action. Classical Bayesian optimization treats experiments as expensive function evaluations: pick <span class="math inline">\(x_i\)</span>, observe <span class="math inline">\(f(x_i)\)</span>, update a surrogate, repeat. In our setting, however, the input <span class="math inline">\(x_i\)</span> is fixed by the physical system; what we can control is how we probe it. The cost lies not in choosing the point, but in generating informative trajectories. Reinforcement learning provides a way to optimize these sequential, dynamic probing strategies — effectively amortizing experiment design across a distribution of systems.</p>
+<p>Importantly, reinforcement learning does not replace physics. It operationalizes it. The agent relies on a model of the system and an explicit Bayesian update; the reward is derived from posterior entropy contraction in physically meaningful descriptors. Without a model, there is no belief state to control. In that sense, this approach sits at the intersection of mechanistic modeling and learning — not as a substitute for theory, but as a computational tool for solving the control problems that theory naturally generates.</p>
+<p>Much of “AI for science” focuses on discovery: learning surrogate models, predicting structures, accelerating simulations. Far less attention has been paid to the design of experiments themselves — to the policies that decide how we probe systems in the first place. If experimentation is fundamentally about reducing uncertainty under constraints, then treating it explicitly as stochastic control over belief states may offer a useful unifying lens.</p>
+</section>
+<section id="acknowledgement" class="level2">
+<h2 class="anchored" data-anchor-id="acknowledgement">Acknowledgement</h2>
+<p>My interest in optimal experiment design in noisy settings traces back to numerous conversations with Rodrigo Teixeira during my time at Roche. I am grateful for his thoughtful insights into how information can be teased out of complex biophysical systems — many of which continue to shape how I think about these problems.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/ybarmaz\.github\.io\/blog\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<script src="https://utteranc.es/client.js" repo="ybarmaz/blog" issue-term="pathname" theme="github-light" crossorigin="anonymous" async="">
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
