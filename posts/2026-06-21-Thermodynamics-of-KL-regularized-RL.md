@@ -11,15 +11,13 @@ categories:
 date: '2026-06-21'
 description: A thermodynamic view of KL-regularized RL, from Gibbs equilibria and entropy mirror descent to TRPO, PPO, GRPO, and support-driven phase transitions.
 output-file: 2026-06-21-Thermodynamics-of-KL-regularized-RL.html
-title: "The Thermodynamics of KL-Regularized RL"
+title: "The thermodynamics of KL-regularized RL: From mirror descent to phase transitions"
 toc: false
 echo: true
 comments:
   utterances:
     repo: ybarmaz/blog
 ---
-
-# The Thermodynamics of KL-Regularized RL: From Mirror Descent to Phase Transitions
 
 Recently, I have been trying to cast some physical intuition on the zoology of reinforcement learning algorithms used in LLM post-training. Who has never been frustrated that while gradient descent sounds like powder skiing, TRPO, PPO, and GRPO sound more like the bush-whacking part where you have to somehow get back to the car after a ski tour? Well, it turns out the snow metaphor runs deeper than the type 1/type 2 fun duality: these algorithms are all trying to melt a fixed pretrained distribution toward higher reward, and "how hard you melt it" is a temperature — one whose equilibrium can exhibit a genuine phase transition in the large-task limit. This post is about taking that analogy literally and seeing how far it goes.
 
