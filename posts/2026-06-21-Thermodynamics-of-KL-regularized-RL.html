@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.25">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Yves Barmaz">
+<meta name="dcterms.date" content="2026-06-21">
+<meta name="description" content="A thermodynamic view of KL-regularized RL, from Gibbs equilibria and entropy mirror descent to TRPO, PPO, GRPO, and support-driven phase transitions.">
+
+<title>The thermodynamics of KL-regularized RL: From mirror descent to phase transitions – Yves Barmaz’s blog</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-7b89279ff1a6dce999919e0e67d4d9ec.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-003c7ce323138a8a6468cb23c965a473.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../styles.css">
+</head>
+
+<body class="nav-fixed fullcontent quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../index.html" class="navbar-brand navbar-brand-logo">
+    </a>
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">Yves Barmaz’s blog</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../about.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/ybarmaz"> <i class="bi bi-github" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://twitter.com/YvesBarmaz"> <i class="bi bi-twitter" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">The thermodynamics of KL-regularized RL: From mirror descent to phase transitions</h1>
+                  <div>
+        <div class="description">
+          A thermodynamic view of KL-regularized RL, from Gibbs equilibria and entropy mirror descent to TRPO, PPO, GRPO, and support-driven phase transitions.
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">Reinforcement Learning</div>
+                <div class="quarto-category">thermodynamics</div>
+                <div class="quarto-category">geometry</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p>Yves Barmaz </p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">June 21, 2026</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<p>Recently, I have been trying to cast some physical intuition on the zoology of reinforcement learning algorithms used in LLM post-training. Who has never been frustrated that while gradient descent sounds like powder skiing, TRPO, PPO, and GRPO sound more like the bush-whacking part where you have to somehow get back to the car after a ski tour? Well, it turns out the snow metaphor runs deeper than the type 1/type 2 fun duality: these algorithms are all trying to melt a fixed pretrained distribution toward higher reward, and “how hard you melt it” is a temperature — one whose equilibrium can exhibit a genuine phase transition in the large-task limit. This post is about taking that analogy literally and seeing how far it goes.</p>
+<section id="why-does-rl-post-training-look-like-statistical-physics" class="level2">
+<h2 class="anchored" data-anchor-id="why-does-rl-post-training-look-like-statistical-physics">Why does RL post-training look like statistical physics?</h2>
+<p>When we fine-tune a language model with reinforcement learning under a KL penalty to the pretrained reference, we can write down the closed-form optimum as</p>
+<p><span class="math display">\[\pi^*(y\mid x) \propto \pi_\text{ref}(y\mid x)\exp(r(x,y)/\tau).\]</span></p>
+<p>This is a Boltzmann distribution. The KL coefficient <span class="math inline">\(\tau\)</span> sits in the denominator of the exponent, exactly where temperature sits in <span class="math inline">\(p \propto e^{-E/kT}\)</span>.</p>
+<p>Where does the closed form come from? Hold the prompt <span class="math inline">\(x\)</span> fixed and maximize the objective <span class="math inline">\(\mathbb{E}_\pi[r] - \tau\,\mathrm{KL}(\pi\,\|\,\pi_\text{ref})\)</span> over the distribution <span class="math inline">\(\pi(\cdot\mid x)\)</span>, with a Lagrange multiplier <span class="math inline">\(\lambda\)</span> for the normalization <span class="math inline">\(\sum_y \pi(y\mid x) = 1\)</span>. Applying the calculus of variations, the optimal policy satisfies</p>
+<p><span class="math display">\[\frac{\delta}{\delta \pi(y|x)} \left[ \sum_y \pi(y|x) r(x,y) - \tau \sum_y \pi(y|x) \log \frac{\pi(y|x)}{\pi_\text{ref}(y|x)} - \lambda \left(\sum_y \pi(y|x) - 1\right) \right] = 0,\]</span></p>
+<p>yielding</p>
+<p><span class="math display">\[r(x,y) - \tau\log\frac{\pi(y\mid x)}{\pi_\text{ref}(y\mid x)} - \tau - \lambda = 0,\]</span></p>
+<p>and solving for <span class="math inline">\(\pi\)</span> gives the Gibbs optimum</p>
+<p><span class="math display">\[\pi^*(y\mid x) = \frac{1}{Z}\,\pi_\text{ref}(y\mid x)\exp\!\bigl(r(x,y)/\tau\bigr),\qquad Z = \sum_y \pi_\text{ref}(y\mid x)\exp\!\bigl(r(x,y)/\tau\bigr),\]</span></p>
+<p>where the multiplier <span class="math inline">\(\lambda\)</span> is fixed by normalization, leaving the partition function <span class="math inline">\(Z\)</span> as the proportionality constant.</p>
+<p>The analogy is not just decorative. Assume a binary reward (each trajectory earns <span class="math inline">\(r(x, y) = \Delta\)</span> or <span class="math inline">\(0\)</span>) and write <span class="math inline">\(p = \pi_\text{ref}(\text{correct})\)</span> for the reference’s base success rate. Under <span class="math inline">\(\pi^*_\tau\)</span> the probability of a correct trajectory is sigmoidal in <span class="math inline">\(1/\tau\)</span>, rising from <span class="math inline">\(\approx p\)</span> (regularization-dominated) to <span class="math inline">\(\approx 1\)</span> (reward-dominated) around a support-dependent critical temperature</p>
+<p><span class="math display">\[\tau_c(p) = \frac{\Delta}{\log\!\bigl((1-p)/p\bigr)} \qquad (p &lt; 1/2).\]</span></p>
+<p>For fixed <span class="math inline">\(p\)</span> this is a smooth crossover, not a true singularity; §10 derives it in full and shows how task-size scaling sharpens the crossover into a genuine phase boundary.</p>
+<p>The closed form is specific to the two-level structure of binary reward. With richer reward shapes, the same Gibbs reweighting still produces a τ-driven crossover, just smoother and without a clean midpoint. What remains in general is the phenomenology: temperature controls how sharply <span class="math inline">\(\pi^*_\tau\)</span> concentrates on high-reward trajectories, and in large structured problems this concentration can sharpen into a phase-transition-like crossover.</p>
+<p>That equilibrium picture — a Boltzmann distribution with <span class="math inline">\(\tau\)</span> as temperature — is the foundation the rest of the post builds on. The aim is to bring some mathematical clarity to the common RL post-training algorithms (TRPO, PPO, GRPO), using concepts borrowed from thermodynamics (free energy, Boltzmann distributions, phase transitions) and from optimization geometry (mirror descent, natural gradient, Bregman divergences), organized around a simple separation of roles:</p>
+<ol type="1">
+<li><strong>Equilibrium.</strong> The KL-regularized RL objective is a free-energy minimization on policy distributions; its minimizer is the Gibbs distribution <span class="math inline">\(\pi^*_\tau\)</span>, and the support-dependent phase transition above is a direct consequence.</li>
+<li><strong>Ideal dynamics.</strong> Exact entropy mirror descent on the free energy <span class="math inline">\(\mathcal{F}_\tau\)</span> gives the corresponding gradient flow in policy-distribution space — an exponentiated-advantage update at each step.</li>
+<li><strong>Practical algorithms.</strong> TRPO, PPO, and GRPO are best read as practical approximations to that ideal flow, trading off geometric fidelity, estimator design, and iteration cost — the trade-offs the post mostly tracks.</li>
+<li><strong>Diagnostics.</strong> In controlled settings where <span class="math inline">\(\pi_\text{ref}\)</span>, <span class="math inline">\(r\)</span>, and the action space are explicit, <span class="math inline">\(\pi^*_\tau\)</span> and the ideal mirror-descent flow are computable, so the gap between an optimizer’s iterates and the thermodynamic target is <em>measurable</em>, not just rhetorical. In full LLM training, the same picture becomes a guide to empirical signatures such as crossings in success rate, entropy, reference KL, or pass@k as the KL strength is swept.</li>
+</ol>
+<p>These four roles are conceptual threads, not section numbers: they are developed across §§3–11 (equilibrium in §5 and §10, ideal dynamics in §§3–4 and §9, practical algorithms in §§6–8, diagnostics in §11), after the geometry background of §§1–2. Along the way the post pulls apart two distinctions that the usual expositions tend to compress (§5 — two KLs; §6 — region vs penalty), and culminates in §11 with the takeaway that the equilibrium picture is directly testable in synthetic benchmarks, while in real LLM training it appears only through empirical crossing signatures.</p>
+<hr>
+</section>
+<section id="gradient-descent-viewed-sideways" class="level2">
+<h2 class="anchored" data-anchor-id="gradient-descent-viewed-sideways">1. Gradient descent, viewed sideways</h2>
+<p>Most readers know gradient descent as the explicit update</p>
+<p><span class="math display">\[x_{t+1} = x_t - \eta\,\nabla f(x_t).\]</span></p>
+<p>A more revealing form is implicit. The update is the minimizer of a <em>local</em> problem,</p>
+<p><span class="math display">\[x_{t+1} = \arg\min_x\left\{\eta\,\langle \nabla f(x_t), x\rangle + \tfrac{1}{2}\|x - x_t\|^2\right\}.\]</span></p>
+<p>The first term linearizes the loss, the second term keeps the candidate near the current iterate. Gradient descent is an instance of <em>proximal</em> optimization, and its proximal penalty happens to be the squared Euclidean distance.</p>
+<p>That choice is not innocent. Squared Euclidean distance is the right way to measure a “small movement” in flat space. It’s the wrong choice on non-flat geometries, like the simplex, the manifold of probability distributions, or positive-definite cones, where a more general algorithm like <a href="https://en.wikipedia.org/wiki/Mirror_descent">mirror descent</a> is needed.</p>
+</section>
+<section id="mirror-descent-change-the-geometry" class="level2">
+<h2 class="anchored" data-anchor-id="mirror-descent-change-the-geometry">2. Mirror descent: change the geometry</h2>
+<p>First we pick a strictly convex potential <span class="math inline">\(\psi\)</span>, called the <em>mirror map</em>. Its <a href="https://en.wikipedia.org/wiki/Bregman_divergence"><strong>Bregman divergence</strong></a></p>
+<p><span class="math display">\[D_\psi(x, y) = \psi(x) - \psi(y) - \langle \nabla \psi(y), x - y\rangle\]</span></p>
+<p>replaces the squared distance. It is nonnegative, vanishes when <span class="math inline">\(x=y\)</span>, and (importantly) is generally asymmetric, <span class="math inline">\(D_\psi(x,y) \ne D_\psi(y,x)\)</span>. This is a feature, not a bug, when the underlying space has direction-dependent geometry.</p>
+<p>The mirror descent update is</p>
+<p><span class="math display">\[x_{t+1} = \arg\min_x\left\{\langle \nabla f(x_t), x\rangle + \tfrac{1}{\eta}D_\psi(x, x_t)\right\}.\]</span></p>
+<p>With <span class="math inline">\(\psi(x) = \tfrac{1}{2}\|x\|^2\)</span>, we recover gradient descent. With <span class="math inline">\(\psi\)</span> chosen to match the geometry of the problem, we get something better.</p>
+</section>
+<section id="entropy-mirror-descent-multiplicative-updates-on-the-simplex" class="level2">
+<h2 class="anchored" data-anchor-id="entropy-mirror-descent-multiplicative-updates-on-the-simplex">3. Entropy mirror descent: multiplicative updates on the simplex</h2>
+<p>For probability vectors, the natural mirror map is the <em>negative entropy</em></p>
+<p><span class="math display">\[\psi(x) = \sum_i x_i \log x_i.\]</span></p>
+<p>Its Bregman divergence is the KL divergence</p>
+<p><span class="math display">\[D_\psi(x, y) = \sum_i x_i \log(x_i/y_i) = \mathrm{KL}(x\,\|\,y).\]</span></p>
+<p>The mirror descent update on the simplex with this <span class="math inline">\(\psi\)</span> has a closed form</p>
+<p><span class="math display">\[x_{t+1, i} \propto x_{t, i}\,\exp(-\eta\, g_{t,i}),\]</span></p>
+<p>where <span class="math inline">\(g_t = \nabla f(x_t)\)</span>. This is the <a href="https://en.wikipedia.org/wiki/Multiplicative_weight_update_method"><strong>multiplicative weights</strong></a> or <strong>exponentiated gradient</strong> update. The crucial difference from Euclidean gradient descent is that updates are <em>multiplicative</em>, not additive. Positivity and normalization are preserved automatically. Coordinates with negative gradient are upweighted exponentially; coordinates with positive gradient are suppressed exponentially.</p>
+<p>This is one of the cleanest examples of why “geometry-aware” optimization is more than a metaphor. The KL geometry of the simplex turns gradient descent into something that respects its constraints.</p>
+</section>
+<section id="policies-are-distributions" class="level2">
+<h2 class="anchored" data-anchor-id="policies-are-distributions">4. Policies are distributions</h2>
+<p>A policy <span class="math inline">\(\pi(a\mid s)\)</span> is a conditional distribution. As a result, the search space of a policy optimization algorithm is a family of distributions, and it can be framed as a mirror-descent problem with KL as the Bregman divergence.</p>
+<p>Concretely, we consider a per-state objective of maximizing the expected advantage of the new policy, but penalizing how far it moves from the old policy in KL.</p>
+<p><span class="math display">\[\pi_{t+1}(\cdot\mid s) = \arg\max_{\pi}\left\{\mathbb{E}_{a\sim \pi}[A_t(s,a)] - \tfrac{1}{\eta}\,\mathrm{KL}\bigl(\pi(\cdot\mid s)\,\|\,\pi_t(\cdot\mid s)\bigr)\right\}.\]</span></p>
+<p>The closed-form solution is the <strong>exponentiated-advantage update</strong>,</p>
+<p><span class="math display">\[\pi_{t+1}(a\mid s) \propto \pi_t(a\mid s)\,\exp\bigl(\eta\,A_t(s, a)\bigr).\]</span></p>
+<p>This is the policy-space analogue of multiplicative weights. The old policy is the reference measure, the advantage <span class="math inline">\(A_t\)</span> reshapes it, <span class="math inline">\(\eta\)</span> controls how aggressively. <em>Bad actions are exponentially suppressed and good actions are exponentially amplified.</em></p>
+<p>This looks superficially similar to the Gibbs formula <span class="math inline">\(\pi^* \propto \pi_\text{ref}\exp(r/\tau)\)</span>, but the roles are different: <span class="math inline">\(r\)</span> defines the final equilibrium, while <span class="math inline">\(A_t\)</span> is the local slope used for one update. §5 makes that distinction precise.</p>
+<p>So far this is standard textbook material. The next two sections pull apart distinctions that textbook presentations tend to compress.</p>
+<hr>
+</section>
+<section id="two-kls-landscape-versus-timestep" class="level2">
+<h2 class="anchored" data-anchor-id="two-kls-landscape-versus-timestep">5. Two KLs: landscape versus timestep</h2>
+<p>There is a subtle trap in the phrase “KL-regularized RL.” It sounds like there is one KL term doing one job. In practice there are two, and they live at different levels of the story.</p>
+<p>One KL is part of the <strong>objective</strong>. It says what policy we ultimately want.</p>
+<p>The other KL is part of the <strong>algorithm</strong>. It says how far we are willing to move in one update.</p>
+<p>Conflating them is the fastest way to turn the thermodynamic analogy into mush.</p>
+<section id="the-reference-kl-the-landscape" class="level3">
+<h3 class="anchored" data-anchor-id="the-reference-kl-the-landscape">The reference KL: the landscape</h3>
+<p>The first KL is the reference penalty,</p>
+<p><span class="math display">\[\mathrm{KL}(\pi\,\|\,\pi_\text{ref}).\]</span></p>
+<p>It compares the trained policy to a fixed pretrained reference. It enters the global objective</p>
+<p><span class="math display">\[\mathcal{F}_\tau(\pi) = -\mathbb{E}_\pi[r] + \tau\,\mathrm{KL}(\pi\,\|\,\pi_\text{ref}).\]</span></p>
+<p>This is the free energy. The reward term wants to concentrate probability on high-reward trajectories; the KL term resists moving too far from the pretrained model. The coefficient <span class="math inline">\(\tau\)</span> is the thermodynamic temperature. It is not a step size — it determines the equilibrium.</p>
+<p>Minimizing this free energy gives</p>
+<p><span class="math display">\[\pi^*_\tau(y\mid x) \propto \pi_\text{ref}(y\mid x)\exp(r(x,y)/\tau).\]</span></p>
+<p>So changing <span class="math inline">\(\tau\)</span> changes the policy you are trying to reach. Large <span class="math inline">\(\tau\)</span> keeps the optimum close to the reference; small <span class="math inline">\(\tau\)</span> lets reward dominate and concentrates mass on high-reward trajectories. This is the object behind the phase-transition picture.</p>
+</section>
+<section id="the-proximal-kl-the-integrator" class="level3">
+<h3 class="anchored" data-anchor-id="the-proximal-kl-the-integrator">The proximal KL: the integrator</h3>
+<p>The second KL is the proximal penalty,</p>
+<p><span class="math display">\[\mathrm{KL}(\pi\,\|\,\pi_k).\]</span></p>
+<p>It compares the candidate next policy to the current policy. It is not part of the final objective; it is part of the numerical method used to move through policy space.</p>
+<p>A mirror-descent step takes a local linear approximation to the objective and regularizes the step by KL distance to the current iterate,</p>
+<p><span class="math display">\[\mathcal{G}_\eta(\pi;\pi_k) = -\mathbb{E}_\pi[\hat A_k] + \frac{1}{\eta}\,\mathrm{KL}(\pi\,\|\,\pi_k).\]</span></p>
+<p>Here <span class="math inline">\(\eta\)</span> is a step size. The coefficient <span class="math inline">\(1/\eta\)</span> looks temperature-like, but it is only a <em>per-step</em> temperature: it controls how much policy mass is allowed to move in one update, not where the trajectory ends up.</p>
+<p>That gives the clean separation:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th><strong>Reference KL</strong></th>
+<th><strong>Proximal KL</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Form</td>
+<td><span class="math inline">\(\mathrm{KL}(\pi\,\|\,\pi_\text{ref})\)</span></td>
+<td><span class="math inline">\(\mathrm{KL}(\pi\,\|\,\pi_k)\)</span></td>
+</tr>
+<tr class="even">
+<td>Reference policy</td>
+<td>Fixed pretrained model</td>
+<td>Previous iterate</td>
+</tr>
+<tr class="odd">
+<td>Lives in</td>
+<td>Global objective</td>
+<td>Local update rule</td>
+</tr>
+<tr class="even">
+<td>Coefficient</td>
+<td><span class="math inline">\(\tau\)</span></td>
+<td><span class="math inline">\(1/\eta\)</span></td>
+</tr>
+<tr class="odd">
+<td>Meaning</td>
+<td>Thermodynamic temperature</td>
+<td>Algorithmic step scale</td>
+</tr>
+<tr class="even">
+<td>Controls</td>
+<td>Where the flow should end</td>
+<td>How the flow is discretized</td>
+</tr>
+</tbody>
+</table>
+<p>In short, <span class="math inline">\(\tau\)</span> chooses the landscape, and <span class="math inline">\(\eta\)</span> chooses the timestep.</p>
+</section>
+<section id="the-missing-link-what-is-the-advantage" class="level3">
+<h3 class="anchored" data-anchor-id="the-missing-link-what-is-the-advantage">The missing link: what is the advantage?</h3>
+<p>The two KLs are connected only if the local slope <span class="math inline">\(\hat A_k\)</span> is the slope of the reference-KL free energy, obtained by differentiating</p>
+<p><span class="math display">\[\mathcal{F}_\tau(\pi) = -\sum_a \pi(a)\,r(a) + \tau\sum_a \pi(a)\log\frac{\pi(a)}{\pi_\text{ref}(a)}\]</span></p>
+<p>with respect to <span class="math inline">\(\pi(a)\)</span>. Up to constants that vanish after normalization, we obtain</p>
+<p><span class="math display">\[-\nabla_\pi \mathcal{F}_\tau\big|_a = r(a) - \tau\log\frac{\pi(a)}{\pi_\text{ref}(a)} - \tau.\]</span></p>
+<p>So the free-energy gradient is not the bare reward. It is the reward corrected by the current KL pressure away from the reference,</p>
+<p><span class="math display">\[r(a) - \tau\log\frac{\pi_k(a)}{\pi_\text{ref}(a)}.\]</span></p>
+<p>This is the advantage the proximal step must see if it is to integrate the gradient flow of <span class="math inline">\(\mathcal{F}_\tau\)</span>.</p>
+<p>With the right slope, the mirror-descent step is</p>
+<p><span class="math display">\[\pi_{k+1} = \arg\max_\pi \left\{ \mathbb{E}_\pi[\hat A^\tau_k] - \frac{1}{\eta}\,\mathrm{KL}(\pi\,\|\,\pi_k) \right\},\]</span></p>
+<p>where</p>
+<p><span class="math display">\[\hat A^\tau_k \;\sim\; r - \tau\log\frac{\pi_k}{\pi_\text{ref}} - \text{baseline}.\]</span></p>
+<p>This yields the exponentiated update</p>
+<p><span class="math display">\[\pi_{k+1}(a) \propto \pi_k(a)\exp\!\bigl(\eta\,\hat A^\tau_k(a)\bigr).\]</span></p>
+<p>In the per-state bandit picture, this is why subtracting a baseline is harmless. Adding or subtracting a constant from every action advantage multiplies all exponentiated weights by the same factor, and that factor disappears when the policy is normalized. What matters is not the absolute level of the free-energy slope, but which actions are above or below the current average.</p>
+<p>In sequential RL, the familiar value baseline plays the analogous role for the policy-gradient estimator: it removes an action-independent component of the return, reducing variance without changing the expected policy-gradient direction.</p>
+<p>Now the roles are clean:</p>
+<ul>
+<li><span class="math inline">\(\tau\)</span> appears <em>inside</em> the advantage, because it defines the free-energy landscape.</li>
+<li><span class="math inline">\(\eta\)</span> appears <em>outside</em> the advantage, because it defines the step size through that landscape.</li>
+</ul>
+<p>Drop the reference-KL correction from <span class="math inline">\(\hat A_k\)</span>, and the same mirror-descent machinery no longer flows toward the Gibbs policy <span class="math inline">\(\pi^*_\tau\)</span>, but toward high bare reward, eventually concentrating on <span class="math inline">\(\arg\max r\)</span> as aggressively as the proximal KL allows.</p>
+<p>So the two KLs do different jobs:</p>
+<ul>
+<li><strong>Reference KL shapes the equilibrium.</strong></li>
+<li><strong>Proximal KL shapes the trajectory.</strong></li>
+</ul>
+<p>We need the first to define the thermodynamic target, and the second to define a stable numerical path toward it. Mixing them up makes it look as if the trust-region step size <span class="math inline">\(\eta\)</span> and the thermodynamic temperature <span class="math inline">\(\tau\)</span> are the same parameter, which they are not.</p>
+</section>
+</section>
+<section id="trpo-from-a-region-to-a-multiplier" class="level2">
+<h2 class="anchored" data-anchor-id="trpo-from-a-region-to-a-multiplier">6. TRPO: from a region to a multiplier</h2>
+<p>Sections §6–§8 now move from the ideal flow to the algorithms people actually run, from TRPO, which keeps the KL geometry but only locally, to PPO, which keeps the trust-region intuition but drops the constrained solve, and finally GRPO, which keeps PPO’s surrogate but changes the advantage estimator. This section starts with <a href="https://arxiv.org/abs/1502.05477">TRPO</a>, because it is the closest practical descendant of entropy mirror descent.</p>
+<p>The instructions behind TRPO are “improve the policy, but do not move too far.”</p>
+<p>In distribution space, the cleanest version of that idea is the trust-region problem</p>
+<p><span class="math display">\[
+\max_{\pi}\,\mathbb{E}_{a\sim\pi}[\hat A(a)]
+\quad\text{s.t.}\quad
+\mathrm{KL}(\pi\,\|\,\pi_\text{old}) \le \delta.
+\]</span></p>
+<p>The KL is in the forward direction, <span class="math inline">\(\mathrm{KL}(\pi\,\|\,\pi_\text{old})\)</span>, because this is the direction that matches the entropy mirror-descent update of §4. The new policy is allowed to improve the local surrogate, but only within a KL ball around the old one.</p>
+<p>At first glance this is a constrained optimization problem, not a mirror-descent step. The bridge is the Lagrange multiplier. For a nontrivial advantage direction, the unconstrained linearized objective would put all mass on the best action, typically far outside the KL ball. The constraint therefore binds. By the <a href="https://en.wikipedia.org/wiki/Karush%E2%80%93Kuhn%E2%80%93Tucker_conditions">KKT conditions</a>, the constrained optimum can be written equivalently as the solution of a penalized problem</p>
+<p><span class="math display">\[
+\max_\pi \left\{ \mathbb{E}_{a\sim\pi}[\hat A(a)] - \lambda^*\,\mathrm{KL}(\pi\,\|\,\pi_\text{old}) \right\},
+\]</span></p>
+<p>where <span class="math inline">\(\lambda^*&gt;0\)</span> is chosen so that the KL constraint is active. This equivalence is not for an arbitrary penalty coefficient; <span class="math inline">\(\lambda^*\)</span> is the particular multiplier selected by the active constraint.</p>
+<p>Setting</p>
+<p><span class="math display">\[
+\eta = \frac{1}{\lambda^*},
+\]</span></p>
+<p>we recover exactly the proximal objective from §5,</p>
+<p><span class="math display">\[
+\max_\pi \left\{ \mathbb{E}_{a\sim\pi}[\hat A(a)] - \frac{1}{\eta}\,\mathrm{KL}(\pi\,\|\,\pi_\text{old}) \right\}.
+\]</span></p>
+<p>The solution is the exponentiated-advantage update</p>
+<p><span class="math display">\[
+\pi_\text{new}(a)
+\propto
+\pi_\text{old}(a)\exp(\eta\,\hat A(a)).
+\]</span></p>
+<p>So, in the clean distribution-space derivation, TRPO is mirror descent. It first linearizes the objective, then takes the largest safe step in KL geometry.</p>
+<p>Practical TRPO implements a local version of this idea in neural-network parameter space. Instead of solving the exact distribution-space problem, it linearizes the surrogate in parameters and approximates the KL constraint to second order,</p>
+<p><span class="math display">\[
+L(\theta)
+\approx
+L(\theta_k) + g^\top(\theta-\theta_k),
+\]</span></p>
+<p><span class="math display">\[
+\mathrm{KL}(\pi_{\theta_k}\,\|\,\pi_\theta)
+\approx
+\frac{1}{2}(\theta-\theta_k)^\top F_k(\theta-\theta_k),
+\]</span></p>
+<p>where <span class="math inline">\(F_k\)</span> is the Fisher information matrix. The resulting step is the natural-gradient direction</p>
+<p><span class="math display">\[
+\Delta\theta \propto F_k^{-1}g,
+\qquad
+\|\Delta\theta\|_{F_k}^2 = 2\delta.
+\]</span></p>
+<p>In this sense, TRPO is the practical algorithm closest to the mirror-descent story. It replaces the exact KL geometry of policy space by its local Fisher approximation in parameter space.</p>
+<p>There is one technical subtlety, though. Practical TRPO is often implemented with the reverse KL,</p>
+<p><span class="math display">\[
+\mathrm{KL}(\pi_\text{old}\,\|\,\pi),
+\]</span></p>
+<p>because expectations under the old policy are directly estimable from old-policy rollouts. Forward and reverse KL give different finite-step optima, the reverse-KL solution is not the exponentiated tilt above. But infinitesimally they agree, both KL directions have the same second-order expansion, namely the Fisher metric. Therefore the clean mirror-descent derivation should be read as the small-step, distribution-space idealization of TRPO, not as the exact finite-step implementation.</p>
+<p>This also connects back to the two-KL distinction from §5. The multiplier <span class="math inline">\(\lambda^*\)</span>, or equivalently <span class="math inline">\(\eta = 1/\lambda^*\)</span>, is an algorithmic step scale: it is chosen by the trust-region constraint and can change from update to update. It is not the thermodynamic temperature <span class="math inline">\(\tau\)</span>, which belongs to the fixed reference-KL objective and determines the Gibbs target.</p>
+<p>Likewise, TRPO follows the Gibbs/free-energy flow only when the surrogate advantage is the free-energy advantage from §5,</p>
+<p><span class="math display">\[r(a) - \tau\log\frac{\pi_k(a)}{\pi_\text{ref}(a)} - \text{baseline}.\]</span></p>
+<p>With a bare-reward advantage, TRPO remains a trust-region policy optimizer, but it is not integrating the KL-regularized free-energy flow whose minimizer is <span class="math inline">\(\pi^*_\tau\)</span>.</p>
+<p>There is one more practical point to note, because it recurs below. The advantage <span class="math inline">\(\hat A\)</span> is not handed to us, it is <em>estimated</em>. TRPO, like the policy-gradient methods it descends from, is <strong>actor-critic</strong>. In other words, a learned value function (the critic) supplies <span class="math inline">\(\hat A\)</span>, usually through generalized advantage estimation (GAE). This is a second approximation stacked on the small-step/Fisher one. Even when the advantage is the right (KL-regularized) one in expectation, the critic is biased and noisy, so TRPO tracks the ideal free-energy gradient only as well as the critic estimates it. PPO inherits this same critic, and GRPO’s defining move (§8) is to throw it away.</p>
+</section>
+<section id="ppo-a-clipped-actor-critic-surrogate" class="level2">
+<h2 class="anchored" data-anchor-id="ppo-a-clipped-actor-critic-surrogate">7. PPO: a clipped actor-critic surrogate</h2>
+<p>TRPO’s per-update step has two geometric ingredients, namely a constraint (maximize the surrogate subject to a KL trust region) and a natural-gradient solve (use the Fisher geometry to turn that constrained policy-space problem into a parameter-space update).</p>
+<p><a href="https://arxiv.org/abs/1707.06347">PPO</a> keeps the goal but changes the machinery. It replaces the hard KL constraint with a clipped likelihood-ratio objective, and it replaces the natural-gradient solve with ordinary first-order optimization, usually Adam over several epochs on the same rollout batch.</p>
+<p>Concretely, given rollout samples from the old policy, the importance ratio is defined as</p>
+<p><span class="math display">\[\rho_t(\theta) = \frac{\pi_\theta(a_t\mid s_t)}{\pi_{\theta_\text{old}}(a_t\mid s_t)}.\]</span></p>
+<p>PPO’s clipped actor objective is</p>
+<p><span class="math display">\[L^\text{CLIP}(\theta) = \mathbb{E}_t\left[ \min\left( \rho_t(\theta)\hat A_t,\; \operatorname{clip}\bigl(\rho_t(\theta),\,1-\epsilon,\,1+\epsilon\bigr)\,\hat A_t \right) \right].\]</span></p>
+<p>The advantage <span class="math inline">\(\hat A_t\)</span> is the same critic estimate as in TRPO (§6). PPO inherits that estimation unchanged and changes only the geometry.</p>
+<p>PPO then has two distinct approximation gaps: - The first is geometric. The clip is not a true KL constraint. Once <span class="math inline">\(\rho_t\)</span> leaves <span class="math inline">\([1-\epsilon, 1+\epsilon]\)</span> in the direction that would improve the objective, the clipped term stops rewarding further movement. This discourages large likelihood-ratio changes, but it does not enforce a global trust region, and it does not produce a natural-gradient step. The underlying parameter-space direction is whatever Adam produces on the clipped surrogate. - The second is statistical. The critic-estimation gap is inherited from §6 rather than introduced. In ordinary RL, it is mostly harmless, but for the Gibbs-flow reading it matters. PPO follows the flow of <span class="math inline">\(\mathcal{F}_\tau\)</span> only as well as <span class="math inline">\(\hat A_t\)</span> estimates the KL-regularized advantage, and only if the reference-KL correction is actually present in the reward or loss.</p>
+<p>So PPO shares TRPO’s intent — improve the policy without moving too far — but drops both of TRPO’s geometric ingredients, i.e.&nbsp;the formal KL constraint and the Fisher/natural-gradient solve, while keeping TRPO’s actor-critic estimation: a learned critic whose job is not to define the geometry, but to estimate the actor’s local direction. This makes PPO cheap, stable, and effective in many settings, but it is not mirror descent in any clean mathematical sense. The mirror-descent picture tells us what PPO is <em>aiming at</em>; whether its clipped actor update, critic-based advantage estimate, and Adam step actually track the policy-space mirror-descent direction is an empirical question, addressed in §11.</p>
+</section>
+<section id="grpo-critic-free-policy-gradient-for-llm-rl" class="level2">
+<h2 class="anchored" data-anchor-id="grpo-critic-free-policy-gradient-for-llm-rl">8. GRPO: critic-free policy gradient for LLM RL</h2>
+<p>LLM RL has a structural simplification that PPO doesn’t exploit: it’s a <strong>contextual bandit</strong>. Each prompt typically produces one response and a terminal reward, with no within-trajectory bootstrapping needed. PPO carries over the full apparatus of sequential RL (a learned value head <span class="math inline">\(V_\phi\)</span>, GAE for advantage estimation) that’s overkill for this structure. <a href="https://arxiv.org/abs/2402.03300"><strong>Group Relative Policy Optimization</strong></a> (GRPO), introduced by DeepSeek and used to train DeepSeek-R1, drops the critic and replaces it with a per-prompt Monte Carlo baseline.</p>
+<p>For each prompt <span class="math inline">\(x\)</span>, it samples a <em>group</em> of <span class="math inline">\(G\)</span> completions <span class="math inline">\(\{y_i\}_{i=1}^G\)</span> from the current policy and defines the <strong>group-relative advantage</strong></p>
+<p><span class="math display">\[\hat A_i = \frac{r(x, y_i) - \bar r_G}{\sigma_G + \varepsilon},\qquad \bar r_G = \tfrac{1}{G}\sum_j r(x, y_j),\quad \sigma_G^2 = \tfrac{1}{G}\sum_j (r(x, y_j) - \bar r_G)^2.\]</span></p>
+<p>The mean-centering <span class="math inline">\(\bar r_G\)</span> is a Monte Carlo estimate of the prompt-conditional value</p>
+<p><span class="math display">\[V^\pi(x) = \mathbb{E}_{y\sim\pi(\cdot\mid x)}[r(x, y)].\]</span></p>
+<p>This is a Monte Carlo prompt-level baseline. Two finite-sample subtleties are worth flagging. First, because the same sample <span class="math inline">\(r_i\)</span> contributes to the group mean <span class="math inline">\(\bar r_G\)</span>, the resulting estimator is shrunk by a factor <span class="math inline">\((1 - 1/G)\)</span> relative to the ideal <span class="math inline">\((r_i - V^\pi(x))\)</span> baseline; a leave-one-out baseline removes the factor exactly, but in practice the rescaling is absorbed into the learning rate. Second, the group-mean variance scales as <span class="math inline">\(1/G\)</span>, so groups of size <span class="math inline">\(G \in [4, 16]\)</span> are typical.</p>
+<p>The full GRPO loss reuses PPO’s clipped likelihood-ratio surrogate, with the group-relative <span class="math inline">\(\hat A\)</span> in place of GAE-from-critic, plus an explicit reference-KL penalty,</p>
+<p><span class="math display">\[L_\text{GRPO}(\theta) = \mathbb{E}\!\left[\min\bigl(\rho_i(\theta)\hat A_i,\,\mathrm{clip}(\rho_i(\theta), 1-\epsilon, 1+\epsilon)\hat A_i\bigr)\right] - \beta\,\mathrm{KL}(\pi_\theta\,\|\,\pi_\text{ref}).\]</span></p>
+<p>At the level of the actor objective, GRPO is PPO with a different advantage estimate: the same clipped likelihood-ratio surrogate and the same reference-KL penalty (GRPO’s <span class="math inline">\(\beta\)</span> plays the role of the reference-KL temperature/penalty coefficient <span class="math inline">\(\tau\)</span>), but with group-relative advantages instead of critic/GAE advantages. What that shared structure implies thermodynamically (same equilibrium, same phase boundary) will be discussed in §§10–11, once the equilibrium and its dynamics are made explicit.</p>
+<p><strong>The standard normalization</strong> brings an added benefit of scale robustness. Dividing the centered reward by the within-group standard deviation <span class="math inline">\(\sigma_G\)</span> makes <span class="math inline">\(\hat A_i\)</span> invariant to reward scale: multiplying all rewards by a constant leaves the gradient unchanged. It also makes the per-prompt advantage scale comparable across prompts with different intrinsic reward variances — a noisy-reward prompt doesn’t get systematically larger updates than a sharp-reward one. Edge cases warrant care: an all-tie group (e.g.&nbsp;binary reward with all completions correct or all wrong) has <span class="math inline">\(\sigma_G = 0\)</span> and centered differences also zero, so it produces no learning signal (the <span class="math inline">\(\varepsilon\)</span> in <span class="math inline">\(\sigma_G + \varepsilon\)</span> keeps the division finite, but the numerator already vanishes). This standardization is loosely in the spirit of an adaptive trust region — the local reward landscape sets the per-prompt advantage scale rather than a global hyperparameter — but it isn’t a strict equivalent of TRPO’s <span class="math inline">\(\lambda^*\)</span>. It changes the <em>trajectory</em> (dynamics of approach), not the <em>equilibrium</em>; the Gibbs distribution <span class="math inline">\(\pi^*_\tau\)</span> is unaffected.</p>
+<p>So GRPO is not just an aside. It is arguably a <em>cleaner</em> fit to the mirror-descent picture for LLM RL than PPO. The bandit structure makes the Monte Carlo baseline natural, and within-group normalization standardizes the advantage scale across prompts.</p>
+<section id="the-approximation-ladder" class="level3">
+<h3 class="anchored" data-anchor-id="the-approximation-ladder">The approximation ladder</h3>
+<p>Summarizing §§3–8 in one table:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th>preserves</th>
+<th>drops</th>
+<th>price</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Entropy mirror descent</strong> (§§3–4)</td>
+<td>exact gradient flow of <span class="math inline">\(\mathcal{F}_\tau\)</span> on the simplex</td>
+<td>nothing — it’s the ideal</td>
+<td>tabular only; not implementable on neural policies</td>
+</tr>
+<tr class="even">
+<td><strong>TRPO</strong> (§6)</td>
+<td>trust-region budget + KL geometry to second order via Fisher</td>
+<td>exact policy-space KL (kept only to quadratic order)</td>
+<td>per-step CG solve + Fisher–vector products + line search</td>
+</tr>
+<tr class="odd">
+<td><strong>PPO</strong> (§7)</td>
+<td>trust-region <em>intent</em> — “don’t move too far per update”</td>
+<td>the Fisher solve; the formal constraint</td>
+<td>realized parameter-space direction can misalign with mirror descent (§11)</td>
+</tr>
+<tr class="even">
+<td><strong>GRPO</strong> (§8)</td>
+<td>same equilibrium and surrogate as PPO</td>
+<td>the learned value critic</td>
+<td>higher-variance advantage; <span class="math inline">\(\sim(1-1/G)\)</span> shrinkage in the baseline</td>
+</tr>
+</tbody>
+</table>
+<p>Each row trades a different part of the ideal picture for a runnable training loop. The §11 diagnostic pairs naturally with this ladder: it asks how much fidelity is actually retained at each step, in practice.</p>
+</section>
+</section>
+<section id="from-mirror-descent-steps-to-probability-flows" class="level2">
+<h2 class="anchored" data-anchor-id="from-mirror-descent-steps-to-probability-flows">9. From mirror-descent steps to probability flows</h2>
+<p>So far we have treated mirror descent as a discrete update: linearize the objective, penalize movement in KL, and take an exponentiated-advantage step. But if the step size becomes infinitesimal, the same object becomes a flow of probability mass.</p>
+<p>Starting from the exponentiated update</p>
+<p><span class="math display">\[\pi_{k+1}(a) \propto \pi_k(a)\exp(\eta A(a)),\]</span></p>
+<p>expanding <span class="math inline">\(\exp(\eta A)\approx 1+\eta A\)</span> for small <span class="math inline">\(\eta\)</span> and renormalizing yields</p>
+<p><span class="math display">\[\pi_{k+1}(a)-\pi_k(a) \approx \eta\,\pi_k(a)\bigl(A(a)-\mathbb{E}_{\pi_k}[A]\bigr),\]</span></p>
+<p>or in continuous time,</p>
+<p><span class="math display">\[\partial_t\pi_t(a) = \pi_t(a)\bigl(A(a)-\mathbb{E}_{\pi_t}[A]\bigr).\]</span></p>
+<p>This is the <a href="https://en.wikipedia.org/wiki/Replicator_equation"><strong>replicator equation</strong></a>. Actions whose advantage is above average gain mass; actions whose advantage is below average lose mass. In this setting it is the natural-gradient flow of the free energy <span class="math inline">\(\mathcal{F}_\tau\)</span> under information geometry, provided <span class="math inline">\(A\)</span> is the KL-regularized advantage. With a bare reward, the same dynamics concentrate on <span class="math inline">\(\arg\max r\)</span>; with the KL-shaped advantage, the fixed point is the Gibbs policy <span class="math inline">\(\pi^*_\tau\)</span>.</p>
+<p>PPO complicates this ideal picture. In a small-step caricature, clipping replaces the exponential response to advantage by a saturating response, a kind of flux-limited distortion of the clean flow. But this is only an analogy. In a neural policy, the realized PPO step is produced by Adam on a clipped surrogate in parameter space, and it need not align with the exact distribution-space flow. That gap is what §11 discusses: in synthetic benchmarks it can be measured directly, while in full LLM training it appears only through indirect signatures.</p>
+<p>A different geometry on the policy space, Wasserstein rather than Fisher, would lead to a Fokker–Planck drift–diffusion equation with the same Gibbs stationary law. That picture is natural for continuous action spaces with a meaningful ground metric, but not for language-model completions, and it is not the geometry implemented by TRPO, PPO, or GRPO. This emphasizes that the Gibbs equilibrium belongs to the free energy, while the transient flow depends on the chosen geometry.</p>
+</section>
+<section id="the-attractor-gibbs-equilibrium-and-support-thresholds" class="level2">
+<h2 class="anchored" data-anchor-id="the-attractor-gibbs-equilibrium-and-support-thresholds">10. The attractor: Gibbs equilibrium and support thresholds</h2>
+<p>The previous section was about dynamics. This one is about the attractor.</p>
+<p>For the KL-regularized free energy</p>
+<p><span class="math display">\[\mathcal{F}_\tau(\pi) = -\mathbb{E}_\pi[r] + \tau\,\mathrm{KL}(\pi\,\|\,\pi_\text{ref}),\]</span></p>
+<p>the equilibrium policy is</p>
+<p><span class="math display">\[\pi^*_\tau(a) \propto \pi_\text{ref}(a)\exp(r(a)/\tau).\]</span></p>
+<p>This is the thermodynamic core of the post. The pretrained policy is the reference measure, reward is negative energy, and <span class="math inline">\(\tau\)</span> is temperature. Large <span class="math inline">\(\tau\)</span> keeps the equilibrium close to the reference; small <span class="math inline">\(\tau\)</span> lets reward dominate.</p>
+<p>The simplest support-threshold calculation is the binary-reward case. Suppose a trajectory is either correct, with reward <span class="math inline">\(\Delta\)</span>, or incorrect, with reward <span class="math inline">\(0\)</span>. Let</p>
+<p><span class="math display">\[p = \pi_\text{ref}(\text{correct})\]</span></p>
+<p>be the reference probability of a correct trajectory. Under the Gibbs policy,</p>
+<p><span class="math display">\[P^*(\text{correct}) = \frac{p\,e^{\Delta/\tau}}{p\,e^{\Delta/\tau} + 1 - p}.\]</span></p>
+<p>This is a logistic function of <span class="math inline">\(1/\tau\)</span>. Its midpoint occurs when the tilted correct mass equals the incorrect mass,</p>
+<p><span class="math display">\[p\,e^{\Delta/\tau} = 1 - p,\]</span></p>
+<p>so</p>
+<p><span class="math display">\[\tau_c(p) = \frac{\Delta}{\log((1-p)/p)}, \qquad p &lt; 1/2.\]</span></p>
+<p>For fixed finite <span class="math inline">\(p\)</span>, this is a smooth crossover, not a singularity. The phase-transition language enters through task-size scaling. If correct behavior requires <span class="math inline">\(K\)</span> independent steps, and the reference gets each one right with probability <span class="math inline">\(q\)</span>, then</p>
+<p><span class="math display">\[p_K = q^K.\]</span></p>
+<p>If the reward gap also scales extensively, <span class="math inline">\(\Delta_K = K\delta\)</span>, then</p>
+<p><span class="math display">\[\tau_c \approx \frac{K\delta}{K|\log q|} = \frac{\delta}{|\log q|}.\]</span></p>
+<p>The critical scale remains finite as <span class="math inline">\(K\to\infty\)</span>, and the crossover sharpens. If <span class="math inline">\(\Delta\)</span> is held fixed instead, <span class="math inline">\(\tau_c\to 0\)</span>, so the boundary collapses onto zero temperature.</p>
+<p>This gives the support-limited reading of RL post-training. Here “support” should be read not merely as nonzero probability, but as usable reference probability mass on the relevant trajectories. In the finite binary problem, larger reference support <span class="math inline">\(p\)</span> increases the critical temperature: the correct trajectory already has more mass, so a weaker reward tilt is enough to make it dominate.</p>
+<p>In the large-task scaling the more meaningful parameter is the per-step support <span class="math inline">\(q\)</span>, since the total support is <span class="math inline">\(p_K = q^K\)</span> and the extensive-reward limit above gives <span class="math inline">\(\tau_c \to \delta/|\log q|\)</span>. A model with larger per-step competence <span class="math inline">\(q\)</span> has smaller <span class="math inline">\(|\log q|\)</span>, hence larger <span class="math inline">\(\tau_c\)</span>: it can enter the reward-dominated regime even under a stronger KL penalty. A model with poor per-step support has small <span class="math inline">\(q\)</span>, large <span class="math inline">\(|\log q|\)</span>, and therefore a much smaller <span class="math inline">\(\tau_c\)</span>. If the relevant trajectory is effectively outside the reference support, Gibbs reweighting cannot manufacture it: RL can amplify probability mass, but it cannot amplify mass that is not there.</p>
+<p>This is only the equilibrium story. It tells us what exact KL-regularized optimization would target. It does not tell us whether PPO, GRPO, or any finite neural optimizer actually reaches that target. That distinction is the point of the diagnostic section that follows.</p>
+</section>
+<section id="from-equilibrium-to-empirical-crossings" class="level2">
+<h2 class="anchored" data-anchor-id="from-equilibrium-to-empirical-crossings">11. From equilibrium to empirical crossings</h2>
+<p>The thermodynamic picture gives a clean equilibrium and an ideal flow, but it does not guarantee that a practical optimizer actually follows them. The Gibbs policy,</p>
+<p><span class="math display">\[\pi^*_\tau \propto \pi_\text{ref}\exp(r/\tau),\]</span></p>
+<p>is the target of the KL-regularized objective; entropy mirror descent is the ideal policy-space flow toward it. TRPO, PPO, and GRPO are practical approximations to that picture, each preserving different pieces of the geometry.</p>
+<p>In a synthetic benchmark, this distinction can be tested directly. If the reward, reference policy, and action space are simple enough, <span class="math inline">\(\pi^*_\tau\)</span> is computable. One can then compare exact mirror descent, TRPO-like natural-gradient updates, PPO, and GRPO-style estimators against the known Gibbs target. The relevant questions are no longer rhetorical: does the optimizer reach <span class="math inline">\(\pi^*_\tau\)</span>? How much proximal KL does it spend? Is the realized update direction aligned with the exact mirror-descent direction? Does the observed transition occur at the predicted <span class="math inline">\(\tau_c(p)\)</span>?</p>
+<p>In full LLM post-training, those diagnostics are not directly available. The action space is the space of completions, the reward may be learned or noisy, and the exact Gibbs distribution over all outputs is inaccessible. There, the thermodynamic picture is better read as a guide to what signatures to look for rather than as a directly computable target.</p>
+<p>The main empirical signature is a crossing. As the effective temperature is lowered — equivalently, as the reference-KL penalty is weakened relative to reward — the theory predicts a transition from a reference-dominated regime to a reward-dominated regime. One should therefore look for sharp changes in success rate, entropy, reference KL, pass@k, or related order parameters as the KL strength is swept. If the support-threshold picture is right, the crossing should depend strongly on base-model support: models with better pretrained support should cross at a less extreme KL penalty, while weaker models should require a colder objective or fail to cross at all.</p>
+<p>This is also where optimizer effects enter. The phase boundary belongs to the free-energy landscape, but the trajectory belongs to the optimizer. TRPO, PPO, and GRPO may share the same equilibrium target when they use the same reference-KL objective, but they need not approach it in the same way. PPO may improve reward while drifting away from the ideal KL/Fisher flow; GRPO may change the finite-time trajectory through group-baseline variance and normalization; TRPO should be closest to the local natural-gradient picture, modulo critic error, finite steps, and parameterization.</p>
+<p>So the honest status is:</p>
+<ul>
+<li>in synthetic environments, the thermodynamic picture gives a target that can be tested directly;</li>
+<li>in real LLM RL, it gives a phase-transition hypothesis and a set of observable signatures;</li>
+<li>the boundary is an equilibrium claim, while the observed crossing is filtered through optimizer dynamics, sampling, reward noise, and finite compute.</li>
+</ul>
+<p>That does not weaken the analogy. It clarifies what kind of claim it is. The Boltzmann formula defines the equilibrium; the phase-transition picture predicts how that equilibrium should change with temperature and support; practical training runs then tell us whether a given optimizer and model actually exhibit the predicted crossing.</p>
+</section>
+<section id="what-the-analogy-does-not-claim" class="level2">
+<h2 class="anchored" data-anchor-id="what-the-analogy-does-not-claim">12. What the analogy does not claim</h2>
+<p>The thermodynamic language is useful because the KL-regularized optimum is literally a Gibbs reweighting. But the analogy should not be read as a proof that practical RL algorithms implement equilibrium statistical mechanics.</p>
+<p>First, the clean derivations live in distribution space. Entropy mirror descent acts directly on policies, and the Fisher metric is the local geometry induced by KL. TRPO approximates this geometry in neural-network parameter space; PPO drops the Fisher solve altogether and optimizes a clipped surrogate with Adam. Far from the current iterate, parameter geometry and distribution geometry can decouple.</p>
+<p>Second, the KL direction matters at finite step size. The mirror-descent derivation uses <span class="math inline">\(\mathrm{KL}(\pi\,\|\,\pi_\text{old})\)</span>, while practical trust-region methods often estimate <span class="math inline">\(\mathrm{KL}(\pi_\text{old}\,\|\,\pi)\)</span> because old-policy samples are available. Infinitesimally the two agree through the Fisher metric, but their finite-step optima are different.</p>
+<p>Third, the equilibrium picture is not the same as the training trajectory. State-distribution shift, finite batches, critic error, clipping, Adam dynamics, reward noise, and limited sampling all affect what happens in practice. PPO’s clipping, in particular, discourages large likelihood-ratio changes but does not impose a true global KL constraint.</p>
+<p>So the claim is not that TRPO, PPO, or GRPO exactly implement the Gibbs flow. The claim is narrower: KL-regularized RL defines a Gibbs equilibrium and an ideal KL/Fisher flow, and this gives a useful reference geometry for understanding where practical algorithms agree with the theory and where they depart from it.</p>
+</section>
+<section id="target-flow-trajectory" class="level2">
+<h2 class="anchored" data-anchor-id="target-flow-trajectory">13. Target, flow, trajectory</h2>
+<p>KL-regularized RL has a clean thermodynamic core. Once a reference policy, reward, and temperature are fixed, the equilibrium is a Gibbs reweighting,</p>
+<p><span class="math display">\[\pi^*_\tau \propto \pi_\text{ref}\exp(r/\tau).\]</span></p>
+<p>That equilibrium can exhibit a support-dependent transition: when pretrained mass on good trajectories is large enough, reward amplification takes over; when it is too small, the KL penalty keeps the policy reference-dominated unless the system is run much colder. Entropy mirror descent gives the ideal KL/Fisher flow toward this equilibrium. TRPO, PPO, and GRPO are practical approximations to that geometry, preserving different pieces of it and losing others.</p>
+<p>The main lesson is not that PPO or GRPO literally implement statistical mechanics. They do not. The lesson is that the thermodynamic picture separates three things that are often conflated: the equilibrium target, the ideal policy-space flow, and the finite-time trajectory of the optimizer. The boundary belongs to the free energy; the trajectory belongs to the algorithm.</p>
+<p>The thermodynamic vocabulary is not just a metaphor. It is the right language for a problem whose closed-form optimum is literally a Boltzmann distribution — and the right language for asking, precisely, when the optimizer you ran is actually following the dynamics that vocabulary names.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/ybarmaz\.github\.io\/blog\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<script src="https://utteranc.es/client.js" repo="ybarmaz/blog" issue-term="pathname" theme="github-light" crossorigin="anonymous" async="">
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

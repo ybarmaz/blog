@@ -2,6 +2,7 @@
   {
     "listing": "/index.html",
     "items": [
+      "/posts/2026-06-21-Thermodynamics-of-KL-regularized-RL.html",
       "/posts/2026-02-23-RL-for-experiment-design.html",
       "/posts/2026-01-03-Modern-Bayesian-inference-for-SDE.html",
       "/posts/2024-07-07-SDE-model-calibration-through-NPE.html",
